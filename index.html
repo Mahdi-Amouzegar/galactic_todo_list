@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
     <div class="container">
@@ -147,6 +147,7 @@
                 <div class="field">
                     <label class="field-label" for="fPhone">تلفن تماس</label>
                     <input type="tel" id="fPhone" class="ltr" maxlength="20" placeholder="0912..." autocomplete="off">
+                    <a class="due-btn call-btn" id="fPhoneCall" href="#" style="display: none;">📞 تماس گرفتن</a>
                     <span class="field-error" id="fPhoneError"></span>
                 </div>
                 <label class="field">
@@ -156,7 +157,10 @@
                 <div class="field">
                     <label class="field-label" for="fUrl">آدرس اینترنتی</label>
                     <input type="url" id="fUrl" class="ltr" maxlength="300" placeholder="https://..." autocomplete="off" dir="ltr">
-                    <a class="field-link" id="fUrlOpen" href="#" target="_blank" rel="noopener" style="display: none;">باز کردن پیوند ↗</a>
+                    <div class="link-row">
+                        <a class="field-link" id="fUrlOpen" href="#" target="_blank" rel="noopener" style="display: none;">باز کردن پیوند ↗</a>
+                        <button class="due-btn" id="fUrlCopy" type="button" style="display: none;">📋 کپی لینک</button>
+                    </div>
                 </div>
                 <div class="field">
                     <span class="field-label">جلسه‌ها / تاریخ‌ها <span class="count-badge" id="sessCount"></span></span>
@@ -241,15 +245,15 @@
             document.head.appendChild(_ls);
         }
     </script>
-        <script src="js/core.js" defer></script>
-    <script src="js/jalali.js" defer></script>
-    <script src="js/time.js" defer></script>
-    <script src="js/store.js" defer></script>
-    <script src="js/sessions.js" defer></script>
-    <script src="js/picker.js" defer></script>
-    <script src="js/map.js" defer></script>
-    <script src="js/detail.js" defer></script>
-    <script src="js/ui.js" defer></script>
-    <script src="js/app.js" defer></script>
+        <script src="js/core.js?v=4" defer></script>
+    <script src="js/jalali.js?v=4" defer></script>
+    <script src="js/time.js?v=4" defer></script>
+    <script src="js/store.js?v=4" defer></script>
+    <script src="js/sessions.js?v=4" defer></script>
+    <script src="js/picker.js?v=4" defer></script>
+    <script src="js/map.js?v=4" defer></script>
+    <script src="js/detail.js?v=4" defer></script>
+    <script src="js/ui.js?v=4" defer></script>
+    <script src="js/app.js?v=4" defer></script>
 </body>
 </html>

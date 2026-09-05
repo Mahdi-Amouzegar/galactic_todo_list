@@ -1,20 +1,20 @@
 // Service Worker: آفلاین‌سازی پوسته برنامه (فقط فایل‌های همین‌سایت)
-const CACHE = 'space-todo-v3';
+const CACHE = 'space-todo-v4';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css',
+  './styles.css?v=4',
   './manifest.webmanifest',
-  './js/core.js',
-  './js/jalali.js',
-  './js/time.js',
-  './js/store.js',
-  './js/sessions.js',
-  './js/picker.js',
-  './js/map.js',
-  './js/detail.js',
-  './js/ui.js',
-  './js/app.js'
+  './js/core.js?v=4',
+  './js/jalali.js?v=4',
+  './js/time.js?v=4',
+  './js/store.js?v=4',
+  './js/sessions.js?v=4',
+  './js/picker.js?v=4',
+  './js/map.js?v=4',
+  './js/detail.js?v=4',
+  './js/ui.js?v=4',
+  './js/app.js?v=4'
 ];
 
 self.addEventListener('install', e => {

@@ -177,6 +177,18 @@
             else if (action === 'edit-cancel') cancelEdit();
             else if (action === 'detail') openDetail(id);
             else if (action === 'locate') { ensureMapVisible(); flyToTask(id); }
+            else if (action === 'pick-loc') {
+                const found = findTask(id);
+                if (!found) return;
+                ensureMapVisible();
+                if (found.task.location) flyToTask(id);
+                else {
+                    relocateTaskId = id;
+                    switchToTab('map');
+                    document.getElementById('panelMap').scrollIntoView({ behavior: 'smooth' });
+                    mapHint('روی نقشه کلیک کنید تا محل ثبت شود');
+                }
+            }
             else if (action === 'expand') {
                 const gid = String(id);
                 if (expandedGroups.has(gid)) expandedGroups.delete(gid);

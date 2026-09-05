@@ -21,6 +21,7 @@
             document.getElementById('fPriority').value = task.priority || 'medium';
             document.getElementById('fPhoneError').textContent = '';
             updateUrlLink();
+            updateCallBtn();
             renderDetailSessions();
             renderDetailLoc();
             document.getElementById('detailPage').style.display = 'block';
@@ -46,15 +47,31 @@
 
         function updateUrlLink() {
             const link = document.getElementById('fUrlOpen');
+            const copy = document.getElementById('fUrlCopy');
             const task = getDetailTask();
             const raw = task ? (task.url || '').trim() : '';
             if (!raw) {
                 link.style.display = 'none';
                 link.removeAttribute('href');
+                copy.style.display = 'none';
                 return;
             }
             link.href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
             link.style.display = '';
+            copy.style.display = '';
+        }
+
+        function updateCallBtn() {
+            const btn = document.getElementById('fPhoneCall');
+            const task = getDetailTask();
+            const raw = task ? (task.phone || '').trim() : '';
+            if (!raw) {
+                btn.style.display = 'none';
+                btn.removeAttribute('href');
+                return;
+            }
+            btn.href = 'tel:' + raw.replace(/[\s()-]/g, '');
+            btn.style.display = '';
         }
 
         function renderDetailSessions() {
@@ -111,6 +128,7 @@
                 }
                 err.textContent = '';
                 task.phone = v;
+                updateCallBtn();
                 saveTasks();
                 flashSaved();
             });
@@ -187,6 +205,32 @@
                 render();
                 refreshMarkers();
                 flashSaved();
+            });
+            document.getElementById('fUrlCopy').addEventListener('click', async () => {
+                const task = getDetailTask();
+                if (!task || !(task.url || '').trim()) return;
+                const raw = task.url.trim();
+                const full = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+                let ok = false;
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(full);
+                        ok = true;
+                    }
+                } catch { /* fallback */ }
+                if (!ok) {
+                    try {
+                        const ta = document.createElement('textarea');
+                        ta.value = full;
+                        ta.style.position = 'fixed';
+                        ta.style.opacity = '0';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        ok = document.execCommand('copy');
+                        ta.remove();
+                    } catch { /* نادیده */ }
+                }
+                flashSaved(ok ? 'پیوند کپی شد ✓' : 'کپی نشد');
             });
             document.getElementById('detailBack').addEventListener('click', closeDetail);
             document.getElementById('detailDelete').addEventListener('click', () => {

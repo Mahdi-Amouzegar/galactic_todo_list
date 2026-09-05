@@ -178,15 +178,15 @@
             if (Date.now() < suppressMapClickUntil) return;
             const loc = { lat: +e.latlng.lat.toFixed(5), lng: +e.latlng.lng.toFixed(5) };
             if (relocateTaskId) {
-                const t = tasks.find(x => String(x.id) === String(relocateTaskId));
+                const found = findTask(relocateTaskId);
                 relocateTaskId = null;
-                if (t) {
-                    t.location = loc;
+                if (found) {
+                    found.task.location = loc;
                     saveTasks();
                     render();
                     refreshMarkers();
                     mapHint('محل جدید ذخیره شد ✓');
-                    flyToTask(t.id);
+                    flyToTask(found.task.id);
                 }
                 return;
             }

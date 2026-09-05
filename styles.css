@@ -968,6 +968,25 @@
             text-decoration: underline;
         }
 
+        .link-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .call-btn {
+            align-self: flex-start;
+            text-decoration: none;
+        }
+
+        /* دکمه تماس فقط در موبایل */
+        @media (min-width: 901px) {
+            .call-btn {
+                display: none !important;
+            }
+        }
+
         .count-badge {
             color: #00d4ff;
             font-weight: 700;
@@ -1488,6 +1507,14 @@
 
         .group-item {
             border-color: #7b2ff755;
+            align-items: flex-start;
+        }
+
+        /* دکمه‌های خودِ گروه همیشه بالای کارت، روبه‌روی نام گروه */
+        .group-item > .group-caret,
+        .group-item > .task-actions {
+            margin-top: 2px;
+            flex-shrink: 0;
         }
 
         .group-caret {
@@ -1568,8 +1595,58 @@
 
         .child-actions {
             display: flex;
-            gap: 6px;
+            gap: 10px;
             flex-shrink: 0;
+        }
+
+        .child-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1.5px solid #2a2a5e;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            font-family: inherit;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .child-btn.detail {
+            background: linear-gradient(145deg, #0d1a28, #102838);
+            color: #00d4ff;
+        }
+
+        .child-btn.detail:hover {
+            border-color: #00d4ff66;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .child-btn.delete {
+            background: linear-gradient(145deg, #1a0a28, #251038);
+            color: #ff4d8d;
+        }
+
+        .child-btn.delete:hover {
+            border-color: #ff4d8d66;
+            box-shadow: 0 4px 15px rgba(255, 77, 141, 0.2);
+        }
+
+        .child-btn.loc {
+            background: linear-gradient(145deg, #1a1408, #26200f);
+            color: #ffd166;
+        }
+
+        .child-btn.loc:hover {
+            border-color: #ffd16666;
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.2);
+        }
+
+        .child-btn.loc.has {
+            border-color: rgba(255, 209, 102, 0.5);
         }
 
         .mini-link.danger {
@@ -1978,7 +2055,22 @@
             }
         }
 
+        @media (max-width: 900px) {
+            /* هیچ آیتم ردیف افزودن زیرکار اجازه سرریز ندارد */
+            .child-prio {
+                min-width: 0;
+            }
+        }
+
         @media (max-width: 480px) {
+            .child-add .btn-child-add {
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+
+            .due-row .due-btn {
+                flex: 1 1 100%;
+            }
             .header h1 { font-size: 1.8rem; }
             .input-section { flex-direction: column; }
             .priority-select { padding: 12px 16px; }

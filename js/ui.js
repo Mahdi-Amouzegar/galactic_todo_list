@@ -92,8 +92,9 @@
                 ${n ? `<span class="child-due">📅 ${faShort(n.at)}</span>` : ''}
                 ${c.location ? '<span class="child-due">📍</span>' : ''}
                 <span class="child-actions">
-                    <button class="mini-link" data-action="detail" aria-label="جزئیات زیرکار">📋</button>
-                    <button class="mini-link danger" data-action="delete" aria-label="حذف زیرکار">✕</button>
+                    <button class="child-btn loc ${c.location ? 'has' : ''}" data-action="pick-loc" aria-label="${c.location ? 'نمایش محل روی نقشه' : 'ثبت محل روی نقشه'}">📍</button>
+                    <button class="child-btn detail" data-action="detail" aria-label="جزئیات زیرکار">📋</button>
+                    <button class="child-btn delete" data-action="delete" aria-label="حذف زیرکار">✕</button>
                 </span>
             </div>`;
         }
