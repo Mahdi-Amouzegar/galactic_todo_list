@@ -1,5 +1,5 @@
 // Service Worker: آفلاین‌سازی پوسته برنامه (فقط فایل‌های همین‌سایت)
-const CACHE = 'space-todo-v1';
+const CACHE = 'space-todo-v3';
 const ASSETS = [
   './',
   './index.html',

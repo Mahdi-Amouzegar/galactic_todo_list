@@ -1623,11 +1623,11 @@
         }
 
         body.map-hidden .panel-map {
-            display: none;
+            display: none !important;
         }
 
         body.map-hidden .layout {
-            grid-template-columns: 1fr;
+            display: block;
         }
 
         body.map-hidden .container {
@@ -1670,7 +1670,7 @@
             #panelTasks {
                 height: 100%;
                 overflow-y: auto;
-                padding-bottom: 30px;
+                padding-bottom: 96px;
                 scrollbar-width: thin;
                 scrollbar-color: #2a2a5e transparent;
             }
@@ -1705,6 +1705,10 @@
         }
 
         @media (max-width: 900px) {
+            body {
+                padding: 40px 20px 120px;
+            }
+
             .mobile-tabs {
                 display: flex;
             }
@@ -1734,7 +1738,8 @@
         .portfolio-badge {
             position: fixed;
             bottom: 1.4rem;
-            left: 1.4rem;
+            right: 1.4rem;
+            left: auto;
             z-index: 40;
         }
 
@@ -1881,6 +1886,95 @@
 
             .portfolio-badge__box.open {
                 max-width: 310px;
+            }
+        }
+
+        /* اصلاحات موبایل/تبلت: جلوگیری از سرریز افقی + فرم ثبت جادار */
+        @media (max-width: 900px) {
+            /* سطر اول: کادر عنوان تمام‌عرض — سطر دوم: اولویت و افزودن */
+            .input-section {
+                flex-wrap: wrap;
+            }
+
+            .input-section input {
+                flex: 1 1 100%;
+            }
+
+            .priority-select {
+                flex: 1;
+                padding: 12px 14px;
+            }
+
+            .input-section .btn-add {
+                flex: 1;
+                width: auto;
+            }
+
+            /* زنجیره ضدسرریز کارت‌ها */
+            .task-item,
+            .task-content,
+            .child-text {
+                min-width: 0;
+            }
+
+            .task-meta {
+                flex-wrap: wrap;
+            }
+
+            .due-row {
+                flex-wrap: wrap;
+            }
+
+            .due-chip,
+            .loc-chip {
+                max-width: 100%;
+                overflow-wrap: anywhere;
+            }
+
+            /* ردیف افزودن زیرکار: ورودی تمام‌عرض، بقیه سطر بعد */
+            .child-add {
+                flex-wrap: wrap;
+            }
+
+            .child-add .child-input {
+                flex: 1 1 100%;
+            }
+
+            .child-add .child-prio {
+                flex: 1;
+                padding: 10px;
+            }
+
+            .child-add .btn-child-add {
+                flex: 2;
+            }
+
+            .sort-row,
+            .stats {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* ریشه سرریز افقی: آیتم گرید باید بتواند از محتوایش کوچک‌تر شود */
+        .layout,
+        .panel,
+        .task-list {
+            min-width: 0;
+        }
+
+        @media (max-width: 900px) {
+            /* ردیف زیرکار: متن سطر کامل، تاریخ و دکمه‌ها سطر بعد */
+            .child-item {
+                flex-wrap: wrap;
+                row-gap: 6px;
+            }
+
+            .child-item .child-text {
+                flex: 1 1 100%;
+            }
+
+            .child-due {
+                white-space: normal;
             }
         }
 
