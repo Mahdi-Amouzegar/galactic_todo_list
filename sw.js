@@ -1,13 +1,17 @@
+// © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 // Service Worker: آفلاین‌سازی پوسته برنامه (فقط فایل‌های همین‌سایت)
-const CACHE = 'space-todo-v4';
+const CACHE = 'space-todo-v8';
 const ASSETS = [
   './',
   './index.html',
   './styles.css?v=4',
   './manifest.webmanifest',
+  './fonts/vazirmatn-arabic.woff2',
+  './fonts/vazirmatn-latin.woff2',
   './js/core.js?v=4',
   './js/jalali.js?v=4',
   './js/time.js?v=4',
+  './js/notify.js',
   './js/store.js?v=4',
   './js/sessions.js?v=4',
   './js/picker.js?v=4',
@@ -16,6 +20,17 @@ const ASSETS = [
   './js/ui.js?v=4',
   './js/app.js?v=4'
 ];
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ws => {
+      const w = ws.find(x => x.url.includes('index.html') || x.url.endsWith('/'));
+      if (w) return w.focus();
+      return clients.openWindow('./');
+    })
+  );
+});
 
 self.addEventListener('install', e => {
   e.waitUntil(

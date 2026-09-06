@@ -1,3 +1,4 @@
+// © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 'use strict';
 // sessions.js -- session (due-date) domain logic  |  React: selectors
         /* ---------- سررسید ---------- */
@@ -45,6 +46,101 @@
                 const count = sessions.length > 1 ? ` <span class="sess-count">${toFa(sessions.length)} جلسه</span>` : '';
                 return `<span class="due-line">📅 جلسه بعد: ${faShort(n.at)}${extra}</span>${count}`;
             }
-            return `<span class="due-line past-all">📅 ${toFa(sessions.length)} جلسه (همه گذشته)</span>`;
+            const past = [...sessions].sort((a, b) => new Date(b.at) - new Date(a.at))[0];
+            return `<span class="due-line overdue">⚠ سررسید گذشته: ${faShort(past.at)}</span>`;
+        }
+
+        function dayKey(d) {
+            d = new Date(d);
+            return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+        }
+
+        function hasSessionOn(task, key) {
+            return (task.sessions || []).some(s => {
+                const t = new Date(s.at).getTime();
+                return !isNaN(t) && dayKey(new Date(s.at)) === key;
+            });
+        }
+
+        // همه جلسات همراه مالک (برای یادآور، تقویم و تداخل) — فقط ناکامل‌ها
+        function allSessions(onlyOpen) {
+            const out = [];
+            const push = (t, owner) => {
+                if (t.archived) return;
+                (t.sessions || []).forEach(s => {
+                    if (onlyOpen && t.completed) return;
+                    out.push({ at: s.at, id: s.id, owner, taskId: t.id, priority: t.priority, reminded: Boolean(s.reminded) });
+                });
+            };
+            tasks.forEach(t => {
+                if (t.kind === 'group') {
+                    push(t, t.text);
+                    (t.children || []).forEach(c => { if (!c.archived) push(c, t.text + ' / ' + c.text); });
+                } else push(t, t.text);
+            });
+            return out;
+        }
+
+        const FA_DIGITS = { '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9', '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9' };
+
+        function faToEn(s) {
+            return String(s).replace(/[۰-۹٠-٩]/g, d => FA_DIGITS[d] || d);
+        }
+
+        // شنبه=6 ... جمعه=5 در getDay (یکشنبه=0)
+        // ترتیب مهم: بلندترین نام‌ها اول (شنبه زیررشته یکشنبه/پنجشنبه است)
+        const WEEKDAYS_FA = { 'یکشنبه': 0, 'دوشنبه': 1, 'سه‌شنبه': 2, 'سه شنبه': 2, 'چهارشنبه': 3, 'پنجشنبه': 4, 'شنبه': 6, 'جمعه': 5 };
+
+        // استخراج تاریخ/ساعت از متن فارسی → ISO آینده یا null
+        function parseFaDateTime(text, now) {
+            if (!text) return null;
+            const t = faToEn(text);
+            const d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+            const has = (...ws) => ws.some(w => t.includes(w));
+            let day = null;
+            let explicitDay = false;
+            let m;
+            if (has('پس‌فردا', 'پس فردا')) { day = addDays(d0, 2); explicitDay = true; }
+            else if (has('فردا')) { day = addDays(d0, 1); explicitDay = true; }
+            else if (has('امروز')) { day = d0; explicitDay = true; }
+            else if (has('هفته بعد', 'هفته آینده', 'هفته‌ی بعد')) { day = addDays(d0, 7); explicitDay = true; }
+            else if ((m = t.match(/(\d{1,2})\s*روز\s*(دیگه|دیگر|بعد)/))) {
+                const n = parseInt(m[1], 10);
+                if (n < 1 || n > 365) return null;
+                day = addDays(d0, n);
+                explicitDay = true;
+            } else {
+                for (const name of Object.keys(WEEKDAYS_FA)) {
+                    if (t.includes(name)) {
+                        let diff = (WEEKDAYS_FA[name] - d0.getDay() + 7) % 7;
+                        if (diff === 0) diff = 7;
+                        day = addDays(d0, diff);
+                        explicitDay = true;
+                        break;
+                    }
+                }
+            }
+            let h = null;
+            let mi = 0;
+            if ((m = t.match(/ساعت\s*(\d{1,2})(?:\s*[:：]\s*(\d{1,2}))?/))) {
+                h = parseInt(m[1], 10);
+                mi = m[2] ? parseInt(m[2], 10) : 0;
+                if (h > 23 || mi > 59) return null;
+                if (has('صبح')) { if (h === 12) h = 0; }
+                else if (has('ظهر')) { if (h < 12) h += 12; if (h === 24) h = 12; }
+                else if (has('عصر', 'غروب', 'شب')) { if (h < 12) h += 12; }
+                else if (h >= 1 && h <= 6) h += 12; // «ساعت ۵» یعنی ۱۷
+            }
+            if (!day && h === null) return null;
+            if (!day) day = d0;
+            if (h === null) h = 9;
+            let dt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, mi, 0, 0);
+            if (dt.getTime() <= now.getTime()) {
+                if (explicitDay) return null;
+                dt = new Date(dt.getTime() + 24 * 3600 * 1000);
+                if (dt.getTime() <= now.getTime()) return null;
+            }
+            return dt.toISOString();
         }
 

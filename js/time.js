@@ -1,3 +1,4 @@
+// © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 'use strict';
 // time.js -- server-corrected clock  |  React: hooks/useNow.js
         /* ---------- زمان مبنا: سرور امن، با fallback به ساعت دستگاه ---------- */

@@ -1,3 +1,4 @@
+// © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 'use strict';
 // map.js -- Leaflet map + markers + visibility prefs  |  React: <MapPanel/>
         /* ---------- نقشه (Leaflet) ---------- */
@@ -10,6 +11,7 @@
         let suppressMapClickUntil = 0;
         let relocateTaskId = null;
         let mapHintTimer = null;
+        let markerTimer = null;
 
         const TILES = {
             normal: {
@@ -45,7 +47,11 @@
         }
 
         function switchToTab(name) {
-            document.querySelectorAll('.mobile-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+            document.querySelectorAll('.mobile-tab').forEach(b => {
+                const on = b.dataset.tab === name;
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
             document.getElementById('panelTasks').classList.toggle('active', name === 'tasks');
             document.getElementById('panelMap').classList.toggle('active', name === 'map');
             if (name === 'map' && mapReady) setTimeout(() => map.invalidateSize(), 60);
@@ -56,7 +62,14 @@
         function loadPrefs() {
             try {
                 const p = JSON.parse(localStorage.getItem(PREFS_KEY));
-                if (p && typeof p.mapVisible === 'boolean') prefs.mapVisible = p.mapVisible;
+                if (!p) return;
+                if (typeof p.mapVisible === 'boolean') prefs.mapVisible = p.mapVisible;
+                if (typeof p.remindOn === 'boolean') prefs.remindOn = p.remindOn;
+                if ([15, 30, 60, 180, 1440].includes(+p.remindMin)) prefs.remindMin = +p.remindMin;
+                if (typeof p.digestOn === 'boolean') prefs.digestOn = p.digestOn;
+                if (typeof p.lastDigest === 'string') prefs.lastDigest = p.lastDigest;
+                if (typeof p.tourSeen === 'boolean') prefs.tourSeen = p.tourSeen;
+                if (['beginner', 'intermediate', 'advanced'].includes(p.level)) prefs.level = p.level;
             } catch { /* پیش‌فرض */ }
         }
 
@@ -114,7 +127,10 @@
             markersLayer = L.layerGroup().addTo(map);
             mapReady = true;
             map.on('click', onMapClick);
+            map.on('moveend zoomend', () => scheduleMarkerRefresh());
             document.getElementById('map').addEventListener('click', e => {
+                const r = e.target.closest('[data-pproute]');
+                if (r) { showRouteTo(r.dataset.pproute); return; }
                 const b = e.target.closest('[data-ppdetail]');
                 if (!b) return;
                 openDetail(b.dataset.ppdetail);
@@ -125,6 +141,13 @@
             setTimeout(() => { if (map) map.invalidateSize(); }, 350);
             setTimeout(() => { if (map) map.invalidateSize(); }, 1500);
             window.addEventListener('load', () => { if (map) map.invalidateSize(); });
+        }
+
+        // بازسازی مارکرها با تاخیر کوتاه تا تایپ سریع باعث چشمک‌زدن نقشه نشود
+        function scheduleMarkerRefresh() {
+            if (!mapReady) return;
+            clearTimeout(markerTimer);
+            markerTimer = setTimeout(refreshMarkers, 120);
         }
 
         function refreshMarkers() {
@@ -139,14 +162,38 @@
                 m.bindPopup(
                     `<div class="pp pp-${t.priority}"><div class="pp-title">${escapeHtml(t.text)}</div>` +
                     `<div class="pp-date">📅 ${dateLine}</div>` +
-                    `<button class="pp-btn" data-ppdetail="${escapeHtml(String(t.id))}">نمایش جزئیات</button></div>`
+                    `<div class="pp-row"><button class="pp-btn" data-ppdetail="${escapeHtml(String(t.id))}">نمایش جزئیات</button>` +
+                    `<button class="pp-btn" data-pproute="${escapeHtml(String(t.id))}">🧭 مسیر</button></div>`
                 );
                 m._taskId = t.id;
                 markersLayer.addLayer(m);
             };
+            const pts = [];
             tasks.forEach(t => {
-                if (t.kind === 'group') (t.children || []).forEach(addMarker);
-                else addMarker(t);
+                if (t.kind === 'group') (t.children || []).forEach(c => { if (c.location) pts.push(c); });
+                else if (t.location) pts.push(t);
+            });
+            // خوشه‌بندی سبک شبکه‌ای (بدون پلاگین): خانه ۶۴ پیکسلی
+            const CELL = 64;
+            const cells = new Map();
+            pts.forEach(t => {
+                const p = map.latLngToContainerPoint([t.location.lat, t.location.lng]);
+                const k = Math.floor(p.x / CELL) + ':' + Math.floor(p.y / CELL);
+                if (!cells.has(k)) cells.set(k, []);
+                cells.get(k).push(t);
+            });
+            cells.forEach(list => {
+                if (list.length === 1) { addMarker(list[0]); return; }
+                const lat = list.reduce((a, t) => a + t.location.lat, 0) / list.length;
+                const lng = list.reduce((a, t) => a + t.location.lng, 0) / list.length;
+                const m = L.marker([lat, lng], {
+                    icon: L.divIcon({ className: '', html: `<span class="mk-cluster">${toFa(list.length)}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] })
+                });
+                m.on('click', () => {
+                    suppressMapClickUntil = Date.now() + 400;
+                    map.flyTo([lat, lng], Math.min(map.getZoom() + 2, 19), { duration: 0.6 });
+                });
+                markersLayer.addLayer(m);
             });
         }
 
@@ -160,6 +207,83 @@
             markersLayer.eachLayer(m => {
                 if (String(m._taskId) === String(id)) setTimeout(() => m.openPopup(), 1100);
             });
+        }
+
+        let routeLayer = null;
+
+        function clearRoute() {
+            if (routeLayer && mapReady) { map.removeLayer(routeLayer); routeLayer = null; }
+            const b = document.getElementById('routeClearBtn');
+            if (b) b.style.display = 'none';
+        }
+
+        function fmtDist(m) {
+            if (m < 1000) return `${toFa(Math.round(m))} متر`;
+            return `${toFa((m / 1000).toFixed(1))} کیلومتر`;
+        }
+
+        function fmtDur(s) {
+            const m = Math.round(s / 60);
+            if (m < 60) return `${toFa(m)} دقیقه`;
+            return `${toFa(Math.floor(m / 60))} ساعت و ${toFa(m % 60)} دقیقه`;
+        }
+
+        function getOrigin() {
+            return new Promise(resolve => {
+                if (youMarker) {
+                    const ll = youMarker.getLatLng();
+                    return resolve({ lat: ll.lat, lng: ll.lng });
+                }
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    p => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+                    () => resolve(null),
+                    { timeout: 8000 }
+                );
+            });
+        }
+
+        // مسیریابی OSRM (رایگان، بدون کلید) — فقط هنگام درخواست
+        async function showRouteTo(taskId) {
+            const found = findTask(taskId);
+            const t = found ? found.task : null;
+            if (!t || !t.location || !mapReady) return;
+            ensureMapVisible();
+            switchToTab('map');
+            mapHint('در حال محاسبه مسیر...');
+            const o = await getOrigin();
+            if (!o) {
+                mapHint('موقعیت شما مشخص نیست؛ اول «موقعیت من» را بزنید');
+                return;
+            }
+            const d = t.location;
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 12000);
+            try {
+                const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson`, { signal: ctrl.signal });
+                clearTimeout(timer);
+                if (!r.ok) throw new Error('bad');
+                const j = await r.json();
+                const route = j.routes && j.routes[0];
+                if (!route) throw new Error('empty');
+                clearRoute();
+                routeLayer = L.polyline(route.geometry.coordinates.map(c => [c[1], c[0]]), { color: '#00d4ff', weight: 5, opacity: 0.9 }).addTo(map);
+                map.flyToBounds(routeLayer.getBounds().pad(0.2), { duration: 1 });
+                document.getElementById('routeClearBtn').style.display = '';
+                mapHint(`🧭 تا «${t.text}»: ${fmtDist(route.distance)}، حدود ${fmtDur(route.duration)}`, 6000);
+            } catch {
+                clearTimeout(timer);
+                mapHint('مسیریابی ناموفق بود (اینترنت؟)');
+            }
+        }
+
+        function toggleFullscreen() {
+            const w = document.querySelector('.map-wrap');
+            if (!w) return;
+            const on = w.classList.toggle('fullscreen');
+            document.getElementById('fsBtn').textContent = on ? '✕' : '⛶';
+            document.getElementById('fsExit').style.display = on ? '' : 'none';
+            setTimeout(() => { if (mapReady) map.invalidateSize(); }, 80);
         }
 
         function showPickMarker() {

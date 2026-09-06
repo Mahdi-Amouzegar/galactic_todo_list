@@ -1,3 +1,4 @@
+// © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 'use strict';
 // jalali.js -- pure Jalali calendar math (no DOM)  |  React: utils/jalali.js as-is
         /* ---------- تقویم جلالی (محاسبه دقیق کبیسه) ---------- */

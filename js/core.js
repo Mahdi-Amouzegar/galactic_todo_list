@@ -1,3 +1,4 @@
+// © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 'use strict';
 // core.js -- shared state + tiny helpers  |  React: store shape + utils
 
@@ -33,7 +34,9 @@
         let pendingKind = 'task';  // نوع مورد جدید: task | group
         let expandedGroups = new Set(); // شناسه گروه‌های باز (رشته)
         let childDrafts = {};      // سررسیدهای پیش‌نویس زیرکارها به تفکیک گروه
-        let prefs = { mapVisible: true }; // ترجیحات رابط کاربری (localStorage جدا)
+        let prefs = { mapVisible: true, remindOn: true, remindMin: 60, digestOn: true, lastDigest: '', tourSeen: false, level: null }; // ترجیحات (localStorage جدا)
+        let selectedDay = null; // فیلتر روز تقویم: 'gy-gm-gd' یا null
+        let calJy = 0, calJm = 1; // ماه جاری نمای تقویم
 
         // وضعیت پیکر تقویم
         let pickerMode = 'add';

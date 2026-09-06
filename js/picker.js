@@ -1,6 +1,9 @@
+// © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 'use strict';
 // picker.js -- Jalali date+time picker dialog  |  React: <DuePicker/>
         /* ---------- پیکر گرافیکی تاریخ جلالی + ساعت ---------- */
+
+        let conflictArmed = false;
 
         function openPicker(mode, onConfirm) {
             pickerMode = mode;
@@ -34,6 +37,7 @@
         }
 
         function renderPicker() {
+            conflictArmed = false;
             const now = getNow();
             const tj = gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
@@ -72,6 +76,12 @@
                 err.textContent = 'زمان سررسید باید بعد از زمان جاری باشد.';
                 return;
             }
+            const hit = findConflict(picked.getTime());
+            if (hit && !conflictArmed) {
+                conflictArmed = true;
+                err.textContent = `⚠ تداخل با «${hit.owner}» (${faShort(hit.at)}) — برای تأیید دوباره بزنید.`;
+                return;
+            }
             const iso = picked.toISOString();
             if (pickerCallback) {
                 const cb = pickerCallback;
@@ -89,5 +99,38 @@
             addDraftSessions = [];
             updateDueChips();
             closePicker();
+        }
+
+        // نزدیک‌ترین جلسه آینده هر مالک، در پنجره ۳۰ دقیقه‌ای؟
+        function findConflict(ms) {
+            const now = getNow().getTime();
+            const list = allSessions(true);
+            for (const s of list) {
+                const v = new Date(s.at).getTime();
+                if (isNaN(v) || v < now) continue;
+                if (Math.abs(v - ms) < 30 * 60 * 1000) return s;
+            }
+            return null;
+        }
+
+        // میان‌برها: امروز عصر / فردا ۹ صبح / هفته بعد (همیشه آینده)
+        function applyPreset(name) {
+            const now = getNow();
+            let base;
+            if (name === 'evening') {
+                base = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0, 0);
+                if (base.getTime() <= now.getTime()) base.setDate(base.getDate() + 1);
+            } else if (name === 'tomorrow') {
+                base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9, 0, 0, 0);
+            } else {
+                base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 9, 0, 0, 0);
+            }
+            const j = gregorianToJalali(base.getFullYear(), base.getMonth() + 1, base.getDate());
+            pickerJy = j.jy;
+            pickerJm = j.jm;
+            pickerDay = j.jd;
+            document.getElementById('pickerHour').value = String(base.getHours()).padStart(2, '0');
+            document.getElementById('pickerMinute').value = '00';
+            renderPicker();
         }
 

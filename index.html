@@ -1,14 +1,12 @@
 <!DOCTYPE html>
+<!-- © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است -->
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="لیست وظایف فضایی - مدیریت وظایف روزانه با ذخیره‌سازی محلی">
+    <meta name="description" content="وظایف، قرارها و مکان‌هایت را با تقویم شمسی و یادآور مدیریت کن؛ آفلاین و بدون نیاز به حساب کاربری.">
     <meta name="theme-color" content="#0a0a1a">
-    <title>لیست وظایف فضایی</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <title>کارمن | مدیریت وظایف و قرارها</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="mobile-web-app-capable" content="yes">
@@ -18,14 +16,18 @@
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
     <link rel="stylesheet" href="styles.css?v=4">
 </head>
-<body>
+<body data-level="beginner">
     <div class="container">
         <div class="header">
             <img class="site-logo" src="icons/logo.png" alt="لوگوی برنامه" onerror="this.style.display='none'">
-            <h1>لیست وظایف فضایی</h1>
-            <p>وظایف خود را مدیریت کنید</p>
+            <h1>کارمن</h1>
+            <p>کارهایت، زمانت، مسیرت.</p>
+            <p class="today-line" id="todayLine"></p>
             <p class="time-source" id="timeSource">در حال اتصال به سرور زمان...</p>
-            <button class="btn-small" id="installBtn" type="button" style="display: none;">⬇ نصب اپلیکیشن</button>
+            <div class="header-actions">
+                <button class="btn-small" id="installBtn" type="button" style="display: none;">⬇ نصب اپلیکیشن</button>
+                <button class="btn-small" id="mapToggle" type="button">🗺 نقشه: روشن</button>
+            </div>
             <details class="trust">
                 <summary>🔒 حریم خصوصی شما</summary>
                 <p>همه اطلاعات شما (وظایف، تاریخ‌ها و محل‌ها) فقط در همین دستگاه و مرورگر خودتان ذخیره می‌شود و به هیچ سروری ارسال نمی‌شود. نقشه صرفاً تصویر اینترنتی است و چیزی از شما آپلود نمی‌کند.</p>
@@ -40,19 +42,36 @@
         <div class="layout">
             <div class="panel active" id="panelTasks">
 
-        <div class="kind-toggle" role="group" aria-label="نوع مورد جدید">
+        <div class="kind-toggle" id="levelRow" role="group" aria-label="سطح کاربری">
+            <span class="level-name">سطح:</span>
+            <button class="kind-btn active" data-level="beginner" type="button" title="فقط امکانات اصلی">مبتدی</button>
+            <button class="kind-btn" data-level="intermediate" type="button" title="امکانات بیشتر">متوسط</button>
+            <button class="kind-btn" data-level="advanced" type="button" title="همه امکانات">پیشرفته</button>
+        </div>
+
+        <div class="kind-toggle lvl-int" id="kindRow" role="group" aria-label="نوع مورد جدید">
             <button class="kind-btn active" data-kind="task" type="button">📝 وظیفه</button>
             <button class="kind-btn" data-kind="group" type="button">📁 گروه وظیفه</button>
         </div>
 
+        <button class="due-btn template-toggle lvl-int" id="templateBtn" type="button">📁 ساخت گروه از قالب آماده</button>
+        <div class="due-chips lvl-int" id="templateBox" style="display: none;"></div>
+
         <div class="input-section">
             <input type="text" id="taskInput" placeholder="وظیفه جدید را بنویسید..." maxlength="200" autocomplete="off" aria-label="متن وظیفه جدید" autofocus>
-            <select id="prioritySelect" class="priority-select" aria-label="سطح اولویت">
+            <button class="btn-icon mic-btn" id="micBtn" type="button" aria-label="ورود صوتی">🎤</button>
+            <select id="prioritySelect" class="priority-select lvl-int" aria-label="سطح اولویت">
                 <option value="low">اولویت کم</option>
                 <option value="medium" selected>اولویت متوسط</option>
                 <option value="high">اولویت زیاد</option>
             </select>
             <button class="btn-add" id="addBtn">افزودن</button>
+        </div>
+
+        <div class="smart-chip" id="smartChip" style="display: none;">
+            <span id="smartChipText"></span>
+            <button id="smartAccept" type="button">✓ اضافه کن</button>
+            <button id="smartDismiss" type="button" aria-label="بی‌خیال">✕</button>
         </div>
 
         <div class="due-row">
@@ -75,16 +94,46 @@
             <button class="filter-btn active" data-filter="all">همه</button>
             <button class="filter-btn" data-filter="active">انجام نشده</button>
             <button class="filter-btn" data-filter="completed">انجام شده</button>
+            <button class="filter-btn lvl-int" id="dayChip" type="button" style="display: none;"></button>
+            <button class="filter-btn lvl-int" data-filter="hasloc">📍 محل‌دار</button>
+            <button class="filter-btn lvl-int" data-filter="hasdue">📅 سررسیددار</button>
+            <button class="filter-btn lvl-int" data-filter="archived">📦 بایگانی</button>
         </div>
 
-        <div class="sort-row">
+        <div class="sort-row lvl-int">
             <label for="sortSelect">مرتب‌سازی:</label>
-            <select id="sortSelect" class="sort-select">
+            <select id="sortSelect" class="sort-select" title="نکته: در حالت «دستی» می‌توانید کارت‌ها را با درگ جابه‌جا کنید">
                 <option value="newest">جدیدترین</option>
                 <option value="due">نزدیک‌ترین سررسید</option>
+                <option value="oldest">قدیمی‌ترین</option>
+                <option value="alpha">الفبا</option>
+                <option value="manual">دستی (درگ)</option>
             </select>
-            <button class="btn-small" id="mapToggle" type="button">🗺 نقشه: روشن</button>
+            <button class="btn-small" id="calBtn" type="button">📅 تقویم</button>
+            <button class="btn-small" id="trashBtn" type="button">🗑 سطل<span id="trashCount"></span></button>
         </div>
+
+        <details class="settings lvl-int" id="settingsBox">
+            <summary>🔔 تنظیمات یادآور</summary>
+            <div class="settings-row">
+                <label><input type="checkbox" id="setRemindOn"> یادآور جلسات</label>
+                <label>چند دقیقه قبل؟
+                    <select id="setRemindMin" class="sort-select">
+                        <option value="15">۱۵ دقیقه</option>
+                        <option value="30">۳۰ دقیقه</option>
+                        <option value="60" selected>۱ ساعت</option>
+                        <option value="180">۳ ساعت</option>
+                        <option value="1440">۱ روز</option>
+                    </select>
+                </label>
+            </div>
+            <div class="settings-row">
+                <label><input type="checkbox" id="setDigestOn"> خلاصه صبحگاهی</label>
+                <button class="btn-small" id="notifPermBtn" type="button">فعال‌سازی اعلان‌ها</button>
+                <button class="btn-small" id="notifTestBtn" type="button">ارسال آزمایشی</button>
+            </div>
+            <div class="settings-status" id="notifStatus"></div>
+        </details>
 
         <div class="progress-wrap">
             <div class="progress-label">
@@ -102,23 +151,39 @@
             <span>باقی‌مانده: <span class="num" id="remainCount">۰</span></span>
         </div>
 
+        <div class="stats-box lvl-int" id="statsBox"></div>
+
         <div class="task-list" id="taskList" aria-live="polite"></div>
 
         <button class="btn-clear" id="clearDone" style="display: none;">پاک کردن انجام شده‌ها</button>
+        <button class="btn-clear lvl-int" id="archiveDone" type="button" style="display: none;">📦 بایگانی انجام‌شده‌ها</button>
             </div>
 
             <div class="panel" id="panelMap">
                 <div class="map-head">
                     <span class="map-title">🗺 نقشه محل وظایف</span>
-                    <button class="btn-small" id="myLocBtn" type="button">📍 موقعیت من</button>
+                    <div class="map-head-actions">
+                        <button class="btn-small" id="myLocBtn" type="button">📍 موقعیت من</button>
+                        <button class="btn-small" id="fsBtn" type="button" aria-label="نقشه تمام‌صفحه">⛶</button>
+                        <button class="btn-small" id="routeClearBtn" type="button" style="display: none;">✕ مسیر</button>
+                    </div>
                 </div>
                 <div class="map-wrap">
                     <div id="map" aria-label="نقشه"></div>
                     <div class="map-hint" id="mapHint"></div>
+                    <button class="fs-exit" id="fsExit" type="button" style="display: none;">✕ بستن نقشه تمام‌صفحه</button>
                 </div>
                 <p class="map-note">روی هر نقطه از نقشه کلیک کنید تا محل وظیفه جدید انتخاب و فرم ثبت باز شود. از دکمه لایه‌ها (بالا سمت چپ نقشه) حالت معمولی، تاریک یا ماهواره‌ای را انتخاب کنید.</p>
             </div>
         </div>
+        <footer class="app-footer">
+            <div>
+                <span>ساخته‌شده با ❤ توسط <a href="https://www.linkedin.com/in/mahdi-amouzegar/" target="_blank" rel="noopener">مهدی آموزگار</a></span>
+                <span class="app-footer__sep">·</span>
+                <span class="donate-soon" title="به‌زودی: درگاه حمایت مالی">☕ حمایت مالی (به‌زودی)</span>
+            </div>
+            <div class="app-footer__small">© مهدی آموزگار — همه حقوق محفوظ است · 🔒 اطلاعات شما فقط روی همین دستگاه می‌ماند</div>
+        </footer>
     </div>
 
     <section class="detail-page" id="detailPage" style="display: none;" aria-label="جزئیات وظیفه">
@@ -132,7 +197,7 @@
                     <span class="field-label">عنوان</span>
                     <input type="text" id="fTitle" maxlength="200" autocomplete="off">
                 </label>
-                <label class="field">
+                <label class="field lvl-int">
                     <span class="field-label">سطح اولویت</span>
                     <select id="fPriority" class="sort-select">
                         <option value="low">اولویت کم</option>
@@ -140,27 +205,53 @@
                         <option value="high">اولویت زیاد</option>
                     </select>
                 </label>
+                <label class="field lvl-int">
+                    <span class="field-label">تکرار</span>
+                    <select id="fRecur" class="sort-select">
+                        <option value="none">بدون تکرار</option>
+                        <option value="daily">روزانه</option>
+                        <option value="weekly">هفتگی</option>
+                        <option value="monthly">ماهانه</option>
+                    </select>
+                </label>
+                <div class="field pin-row lvl-int">
+                    <input type="checkbox" id="fPin">
+                    <label class="field-label" for="fPin">📌 سنجاق به بالای لیست</label>
+                </div>
                 <label class="field">
                     <span class="field-label">توضیح بیشتر</span>
                     <textarea id="fDesc" rows="3" maxlength="1000" placeholder="مثلاً نام پزشک، علت مراجعه..."></textarea>
                 </label>
-                <div class="field">
+                <div class="field lvl-int">
                     <label class="field-label" for="fPhone">تلفن تماس</label>
                     <input type="tel" id="fPhone" class="ltr" maxlength="20" placeholder="0912..." autocomplete="off">
                     <a class="due-btn call-btn" id="fPhoneCall" href="#" style="display: none;">📞 تماس گرفتن</a>
                     <span class="field-error" id="fPhoneError"></span>
                 </div>
-                <label class="field">
+                <label class="field lvl-int">
                     <span class="field-label">آدرس پستی</span>
                     <textarea id="fAddr" rows="2" maxlength="500" placeholder="آدرس مطب یا محل..."></textarea>
                 </label>
-                <div class="field">
+                <div class="field lvl-int">
                     <label class="field-label" for="fUrl">آدرس اینترنتی</label>
                     <input type="url" id="fUrl" class="ltr" maxlength="300" placeholder="https://..." autocomplete="off" dir="ltr">
                     <div class="link-row">
                         <a class="field-link" id="fUrlOpen" href="#" target="_blank" rel="noopener" style="display: none;">باز کردن پیوند ↗</a>
                         <button class="due-btn" id="fUrlCopy" type="button" style="display: none;">📋 کپی لینک</button>
                     </div>
+                </div>
+                <div class="field lvl-adv">
+                    <span class="field-label">⏱ زمان صرف‌شده</span>
+                    <div class="loc-btns">
+                        <span class="loc-line" id="timerLabel">۰ دقیقه</span>
+                        <button class="due-btn" id="timerToggle" type="button">▶ شروع</button>
+                    </div>
+                </div>
+                <div class="field lvl-int">
+                    <span class="field-label">📷 تصاویر و مدارک <span class="count-badge" id="photoCount"></span></span>
+                    <div class="photo-grid" id="photoGrid"></div>
+                    <label class="due-btn" for="photoInput" style="cursor: pointer;">＋ افزودن عکس</label>
+                    <input type="file" id="photoInput" accept="image/*" multiple hidden>
                 </div>
                 <div class="field">
                     <span class="field-label">جلسه‌ها / تاریخ‌ها <span class="count-badge" id="sessCount"></span></span>
@@ -172,6 +263,7 @@
                     <div class="loc-line" id="detailLocLine"></div>
                     <div class="loc-btns">
                         <button class="due-btn" id="detailLocShow" type="button">نمایش روی نقشه</button>
+                        <button class="due-btn" id="detailLocRoute" type="button">🧭 فاصله و مسیر</button>
                         <button class="due-btn" id="detailLocChange" type="button">تغییر محل</button>
                         <button class="due-clear" id="detailLocRemove" type="button" aria-label="حذف محل">✕</button>
                     </div>
@@ -184,9 +276,66 @@
         </div>
     </section>
 
+    <div class="snackbar" id="snackbar" role="status" aria-live="polite">
+        <span id="snackMsg"></span>
+        <button id="snackUndo" type="button">بازگردانی</button>
+    </div>
+
+    <div class="lightbox" id="lightbox" style="display: none;">
+        <img id="lightboxImg" alt="تصویر وظیفه">
+    </div>
+
+    <div class="picker-overlay" id="welcomeOverlay" style="display: none;">
+        <div class="picker" role="dialog" aria-modal="true" aria-label="خوش آمدید">
+            <div class="picker-title">👋 خوش آمدید</div>
+            <p class="welcome-text">این دستیار وظایف شماست — کاملاً آفلاین و خصوصی.<br>• عنوان را بنویسید و Enter بزنید<br>• با 📅 تاریخ، با 📍 محل اضافه کنید<br>• از «سطح متوسط» امکانات بیشتری باز می‌شود</p>
+            <div class="picker-actions">
+                <button class="btn-add picker-confirm" id="welcomeStart">شروع</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="picker-overlay" id="calOverlay" style="display: none;">
+        <div class="picker cal-wide" role="dialog" aria-modal="true" aria-label="تقویم جلسات">
+            <div class="picker-title">📅 تقویم جلسات</div>
+            <div class="picker-nav">
+                <button class="picker-nav-btn" id="calPrev" aria-label="ماه قبل">›</button>
+                <div class="picker-month" id="calLabel"></div>
+                <button class="picker-nav-btn" id="calNext" aria-label="ماه بعد">‹</button>
+            </div>
+            <div class="picker-weekdays">
+                <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span>
+            </div>
+            <div class="picker-days" id="calDays"></div>
+            <div class="picker-actions">
+                <button class="btn-clear" id="calClose">بستن</button>
+            </div>
+        </div>
+    </div>
+
+    <section class="detail-page" id="trashPage" style="display: none;" aria-label="سطل زباله">
+        <div class="detail-inner">
+            <div class="detail-header">
+                <button class="btn-icon" id="trashBack" aria-label="بازگشت به لیست">→</button>
+                <h2>🗑 سطل زباله</h2>
+            </div>
+            <div class="detail-card">
+                <div class="session-list" id="trashList"></div>
+                <div class="detail-actions">
+                    <button class="btn-clear" id="trashEmpty" type="button">خالی کردن سطل</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div class="picker-overlay" id="pickerOverlay" style="display: none;">
         <div class="picker" role="dialog" aria-modal="true" aria-label="انتخاب سررسید">
             <div class="picker-title">انتخاب سررسید</div>
+            <div class="picker-chips">
+                <button type="button" data-preset="evening">امروز عصر</button>
+                <button type="button" data-preset="tomorrow">فردا ۹ صبح</button>
+                <button type="button" data-preset="week">هفته بعد</button>
+            </div>
             <div class="picker-nav">
                 <button class="picker-nav-btn" id="pickerPrev" aria-label="ماه قبل">›</button>
                 <div class="picker-month" id="pickerMonthLabel"></div>
@@ -211,29 +360,6 @@
         </div>
     </div>
 
-    <div class="portfolio-badge">
-        <div class="portfolio-badge__box" role="button" tabindex="0" aria-expanded="false" aria-label="نمونه‌کار مهدی آموزگار">
-            <div class="portfolio-badge__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                    <path d="M2 17l10 5 10-5" />
-                    <path d="M2 12l10 5 10-5" />
-                </svg>
-            </div>
-            <span class="portfolio-badge__label">نمونه‌کار</span>
-            <div class="portfolio-badge__separator" aria-hidden="true"></div>
-            <div class="portfolio-badge__details">
-                <span class="portfolio-badge__name">مهدی آموزگار</span>
-                <a href="https://www.linkedin.com/in/mahdi-amouzegar/" target="_blank" rel="noopener noreferrer" class="portfolio-badge__link">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                    </svg>
-                    <span>مشاهده پروفایل لینکدین</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // CDN جایگزین در صورت در دسترس نبودن unpkg
@@ -248,6 +374,7 @@
         <script src="js/core.js?v=4" defer></script>
     <script src="js/jalali.js?v=4" defer></script>
     <script src="js/time.js?v=4" defer></script>
+    <script src="js/notify.js" defer></script>
     <script src="js/store.js?v=4" defer></script>
     <script src="js/sessions.js?v=4" defer></script>
     <script src="js/picker.js?v=4" defer></script>
