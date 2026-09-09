@@ -91,7 +91,7 @@
                 if (t.archived) return;
                 (t.sessions || []).forEach(s => {
                     if (onlyOpen && t.completed) return;
-                    out.push({ at: s.at, id: s.id, owner, taskId: t.id, priority: t.priority, reminded: Boolean(s.reminded), remindMin: s.remindMin != null ? s.remindMin : null });
+                    out.push({ at: s.at, id: s.id, owner, taskId: t.id, priority: t.priority, reminded: Boolean(s.reminded), remindedDue: Boolean(s.remindedDue), remindMin: s.remindMin != null ? s.remindMin : null });
                 });
             };
             tasks.forEach(t => {

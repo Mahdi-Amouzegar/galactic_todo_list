@@ -322,6 +322,7 @@
                 const s = (task.sessions || []).find(x => String(x.id) === String(sel.dataset.sessRem));
                 if (!s) return;
                 s.reminded = false;
+                s.remindedDue = false;
                 if (sel.value === '') s.remindMin = null;
                 else s.remindMin = Math.max(0, parseInt(sel.value, 10) || 0);
                 saveTasks();

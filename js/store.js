@@ -62,7 +62,7 @@
             const sessions = Array.isArray(t.sessions)
                 ? t.sessions
                     .filter(s => s && typeof s.at === 'string' && !isNaN(new Date(s.at)))
-                    .map(s => ({ id: typeof s.id !== 'undefined' ? s.id : uid(), at: s.at, reminded: Boolean(s.reminded), location: validLoc(s.location), remindMin: (s.remindMin === null || s.remindMin === undefined) ? null : (Number.isFinite(+s.remindMin) && +s.remindMin >= 0 ? Math.floor(+s.remindMin) : null) }))
+                    .map(s => ({ id: typeof s.id !== 'undefined' ? s.id : uid(), at: s.at, reminded: Boolean(s.reminded), remindedDue: Boolean(s.remindedDue), location: validLoc(s.location), remindMin: (s.remindMin === null || s.remindMin === undefined) ? null : (Number.isFinite(+s.remindMin) && +s.remindMin >= 0 ? Math.floor(+s.remindMin) : null) }))
                 : [];
             // حذف تکراری‌های هم‌دقیقه (ممکن است با اختلاف ثانیه ثبت شده باشند)
             for (let i = sessions.length - 1; i >= 0; i--) {

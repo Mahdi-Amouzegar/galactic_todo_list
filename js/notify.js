@@ -71,22 +71,37 @@
             } catch { /* نادیده */ }
         }
 
+        // اعلان ماندگار سیستمی از طریق سرویس‌ورکر: وقتی تب در پس‌زمینه است هم
+        // در مرکز اعلان سیستم‌عامل دیده می‌شود (برخلاف new Notification صفحه).
+        // خروجی Promise<boolean> است تا فقط در صورت نمایش موفق، «یادآوری شد» ثبت شود.
         function fireNotification(title, body, tag) {
-            if (!notifGranted()) return false;
+            if (!notifGranted()) return Promise.resolve(false);
+            const opts = { body, tag, icon: 'icons/icon-192.png', dir: 'rtl', lang: 'fa' };
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                return navigator.serviceWorker.ready
+                    .then(reg => reg.showNotification(title, opts))
+                    .then(() => true)
+                    .catch(() => legacyNotif(title, opts));
+            }
+            return Promise.resolve(legacyNotif(title, opts));
+        }
+
+        function legacyNotif(title, opts) {
             try {
-                new Notification(title, { body, tag, icon: 'icons/icon-192.png', dir: 'rtl', lang: 'fa' });
+                new Notification(title, opts);
                 return true;
             } catch {
                 return false;
             }
         }
 
-        function markReminded(taskId, sessId) {
+        function markReminded(taskId, sessId, which) {
             const found = findTask(taskId);
             if (!found) return;
             const s = (found.task.sessions || []).find(x => String(x.id) === String(sessId));
             if (s) {
-                s.reminded = true;
+                if (which === 'due') s.remindedDue = true;
+                else s.reminded = true;
                 saveTasks();
             }
         }
@@ -94,15 +109,30 @@
         function checkReminders() {
             if (!prefs.remindOn || !notifGranted()) return;
             const now = Date.now();
+            // تلورانس رسیدن به لحظه سررسید: دریفت تایمر ۶۰ ثانیه‌ای و برگشت از پس‌زمینه را پوشش می‌دهد
+            const DUE_GRACE = 2 * 60 * 1000;
             allSessions(true).forEach(s => {
-                if (s.reminded) return;
                 const rm = (s.remindMin != null) ? s.remindMin : prefs.remindMin;
                 if (!rm) return; // ۰ یعنی خاموش برای این جلسه
                 const v = new Date(s.at).getTime();
-                if (isNaN(v) || v <= now || v - now > rm * 60 * 1000) return;
-                if (fireNotification('⏰ یادآور جلسه', `${s.owner} — ${faShort(s.at)}`, 'sess-' + s.id)) {
-                    playChime();
-                    markReminded(s.taskId, s.id);
+                if (isNaN(v)) return;
+                // ۱) هشدار زودهنگام: بازه تنظیم‌شده قبل از جلسه
+                if (!s.reminded && v > now && v - now <= rm * 60 * 1000) {
+                    fireNotification('⏰ یادآور جلسه', `${s.owner} — ${faShort(s.at)}`, 'sess-' + s.id).then(ok => {
+                        if (ok) {
+                            playChime();
+                            markReminded(s.taskId, s.id, 'lead');
+                        }
+                    });
+                }
+                // ۲) هشدار لحظه سررسید
+                if (!s.remindedDue && v <= now && now - v <= DUE_GRACE) {
+                    fireNotification('🔴 شروع جلسه', `${s.owner} — الان زمان آن است (${faShort(s.at)})`, 'due-' + s.id).then(ok => {
+                        if (ok) {
+                            playChime();
+                            markReminded(s.taskId, s.id, 'due');
+                        }
+                    });
                 }
             });
         }
@@ -117,11 +147,13 @@
             const body = todays.length
                 ? `امروز ${toFa(todays.length)} جلسه داری: ${todays.slice(0, 3).map(s => s.owner).join('، ')}${todays.length > 3 ? ' و…' : ''}`
                 : 'امروز جلسه‌ای نداری 🎉';
-            if (fireNotification('📅 برنامه امروز', body, 'digest-' + day)) {
-                playChime();
-                prefs.lastDigest = day;
-                savePrefs();
-            }
+            fireNotification('📅 برنامه امروز', body, 'digest-' + day).then(ok => {
+                if (ok) {
+                    playChime();
+                    prefs.lastDigest = day;
+                    savePrefs();
+                }
+            });
         }
 
         function startReminderLoop() {

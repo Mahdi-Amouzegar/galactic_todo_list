@@ -1,10 +1,10 @@
 // © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 // Service Worker: آفلاین‌سازی پوسته برنامه (فقط فایل‌های همین‌سایت)
-const CACHE = 'space-todo-v25';
+const CACHE = 'space-todo-v26';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=10',
+  './styles.css?v=11',
   './manifest.webmanifest',
   './fonts/vazirmatn-arabic.woff2',
   './fonts/vazirmatn-latin.woff2',
@@ -18,12 +18,12 @@ const ASSETS = [
   './js/core.js?v=7',
   './js/jalali.js?v=7',
   './js/time.js?v=7',
-  './js/notify.js',
-  './js/store.js?v=7',
-  './js/sessions.js?v=7',
+  './js/notify.js?v=8',
+  './js/store.js?v=8',
+  './js/sessions.js?v=8',
   './js/picker.js?v=7',
   './js/map.js?v=7',
-  './js/detail.js?v=8',
+  './js/detail.js?v=9',
   './js/ui.js?v=10',
   './js/app.js?v=8'
 ];
