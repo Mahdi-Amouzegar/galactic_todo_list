@@ -52,7 +52,7 @@
         function getFiltered() {
             const q = searchQuery.trim();
             const base = t => {
-                if (t.kind === 'group') {
+                if (t.kind === 'plan') {
                     if (currentFilter === 'archived') {
                         return t.archived || (t.children || []).some(c => c.archived);
                     }
@@ -67,8 +67,8 @@
                     if (currentFilter === 'hasdue') {
                         return (t.sessions || []).length > 0 || (t.children || []).some(c => (c.sessions || []).length && !c.archived);
                     }
-                    if (currentFilter === 'completed') return groupIsDone(t);
-                    if (currentFilter === 'active') return !groupIsDone(t);
+                    if (currentFilter === 'completed') return planIsDone(t);
+                    if (currentFilter === 'active') return !planIsDone(t);
                     return true;
                 }
                 if (currentFilter === 'archived') return Boolean(t.archived);
@@ -83,14 +83,14 @@
             let list = tasks.filter(t => {
                 if (!base(t)) return false;
                 if (!selectedDay) return true;
-                if (t.kind === 'group') {
+                if (t.kind === 'plan') {
                     return hasSessionOn(t, selectedDay) || (t.children || []).some(c => hasSessionOn(c, selectedDay));
                 }
                 return hasSessionOn(t, selectedDay);
             });
             if (currentSort === 'due') {
                 const key = t => {
-                    if (t.kind === 'group') return groupDueKey(t);
+                    if (t.kind === 'plan') return planDueKey(t);
                     const u = nearestUpcoming(t);
                     return u ? new Date(u.at).getTime() : Infinity;
                 };
@@ -124,7 +124,7 @@
             };
             tasks.forEach(t => {
                 if (t.archived) return;
-                if (t.kind === 'group') (t.children || []).forEach(c => { if (c.completed && !c.archived) bump(c.completedAt); });
+                if (t.kind === 'plan') (t.children || []).forEach(c => { if (c.completed && !c.archived) bump(c.completedAt); });
                 else if (t.completed) bump(t.completedAt);
             });
             const max = Math.max(1, ...counts);
@@ -140,10 +140,57 @@
                 }).join('') + `</div>`;
         }
 
-        function renderTemplateBox() {
-            const box = document.getElementById('templateBox');
-            if (!box) return;
-            box.innerHTML = GROUP_TEMPLATES.map(x => `<button type="button" class="due-chip" data-template="${x.id}" style="cursor: pointer;">${escapeHtml(x.title)}</button>`).join('');
+        let tplDraft = null;
+
+        function renderTemplateList() {
+            const el = document.getElementById('tplList');
+            if (!el) return;
+            el.innerHTML = `<div class="tpl-list">` + PLAN_TEMPLATES.map(x =>
+                `<button type="button" class="tpl-opt" data-tpl="${x.id}"><b>${escapeHtml(x.title)}</b><span>${toFa(x.children.length)} کار آماده</span></button>`
+            ).join('') + `</div>`;
+        }
+
+        function planDateRange(t) {
+            const fmt = iso => {
+                try {
+                    return new Date(iso).toLocaleDateString('fa-IR', { day: 'numeric', month: 'long' });
+                } catch {
+                    return '';
+                }
+            };
+            if (t.startAt && t.endAt) return `از ${fmt(t.startAt)} تا ${fmt(t.endAt)}`;
+            if (t.startAt) return `از ${fmt(t.startAt)}`;
+            if (t.endAt) return `تا ${fmt(t.endAt)}`;
+            return '';
+        }
+
+        function renderTplKids() {
+            const el = document.getElementById('tplKids');
+            if (!el || !tplDraft) return;
+            el.innerHTML = tplDraft.kids.length ? tplDraft.kids.map((k, i) =>
+                `<div class="session-item"><span class="session-num">${toFa(i + 1)}</span>` +
+                `<span class="session-date">${escapeHtml(k)}</span>` +
+                `<button class="btn-icon btn-delete" data-tplkid="${i}" aria-label="حذف کار">✕</button></div>`
+            ).join('') : '<div class="session-empty">همه کارها را حذف کردید؛ کار جدید اضافه کنید.</div>';
+        }
+
+        function openTemplateModal() {
+            tplDraft = null;
+            renderTemplateList();
+            document.getElementById('tplList').style.display = '';
+            document.getElementById('tplConfig').style.display = 'none';
+            document.getElementById('tplKidAdd').style.display = 'none';
+            document.getElementById('tplBack').style.display = 'none';
+            document.getElementById('tplCreate').style.display = 'none';
+            document.getElementById('templateModal').style.display = 'flex';
+        }
+
+        function closeTemplateModal() {
+            tplDraft = null;
+            document.getElementById('tplKidAdd').style.display = 'none';
+            document.getElementById('tplBack').style.display = 'none';
+            document.getElementById('tplCreate').style.display = 'none';
+            document.getElementById('templateModal').style.display = 'none';
         }
 
         /* ---------- سطل زباله ---------- */
@@ -162,7 +209,7 @@
                     dstr = new Date(x.deletedAt).toLocaleDateString('fa-IR', { day: 'numeric', month: 'long' });
                 } catch { /* نادیده */ }
                 return `<div class="session-item">
-                    <span class="session-num">${x.kind === 'group' ? '📁' : '📝'}</span>
+                    <span class="session-num">${x.kind === 'plan' ? '📁' : '📝'}</span>
                     <span class="session-date">${escapeHtml(x.text)} <small>(${dstr})</small></span>
                     <button class="btn-icon btn-edit" data-tact="restore" data-tid="${escapeHtml(String(x.id))}" aria-label="بازگردانی">↩</button>
                     <button class="btn-icon btn-delete" data-tact="purge" data-tid="${escapeHtml(String(x.id))}" aria-label="حذف همیشگی">✕</button>
@@ -262,63 +309,72 @@
                     aria-pressed="${c.completed}"></button>
                 <span class="child-text" data-action="edit" title="برای ویرایش دو بار کلیک کنید">${escapeHtml(c.text)}</span>
                 ${n ? `<span class="child-due">📅 ${faShort(n.at)}</span>` : ''}
-                ${c.location ? '<span class="child-due">📍</span>' : ''}
+                ${(c.location || (c.sessions || []).some(s => s.location)) ? '<span class="child-due">📍</span>' : ''}
                 ${(c.photos || []).length ? '<span class="child-due">📷</span>' : ''}
-                ${c.recur && c.recur !== 'none' ? '<span class="child-due" title="تکرارشونده">🔁</span>' : ''}
+                ${recurBadge(c, 'child-due')}
                 <span class="child-actions">
                     ${currentFilter === 'archived'
                         ? `<button class="child-btn detail" data-action="unarchive" aria-label="بازگردانی از بایگانی">↩</button>
                     <button class="child-btn delete" data-action="delete" aria-label="حذف زیرکار">✕</button>`
                         : `<button class="child-btn loc ${c.location ? 'has' : ''}" data-action="pick-loc" aria-label="${c.location ? 'نمایش محل روی نقشه' : 'ثبت محل روی نقشه'}">📍</button>
                     <button class="child-btn detail" data-action="detail" aria-label="جزئیات زیرکار">📋</button>
+                    <button class="child-btn archive" data-action="archive" aria-label="بایگانی زیرکار">📦</button>
                     <button class="child-btn delete" data-action="delete" aria-label="حذف زیرکار">✕</button>`}
                 </span>
             </div>`;
         }
 
-        function groupHtml(task) {
-            const st = groupStats(task);
+        function planHtml(task) {
+            const st = planStats(task);
             const q = searchQuery.trim();
-            const open = expandedGroups.has(String(task.id)) || (q !== '' && !taskMatches(task, q));
+            const open = expandedPlans.has(String(task.id)) || (q !== '' && !taskMatches(task, q));
             const kids = visibleChildren(task);
             const drafts = childDrafts[task.id] || [];
             const pct = st.total ? Math.round((st.done / st.total) * 100) : 0;
-            return `<div class="task-item group-item prio-${task.priority}"${currentSort === 'manual' ? ' draggable="true"' : ''} data-id="${escapeHtml(String(task.id))}">
-                <button class="group-caret" data-action="expand" aria-label="باز و بسته کردن گروه">${open ? '▾' : '◂'}</button>
-                <div class="task-content">
-                    <div class="task-text">📁 ${escapeHtml(task.text)}</div>
-                    <div class="task-meta">
-                        <span class="priority-badge p-${task.priority}">${PRIORITY_LABELS[task.priority]}</span>${task.recur && task.recur !== 'none' ? '<span title="تکرارشونده">🔁</span>' : ''}
-                        <span>زیرکار: ${toFa(st.done)} از ${toFa(st.total)}</span>
-                        ${(task.photos || []).length ? `<span title="${toFa(task.photos.length)} عکس">📷</span>` : ''}
-                        <div class="mini-progress"><div class="mini-progress-fill" style="width: ${pct}%;"></div></div>
-                        ${st.total > 0 && st.done < st.total ? '<button class="mini-link lvl-int" data-action="check-all" aria-label="انجام شدن همه زیرکارها">✓ همه انجام شد</button>' : ''}
-                    </div>
-                    ${(task.sessions && task.sessions.length) ? sessionSummaryHtml(task) : ''}
-                    ${open ? `<div class="group-body">
-                        ${kids.length ? kids.map(c => childHtml(c)).join('') : '<div class="session-empty">هنوز زیرکاری ثبت نشده است.</div>'}
-                        ${drafts.length ? `<div class="due-chips" style="display: flex; margin: 0;">${drafts.map(s => `<span class="due-chip">📅 ${faShort(s.at)}<button type="button" data-cdchip="${escapeHtml(String(s.id))}" data-gid="${escapeHtml(String(task.id))}" aria-label="حذف">✕</button></span>`).join('')}</div>` : ''}
-                        <div class="child-add">
-                            <input type="text" class="child-input" placeholder="زیرکار جدید..." maxlength="${MAX_LENGTH}" aria-label="عنوان زیرکار جدید">
-                            <select class="child-prio lvl-int" aria-label="اولویت زیرکار">
-                                <option value="low">کم</option>
-                                <option value="medium" selected>متوسط</option>
-                                <option value="high">زیاد</option>
-                            </select>
-                            <button class="btn-icon btn-detail lvl-int" data-action="child-date" aria-label="تعیین سررسید زیرکار">📅</button>
-                            <button class="btn-add btn-child-add" data-action="child-add">افزودن</button>
+            return `<div class="task-item plan-item prio-${task.priority}"${currentSort === 'manual' ? ' draggable="true"' : ''} data-id="${escapeHtml(String(task.id))}">
+                <div class="plan-head">
+                    <button class="plan-caret" data-action="expand" aria-label="باز و بسته کردن برنامه">${open ? '▾' : '◂'}</button>
+                    <div class="plan-head-main">
+                        <div class="task-text">📁 ${escapeHtml(task.text)}</div>
+                        <div class="task-meta">
+                            <span class="priority-badge p-${task.priority}">${PRIORITY_LABELS[task.priority]}</span>${recurBadge(task)}
+                            <span>زیرکار: ${toFa(st.done)} از ${toFa(st.total)}</span>
+                            ${(task.startAt || task.endAt) ? `<span>📅 ${planDateRange(task)}</span>` : ''}
+                            ${(task.photos || []).length ? `<span title="${toFa(task.photos.length)} عکس">📷</span>` : ''}
+                            <div class="mini-progress"><div class="mini-progress-fill" style="width: ${pct}%;"></div></div>
+                            ${st.total > 0 && st.done < st.total ? '<button class="mini-link" data-action="check-all" aria-label="انجام شدن همه زیرکارها">✓ همه انجام شد</button>' : ''}
                         </div>
-                    </div>` : ''}
+                        ${(task.sessions && task.sessions.length) ? sessionSummaryHtml(task) : ''}
+                    </div>
+                    <div class="task-actions">
+                        ${currentFilter === 'archived'
+                            ? `<button class="btn-icon btn-edit" data-action="unarchive" aria-label="بازگردانی از بایگانی">↩</button>
+                        <button class="btn-icon btn-delete" data-action="delete" aria-label="حذف برنامه">✕</button>`
+                            : `<button class="btn-icon btn-pin ${task.pinned ? 'on' : ''}" data-action="pin" aria-label="سنجاق به بالا" aria-pressed="${task.pinned ? 'true' : 'false'}">📌</button>
+                        <button class="btn-icon btn-detail" data-action="detail" aria-label="جزئیات برنامه">📋</button>
+                        <button class="btn-icon btn-archive" data-action="archive" aria-label="بایگانی برنامه">📦</button>
+                        <button class="btn-icon btn-delete" data-action="delete" aria-label="حذف برنامه">✕</button>`}
+                    </div>
                 </div>
-                <div class="task-actions">
-                    ${currentFilter === 'archived'
-                        ? `<button class="btn-icon btn-edit" data-action="unarchive" aria-label="بازگردانی از بایگانی">↩</button>
-                    <button class="btn-icon btn-delete" data-action="delete" aria-label="حذف گروه">✕</button>`
-                        : `<button class="btn-icon btn-pin lvl-int ${task.pinned ? 'on' : ''}" data-action="pin" aria-label="سنجاق به بالا" aria-pressed="${task.pinned ? 'true' : 'false'}">📌</button>
-                    <button class="btn-icon btn-detail" data-action="detail" aria-label="جزئیات گروه">📋</button>
-                    <button class="btn-icon btn-delete" data-action="delete" aria-label="حذف گروه">✕</button>`}
-                </div>
+                ${open ? `<div class="plan-body">
+                    ${kids.length ? kids.map(c => childHtml(c)).join('') : '<div class="session-empty">هنوز زیرکاری ثبت نشده است.</div>'}
+                    ${drafts.length ? `<div class="due-chips" style="display: flex; margin: 0;">${drafts.map(s => `<span class="due-chip">📅 ${faShort(s.at)}<button type="button" data-cdchip="${escapeHtml(String(s.id))}" data-gid="${escapeHtml(String(task.id))}" aria-label="حذف">✕</button></span>`).join('')}</div>` : ''}
+                    <div class="child-add">
+                        <input type="text" class="child-input" placeholder="زیرکار جدید..." maxlength="${MAX_LENGTH}" aria-label="عنوان زیرکار جدید">
+                        <select class="child-prio" aria-label="اولویت زیرکار">
+                            <option value="low">کم</option>
+                            <option value="medium" selected>متوسط</option>
+                            <option value="high">زیاد</option>
+                        </select>
+                        <button class="btn-icon btn-detail" data-action="child-date" aria-label="تعیین سررسید زیرکار">📅</button>
+                        <button class="btn-add btn-child-add" data-action="child-add">افزودن</button>
+                    </div>
+                </div>` : ''}
             </div>`;
+        }
+
+        function taskTypeIcon(task) {
+            return (task.kind === 'series' || task.recur !== 'none') ? '🔁' : '📝';
         }
 
         let snackTimer = null;
@@ -347,7 +403,7 @@
             const live = tasks.filter(t => !t.archived);
             const filtered = getFiltered();
             const total = live.length;
-            const done = live.filter(t => t.kind === 'group' ? groupIsDone(t) : t.completed).length;
+            const done = live.filter(t => t.kind === 'plan' ? planIsDone(t) : t.completed).length;
             const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
             totalCountEl.textContent = toFa(total);
@@ -372,7 +428,7 @@
                 if (t.archived) { archivedCount++; return; }
                 if (t.location) locCount++;
                 if ((t.sessions || []).length) dueCount++;
-                if (t.kind === 'group') (t.children || []).forEach(c => {
+                if (t.kind === 'plan') (t.children || []).forEach(c => {
                     if (c.archived) { archivedCount++; return; }
                     if (c.location) locCount++;
                     if ((c.sessions || []).length) dueCount++;
@@ -415,7 +471,7 @@
             }
 
             taskList.innerHTML = filtered.map(task => {
-                if (task.kind === 'group') return groupHtml(task);
+                if (task.kind === 'plan') return planHtml(task);
                 if (String(task.id) === String(editingId)) {
                     return `
                     <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${escapeHtml(String(task.id))}">
@@ -434,9 +490,9 @@
                         aria-label="${task.completed ? 'برگرداندن به انجام نشده' : 'علامت‌گذاری به عنوان انجام شده'}"
                         aria-pressed="${task.completed}"></button>
                     <div class="task-content">
-                        <div class="task-text" data-action="edit" title="برای ویرایش دو بار کلیک کنید">${escapeHtml(task.text)}</div>
+                        <div class="task-text" data-action="edit" title="برای ویرایش دو بار کلیک کنید"><span class="task-type-icon" aria-hidden="true">${taskTypeIcon(task)}</span> ${escapeHtml(task.text)}</div>
                         <div class="task-meta">
-                            <span class="priority-badge p-${task.priority}">${PRIORITY_LABELS[task.priority]}</span>${task.recur && task.recur !== 'none' ? '<span title="تکرارشونده">🔁</span>' : ''}
+                            <span class="priority-badge p-${task.priority}">${PRIORITY_LABELS[task.priority]}</span>${recurBadge(task)}
                             <span class="created-date">${faDate(task.createdAt)}</span>
                             ${(task.photos || []).length ? `<span title="${toFa(task.photos.length)} عکس">📷</span>` : ''}
                             ${task.location ? '<button class="mini-link" data-action="locate" aria-label="نمایش محل روی نقشه">📍 نقشه</button>' : ''}
@@ -447,9 +503,10 @@
                         ${currentFilter === 'archived'
                             ? `<button class="btn-icon btn-edit" data-action="unarchive" aria-label="بازگردانی از بایگانی">↩</button>
                         <button class="btn-icon btn-delete" data-action="delete" aria-label="حذف وظیفه">✕</button>`
-                            : `<button class="btn-icon btn-pin lvl-int ${task.pinned ? 'on' : ''}" data-action="pin" aria-label="سنجاق به بالا" aria-pressed="${task.pinned ? 'true' : 'false'}">📌</button>
+                            : `<button class="btn-icon btn-pin ${task.pinned ? 'on' : ''}" data-action="pin" aria-label="سنجاق به بالا" aria-pressed="${task.pinned ? 'true' : 'false'}">📌</button>
                         <button class="btn-icon btn-detail" data-action="detail" aria-label="جزئیات و اطلاعات بیشتر">📋</button>
                         <button class="btn-icon btn-edit" data-action="edit-btn" aria-label="ویرایش وظیفه">✎</button>
+                        <button class="btn-icon btn-archive" data-action="archive" aria-label="بایگانی وظیفه">📦</button>
                         <button class="btn-icon btn-delete" data-action="delete" aria-label="حذف وظیفه">✕</button>`}
                     </div>
                 </div>`;
@@ -457,4 +514,3 @@
 
             justAddedId = null;
         }
-

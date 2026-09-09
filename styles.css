@@ -37,38 +37,7 @@
             position: relative;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background:
-                radial-gradient(2px 2px at 20% 30%, #ffffff33, transparent),
-                radial-gradient(1px 1px at 40% 70%, #ffffff22, transparent),
-                radial-gradient(2px 2px at 60% 20%, #ffffff33, transparent),
-                radial-gradient(1px 1px at 80% 50%, #ffffff22, transparent),
-                radial-gradient(1px 1px at 10% 80%, #ffffff33, transparent),
-                radial-gradient(2px 2px at 90% 15%, #ffffff22, transparent),
-                radial-gradient(1px 1px at 50% 90%, #ffffff33, transparent),
-                radial-gradient(1px 1px at 30% 50%, #ffffff22, transparent),
-                radial-gradient(2px 2px at 70% 60%, #ffffff33, transparent),
-                radial-gradient(1px 1px at 15% 45%, #ffffff22, transparent),
-                radial-gradient(2px 2px at 85% 35%, #ffffff33, transparent),
-                radial-gradient(1px 1px at 45% 10%, #ffffff22, transparent),
-                radial-gradient(1px 1px at 65% 85%, #ffffff33, transparent),
-                radial-gradient(2px 2px at 5% 60%, #ffffff22, transparent),
-                radial-gradient(1px 1px at 95% 75%, #ffffff33, transparent);
-            pointer-events: none;
-            z-index: 0;
-            animation: twinkle 4s ease-in-out infinite alternate;
-        }
-
-        @keyframes twinkle {
-            0% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
+        /* (بک‌گراند ستاره‌ای متحرک برای کاهش مصرف CPU حذف شد) */
 
         /* احترام به تنظیم کاهش حرکت کاربر */
         @media (prefers-reduced-motion: reduce) {
@@ -78,13 +47,7 @@
             }
         }
 
-        /* موبایل: ستاره‌ها ثابت تا باتری و توان رندر مصرف نشود */
-        @media (max-width: 900px) {
-            body::before {
-                animation: none;
-                opacity: 0.8;
-            }
-        }
+        /* (همراه بک‌گراند ستاره‌ای حذف شد) */
 
         .container {
             width: 100%;
@@ -561,6 +524,16 @@
             border-color: #ff4d8d66;
             color: #ff6da8;
             box-shadow: 0 4px 15px rgba(255, 77, 141, 0.2);
+        }
+
+        .btn-archive {
+            background: linear-gradient(145deg, #1a1408, #26200f);
+            color: #ffd166;
+        }
+
+        .btn-archive:hover {
+            border-color: #ffd16666;
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.2);
         }
 
         .empty-state {
@@ -1187,6 +1160,71 @@
             margin-top: 12px;
         }
 
+        .hero-desc {
+            margin-top: 6px;
+            font-size: 0.88rem;
+            color: #a5a5d0;
+            font-weight: 300;
+            line-height: 2;
+        }
+
+        .form-actions {
+            margin: 2px 0 18px;
+        }
+
+        .form-actions .btn-add {
+            width: 100%;
+        }
+
+        .tpl-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .tpl-opt {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1.5px solid #2a2a5e;
+            background: linear-gradient(145deg, #0d0d28, #151542);
+            color: #e0e0ff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.25s ease;
+        }
+
+        .tpl-opt:hover {
+            border-color: #7b2ff766;
+            box-shadow: 0 0 15px rgba(123, 47, 247, 0.2);
+        }
+
+        .tpl-opt span:last-child {
+            font-size: 0.72rem;
+            font-weight: 400;
+            color: #7a7aaa;
+            white-space: nowrap;
+        }
+
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        input,
+        textarea,
+        select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
         #installBtn {
             display: block;
         }
@@ -1596,39 +1634,72 @@
             border-color: #ff4d8d66;
         }
 
-        .kind-toggle {
+        /* انتخاب نوع بالای فرم: کار / برنامه / دوره */
+        .kind3 {
             display: flex;
             gap: 8px;
             margin-bottom: 12px;
-            background: #0d0d28;
-            border: 1.5px solid #1a1a3e;
-            border-radius: 14px;
-            padding: 4px;
         }
 
-        .kind-btn {
+        .kind3-btn {
             flex: 1;
-            padding: 9px;
-            border: none;
-            border-radius: 10px;
-            background: transparent;
+            padding: 10px 4px;
+            border-radius: 14px;
+            border: 1.5px solid #1a1a3e;
+            background: linear-gradient(145deg, #0d0d28, #131338);
             color: #7a7aaa;
             font-family: inherit;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
         }
 
-        .kind-btn.active {
-            background: linear-gradient(145deg, #1a0a4a, #251060);
+        .kind3-btn.active {
+            border-color: #7b2ff7;
             color: #b98aff;
-            box-shadow: 0 3px 15px rgba(123, 47, 247, 0.2);
+            background: linear-gradient(145deg, #1a0a4a, #251060);
+            box-shadow: 0 3px 15px rgba(123, 47, 247, 0.25);
         }
 
-        .group-item {
+        /* لیست تکرار دوره */
+        .recur-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .recur-list button {
+            padding: 10px 6px;
+            border-radius: 12px;
+            border: 1.5px solid #2a2a5e;
+            background: linear-gradient(145deg, #0d0d28, #151542);
+            color: #7a7aaa;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .recur-list button.on {
+            border-color: #00d4ff88;
+            color: #00d4ff;
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.18);
+        }
+
+        .btn-icon.has-loc,
+        .btn-detail.has-loc {
+            border-color: rgba(255, 209, 102, 0.55);
+            color: #ffd166;
+        }
+
+        .plan-item {
             border-color: #7b2ff755;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
         }
 
         /* نوار رنگی اولویت روی لبه کارت (راست‌چین: لبه راست) */
@@ -1640,14 +1711,27 @@
         .task-item.prio-medium { border-right-color: #ffd166; }
         .task-item.prio-low { border-right-color: #00d4ff; }
 
-        /* دکمه‌های خودِ گروه همیشه بالای کارت، روبه‌روی نام گروه */
-        .group-item > .group-caret,
-        .group-item > .task-actions {
+        /* سربرگ تک‌ستونه برنامه: نشانگر + عنوان/متا + دکمه‌ها در یک ردیف */
+        .plan-head {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .plan-head-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* دکمه‌های خودِ برنامه همیشه بالای کارت، روبه‌روی نام برنامه */
+        .plan-head > .plan-caret,
+        .plan-head > .task-actions {
             margin-top: 2px;
             flex-shrink: 0;
         }
 
-        .group-caret {
+        .plan-caret {
             width: 32px;
             height: 32px;
             border-radius: 10px;
@@ -1661,7 +1745,7 @@
             transition: all 0.25s ease;
         }
 
-        .group-caret:hover {
+        .plan-caret:hover {
             border-color: #7b2ff7;
         }
 
@@ -1681,19 +1765,20 @@
             transition: width 0.4s ease;
         }
 
-        .group-body {
+        .plan-body {
             margin-top: 12px;
             border-top: 1px dashed #2a2a5e;
             padding-top: 12px;
             display: flex;
             flex-direction: column;
             gap: 8px;
+            width: 100%;
         }
 
         .child-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             padding: 10px 12px;
             border-radius: 12px;
             background: rgba(13, 13, 40, 0.6);
@@ -1703,13 +1788,15 @@
         .child-item .task-checkbox {
             width: 22px;
             height: 22px;
+            flex-shrink: 0;
         }
 
         .child-text {
-            flex: 1;
+            flex: 1 1 auto;
             min-width: 0;
             font-size: 0.88rem;
-            overflow-wrap: anywhere;
+            line-height: 1.7;
+            overflow-wrap: break-word;
         }
 
         .child-item.completed .child-text {
@@ -1729,20 +1816,21 @@
 
         .child-actions {
             display: flex;
-            gap: 10px;
+            gap: 6px;
             flex-shrink: 0;
+            margin-inline-start: auto;
         }
 
         .child-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
             border: 1.5px solid #2a2a5e;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.05rem;
+            font-size: 0.9rem;
             font-family: inherit;
             flex-shrink: 0;
             transition: all 0.25s ease;
@@ -1767,6 +1855,16 @@
         .child-btn.delete:hover {
             border-color: #ff4d8d66;
             box-shadow: 0 4px 15px rgba(255, 77, 141, 0.2);
+        }
+
+        .child-btn.archive {
+            background: linear-gradient(145deg, #1a1408, #26200f);
+            color: #ffd166;
+        }
+
+        .child-btn.archive:hover {
+            border-color: #ffd16666;
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.2);
         }
 
         .child-btn.loc {
@@ -1849,57 +1947,72 @@
             display: none;
         }
 
-        /* دسکتاپ: اسکرول مستقل پنل وظایف + نقشه کاملاً ثابت */
+        body.map-hidden .container {
+            grid-template-columns: minmax(0, 1fr);
+            max-width: 640px;
+        }
+
+        /* دسکتاپ: اسکرول طبیعی صفحه + هدر افقی فشرده + نقشه چسبان */
         @media (min-width: 901px) {
-            body {
-                height: 100vh;
-                overflow: hidden;
-            }
-
-            .container {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-            }
-
             .header {
-                flex-shrink: 0;
+                display: grid;
+                grid-template-columns: auto 1fr auto;
+                gap: 8px 18px;
+                align-items: center;
+                text-align: right;
                 margin-bottom: 20px;
             }
 
-            .mobile-tabs {
-                flex-shrink: 0;
+            .header .site-logo {
+                width: 54px;
+                height: 54px;
+                margin: 0;
+            }
+
+            .header-side {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                align-items: flex-end;
+                font-size: 0.75rem;
+            }
+
+            .header-side .today-line,
+            .header-side .time-source,
+            .header-side .trust,
+            .header-side .header-actions {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+
+            .header-side .trust {
+                margin-left: 0;
+                margin-right: 0;
+                max-width: 270px;
             }
 
             .layout {
-                flex: 1;
-                min-height: 0;
-                overflow: hidden;
-                align-items: stretch;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 400px;
+                gap: 24px;
+                align-items: start;
             }
 
             #panelTasks {
-                height: 100%;
-                overflow-y: auto;
-                padding-bottom: 96px;
-                scrollbar-width: thin;
-                scrollbar-color: #2a2a5e transparent;
-            }
-
-            #panelTasks::-webkit-scrollbar {
-                width: 8px;
-            }
-
-            #panelTasks::-webkit-scrollbar-thumb {
-                background: #2a2a5e;
-                border-radius: 99px;
+                min-width: 0;
             }
 
             .panel-map {
-                position: static;
-                height: 100%;
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: max(20px, calc((100vw - 1180px) / 2));
+                width: min(400px, calc(100vw - 40px));
+                z-index: 30;
                 display: flex;
                 flex-direction: column;
+                overflow: hidden;
+                padding: 16px 0;
             }
 
             .map-wrap {
@@ -1913,11 +2026,22 @@
                 flex: 1;
                 min-height: 400px;
             }
+
+            .app-footer {
+                grid-column: 1;
+                grid-row: 3;
+                display: flex;
+                justify-content: center;
+                align-items: baseline;
+                gap: 4px 8px;
+                flex-wrap: wrap;
+                padding: 10px;
+            }
         }
 
         @media (max-width: 900px) {
             body {
-                padding: 40px 20px 120px;
+                padding: 40px 20px 60px;
             }
 
             .mobile-tabs {
@@ -1973,23 +2097,13 @@
 
         /* اصلاحات موبایل/تبلت: جلوگیری از سرریز افقی + فرم ثبت جادار */
         @media (max-width: 900px) {
-            /* سطر اول: کادر عنوان تمام‌عرض — سطر دوم: اولویت و افزودن */
             .input-section {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
             }
 
             .input-section input {
-                flex: 1 1 100%;
-            }
-
-            .priority-select {
                 flex: 1;
-                padding: 12px 14px;
-            }
-
-            .input-section .btn-add {
-                flex: 1;
-                width: auto;
+                min-width: 0;
             }
 
             /* زنجیره ضدسرریز کارت‌ها */
@@ -2111,6 +2225,11 @@
 
         .settings-status.ok {
             color: #00ff88;
+        }
+
+        select option {
+            color: #101032;
+            background-color: #ffffff;
         }
 
         input[type="checkbox"] {
@@ -2417,19 +2536,118 @@
             outline-offset: -2px;
         }
 
-        /* سطوح کاربری: فقط مخفی‌سازی، بدون حذف داده */
-        body[data-level="beginner"] .lvl-int,
-        body[data-level="beginner"] .lvl-adv,
-        body[data-level="intermediate"] .lvl-adv {
-            display: none !important;
+        /* (سیستم سطوح حذف شد؛ ایجاد قصد‌محور جایگزین آن است) */
+
+        .more-details {
+            margin-bottom: 14px;
+            border: 1.5px dashed #2a2a5e;
+            border-radius: 14px;
+            padding: 8px 14px;
         }
 
-        .level-name {
-            align-self: center;
-            font-size: 0.75rem;
+        .more-details summary {
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #b98aff;
+            list-style: none;
+            padding: 4px 0;
+        }
+
+        .more-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .more-details summary::after {
+            content: '▾';
+            margin-right: 6px;
+            font-size: 0.7rem;
             color: #5a5a8a;
-            white-space: nowrap;
-            padding-right: 6px;
+        }
+
+        .more-details[open] summary::after {
+            content: '▴';
+        }
+
+        .more-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 8px 0 6px;
+        }
+
+        .more-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .more-row > span {
+            width: 52px;
+            flex-shrink: 0;
+            font-size: 0.78rem;
+            color: #7a7aaa;
+            font-weight: 600;
+        }
+
+        .more-row select,
+        .more-row input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 14px;
+            border: 1.5px solid #1a1a3e;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #0d0d28, #131338);
+            color: #e0e0ff;
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .more-row select:focus,
+        .more-row input:focus {
+            border-color: #00d4ff66;
+        }
+
+        .sess-remind {
+            padding: 4px 6px;
+            border-radius: 8px;
+            border: 1px solid #2a2a5e;
+            background: #0d0d28;
+            color: #00d4ff;
+            font-family: inherit;
+            font-size: 0.7rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            max-width: 92px;
+        }
+
+        .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .day-chip {
+            min-width: 40px;
+            padding: 6px 10px;
+            border-radius: 10px;
+            border: 1.5px solid #2a2a5e;
+            background: linear-gradient(145deg, #0d0d28, #151542);
+            color: #7a7aaa;
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .day-chip.on {
+            border-color: #00d4ff88;
+            color: #00d4ff;
+            background: rgba(0, 212, 255, 0.12);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
         }
 
         @media (max-width: 480px) {
@@ -2443,10 +2661,109 @@
             }
             .created-date { display: none; }
             .header h1 { font-size: 1.8rem; }
-            .input-section { flex-direction: column; }
             .priority-select { padding: 12px 16px; }
             .btn-add { width: 100%; }
             .task-item { padding: 14px 16px; gap: 10px; }
             .stats { gap: 16px; flex-wrap: wrap; }
         }
-    
+
+        /* ساختار اصلی: نقشهٔ ثابتِ دسکتاپ و جریان مستقل محتوای سمت راست */
+        .tagline-toggle {
+            margin-top: 8px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #7a7aaa;
+            font: inherit;
+            font-size: 0.95rem;
+            font-weight: 300;
+            cursor: pointer;
+        }
+
+        .tagline-toggle:hover,
+        .tagline-toggle:focus-visible { color: #00d4ff; outline: none; }
+        .hero-desc[hidden] { display: none; }
+
+        #templateModal .picker.cal-wide {
+            max-height: min(82vh, 720px);
+            overflow-y: auto;
+        }
+
+        #templateModal .tpl-actions {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 0 0 10px;
+            margin-bottom: 10px;
+            background: linear-gradient(145deg, #101032, #181848);
+            flex-wrap: wrap;
+        }
+
+        #templateModal .tpl-actions .btn-add,
+        #templateModal .tpl-actions .btn-clear { flex: 1 1 auto; }
+
+        @media (min-width: 901px) {
+            html, body { height: 100%; }
+            body { padding: 0; overflow: hidden; }
+            .container { width: 100%; max-width: none; height: 100vh; }
+            .app-shell {
+                display: grid;
+                grid-template-columns: minmax(360px, 42vw) minmax(0, 1fr);
+                height: 100vh;
+                background: #080818;
+            }
+            .right-flow {
+                grid-column: 2;
+                min-width: 0;
+                height: 100vh;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                padding: 28px 34px 0;
+            }
+            #panelMap {
+                grid-column: 1;
+                grid-row: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                height: 100vh;
+                padding: 28px 24px 18px;
+                border-left: 1px solid #202050;
+                background: #0a0a1a;
+            }
+            #panelMap .map-wrap { flex: 1; min-height: 0; }
+            #panelMap #map { height: 100%; min-height: 400px; }
+            .right-flow .header { margin-bottom: 20px; }
+            .right-flow .header-main { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+            .right-flow .header h1,
+            .right-flow .tagline-toggle { margin-top: 0; white-space: nowrap; }
+            .right-flow .hero-desc { flex-basis: 100%; width: 100%; margin-top: 8px; }
+            .right-flow .layout { display: block; }
+            .right-flow .app-footer { margin-top: 24px; }
+            body.map-hidden .app-shell { grid-template-columns: minmax(0, 1fr); }
+            body.map-hidden .container { max-width: none; }
+            body.map-hidden #panelMap { display: none !important; }
+            body.map-hidden .right-flow {
+                grid-column: 1;
+                max-width: 980px;
+                width: 100%;
+                justify-self: center;
+            }
+            /* دسکتاپ: زیرکار تمام عرض محتوای برنامه را بگیرد تا عنوان کمتر بشکند */
+            .plan-body { width: 100%; }
+            .child-item { width: 100%; box-sizing: border-box; }
+            .child-text { flex: 1 1 auto; white-space: normal; }
+            .child-due { flex-shrink: 0; }
+        }
+
+        @media (max-width: 900px) {
+            .app-shell { display: grid; grid-template-columns: minmax(0, 1fr); }
+            .right-flow { display: contents; }
+            .app-shell .header { grid-row: 1; }
+            .app-shell .mobile-tabs { grid-row: 2; }
+            .app-shell .layout { grid-row: 3; }
+            .app-shell #panelMap { grid-row: 4; }
+            .app-shell .app-footer { grid-row: 5; }
+            body.map-hidden .mobile-tabs { display: flex; }
+            body.map-hidden .mobile-tab[data-tab="map"] { display: none; }
+        }

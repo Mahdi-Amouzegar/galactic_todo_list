@@ -44,10 +44,20 @@
                 const diffDays = Math.round((startOf(due) - startOf(now)) / 86400000);
                 const extra = diffDays === 0 ? ' (امروز)' : diffDays === 1 ? ' (فردا)' : ` (${toFa(diffDays)} روز مانده)`;
                 const count = sessions.length > 1 ? ` <span class="sess-count">${toFa(sessions.length)} جلسه</span>` : '';
-                return `<span class="due-line">📅 جلسه بعد: ${faShort(n.at)}${extra}</span>${count}`;
+                return `<span class="due-line">📅 جلسه بعد: ${faShort(n.at)}${extra}${n.location ? ' 📍' : ''}</span>${count}`;
             }
             const past = [...sessions].sort((a, b) => new Date(b.at) - new Date(a.at))[0];
             return `<span class="due-line overdue">⚠ سررسید گذشته: ${faShort(past.at)}</span>`;
+        }
+
+        function recurBadge(t, cls) {
+            if (!t.recur || t.recur === 'none') return '';
+            let suffix = '';
+            if (t.recur === 'custom' && t.recurN > 1) suffix = ` ${toFa(t.recurN)} روز`;
+            else if (t.recur === 'hourly' && t.recurN >= 1) suffix = ` هر ${toFa(t.recurN)} ساعت`;
+            else if (t.recur === 'weeklyDays') suffix = ' روزهای هفته';
+            else if (t.recur === 'monthlyDays') suffix = ' روزهای ماه';
+            return `<span class="${cls || ''}" title="تکرارشونده${suffix}">🔁</span>`;
         }
 
         function dayKey(d) {
@@ -63,17 +73,29 @@
         }
 
         // همه جلسات همراه مالک (برای یادآور، تقویم و تداخل) — فقط ناکامل‌ها
+        function sameMinute(a, b) {
+            const da = new Date(a);
+            const db = new Date(b);
+            return !isNaN(da) && !isNaN(db) &&
+                da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() &&
+                da.getDate() === db.getDate() && da.getHours() === db.getHours() && da.getMinutes() === db.getMinutes();
+        }
+
+        function hasSessionAt(list, iso) {
+            return (list || []).some(s => sameMinute(s.at, iso));
+        }
+
         function allSessions(onlyOpen) {
             const out = [];
             const push = (t, owner) => {
                 if (t.archived) return;
                 (t.sessions || []).forEach(s => {
                     if (onlyOpen && t.completed) return;
-                    out.push({ at: s.at, id: s.id, owner, taskId: t.id, priority: t.priority, reminded: Boolean(s.reminded) });
+                    out.push({ at: s.at, id: s.id, owner, taskId: t.id, priority: t.priority, reminded: Boolean(s.reminded), remindMin: s.remindMin != null ? s.remindMin : null });
                 });
             };
             tasks.forEach(t => {
-                if (t.kind === 'group') {
+                if (t.kind === 'plan') {
                     push(t, t.text);
                     (t.children || []).forEach(c => { if (!c.archived) push(c, t.text + ' / ' + c.text); });
                 } else push(t, t.text);

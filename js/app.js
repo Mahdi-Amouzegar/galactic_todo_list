@@ -3,8 +3,8 @@
 // app.js -- event wiring + boot  |  React: App.jsx composition root
         /* ---------- رویدادها (تفویض رویداد، بدون onclick درون‌خطی) ---------- */
 
-        addBtn.addEventListener('click', addTask);
-        input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+        addBtn.addEventListener('click', () => addTask(pendingKind));
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(pendingKind); });
 
         document.getElementById('dueBtn').addEventListener('click', () => openPicker('add'));
         document.getElementById('dueChips').addEventListener('click', e => {
@@ -34,51 +34,266 @@
             currentSort = e.target.value;
             render();
         });
+        function setKind(kind) {
+            pendingKind = kind;
+            prefs.pendingKind = kind;
+            savePrefs();
+            input.placeholder = kind === 'plan'
+                ? 'نام برنامه (مثلاً سفر به تهران)...'
+                : kind === 'series'
+                    ? 'نام دوره (مثلاً جلسات فیزیوتراپی)...'
+                    : 'کار جدید را بنویسید...';
+            document.querySelectorAll('.kind3-btn').forEach(x => x.classList.toggle('active', x.dataset.kind === kind));
+            const isPlan = kind === 'plan';
+            const isSeries = kind === 'series';
+            document.getElementById('locBtn').style.display = isPlan ? 'none' : '';
+            if (isPlan && pendingLoc) {
+                pendingLoc = null;
+                if (pickMarker && mapReady) { map.removeLayer(pickMarker); pickMarker = null; }
+                updateLocChip();
+            }
+            if (addDraftSessions.length && (isPlan || isSeries)) {
+                addDraftSessions = [];
+                updateDueChips();
+            }
+            const sc = document.getElementById('smartChip');
+            if (sc && (isPlan || (isSeries && seriesType !== 'dates'))) sc.style.display = 'none';
+            document.getElementById('planKidsWrap').style.display = isPlan ? '' : 'none';
+            const md = document.getElementById('moreDetails');
+            if (md) {
+                md.style.display = isSeries ? '' : 'none';
+                if (!isSeries) md.open = false;
+            }
+            document.getElementById('seriesRecurWrap').style.display = isSeries ? '' : 'none';
+            const tb = document.getElementById('templateBtn');
+            if (tb) tb.style.display = isPlan ? '' : 'none';
+            const addB = document.getElementById('addBtn');
+            if (addB) addB.textContent = isPlan ? 'افزودن برنامه' : isSeries ? 'افزودن دوره' : 'افزودن کار';
+            updateDueRow();
+            syncDisclosure();
+        }
 
-        document.querySelectorAll('.kind-btn').forEach(b => {
+        function updateDueRow() {
+            const isPlan = pendingKind === 'plan';
+            const isDates = pendingKind === 'series' && seriesType === 'dates';
+            const dueB = document.getElementById('dueBtn');
+            if (dueB) dueB.style.display = (isPlan || pendingKind === 'series') ? 'none' : '';
+            const sad = document.getElementById('seriesAddDate');
+            if (sad) sad.style.display = isDates ? '' : 'none';
+            const dc = document.getElementById('dueChips');
+            const slot = document.getElementById('dueChipsSlot');
+            if (dc && slot) {
+                if (isDates) slot.appendChild(dc);
+                else if (window.__dueHome && dc.parentElement !== window.__dueHome.p) {
+                    window.__dueHome.p.insertBefore(dc, window.__dueHome.n);
+                }
+            }
+        }
+
+        function syncDisclosure() {
+            const md = document.getElementById('moreDetails');
+            if (md) md.open = prefs.proMode === true;
+        }
+
+        document.querySelectorAll('.kind3-btn').forEach(b => {
             b.addEventListener('click', () => {
-                document.querySelectorAll('.kind-btn').forEach(x => x.classList.remove('active'));
-                b.classList.add('active');
-                pendingKind = b.dataset.kind;
-                const isGroup = pendingKind === 'group';
-                const locBtn = document.getElementById('locBtn');
-                locBtn.style.opacity = isGroup ? '0.4' : '';
-                locBtn.style.pointerEvents = isGroup ? 'none' : '';
-                input.placeholder = isGroup ? 'عنوان گروه وظیفه (مثلاً خرید بازار)...' : 'وظیفه جدید را بنویسید...';
-                if (isGroup) {
-                    pendingLoc = null;
-                    if (pickMarker && mapReady) { map.removeLayer(pickMarker); pickMarker = null; }
-                    updateLocChip();
+                setKind(b.dataset.kind);
+                input.focus();
+            });
+        });
+
+        document.querySelectorAll('[data-srecur]').forEach(b => {
+            b.addEventListener('click', () => {
+                seriesType = b.dataset.srecur;
+                document.querySelectorAll('[data-srecur]').forEach(x => x.classList.toggle('on', x === b));
+                document.getElementById('seriesError').textContent = '';
+                seriesDays = [];
+                document.querySelectorAll('#seriesSubWeek .on, #seriesMonthChips .on').forEach(x => x.classList.remove('on'));
+                document.getElementById('seriesSubHours').style.display = seriesType === 'hourlyN' ? '' : 'none';
+                document.getElementById('seriesSubWeek').style.display = seriesType === 'weeklyDays' ? '' : 'none';
+                document.getElementById('seriesSubMonth').style.display = seriesType === 'monthlyDays' ? '' : 'none';
+                updateDueRow();
+                if (seriesType !== 'dates' && addDraftSessions.length) {
+                    addDraftSessions = [];
+                    updateDueChips();
                 }
             });
+        });
+        document.querySelectorAll('[data-snh]').forEach(b => {
+            b.addEventListener('click', () => {
+                document.getElementById('seriesN').value = b.dataset.snh;
+            });
+        });
+        document.getElementById('seriesSubWeek').addEventListener('click', e => {
+            const b = e.target.closest('[data-swday]');
+            if (!b) return;
+            const v = parseInt(b.dataset.swday, 10);
+            const i = seriesDays.indexOf(v);
+            if (i >= 0) { seriesDays.splice(i, 1); b.classList.remove('on'); }
+            else { seriesDays.push(v); b.classList.add('on'); }
+        });
+        (function renderSeriesMonth() {
+            const mc = document.getElementById('seriesMonthChips');
+            if (!mc) return;
+            let h = '';
+            for (let d = 1; d <= 31; d++) h += `<button type="button" class="day-chip" data-smday="${d}">${toFa(d)}</button>`;
+            mc.innerHTML = h;
+        })();
+        document.getElementById('seriesMonthChips').addEventListener('click', e => {
+            const b = e.target.closest('[data-smday]');
+            if (!b) return;
+            const v = parseInt(b.dataset.smday, 10);
+            const i = seriesDays.indexOf(v);
+            if (i >= 0) { seriesDays.splice(i, 1); b.classList.remove('on'); }
+            else { seriesDays.push(v); b.classList.add('on'); }
         });
 
         document.querySelectorAll('.mobile-tab').forEach(b => {
             b.addEventListener('click', () => switchToTab(b.dataset.tab));
         });
+        document.getElementById('seriesAddDate').addEventListener('click', () => openPicker('add'));
 
-        document.querySelectorAll('#levelRow .kind-btn').forEach(b => {
-            b.addEventListener('click', () => applyLevel(b.dataset.level));
-        });
+        function renderPlanKids() {
+            const box = document.getElementById('planKidChips');
+            if (!box) return;
+            box.innerHTML = planDraftKids.map((k, i) => `<span class="due-chip">📝 ${escapeHtml(k)}<button type="button" data-plankid="${i}" aria-label="حذف">✕</button></span>`).join('');
+            box.style.display = planDraftKids.length ? 'flex' : 'none';
+        }
 
-        renderTemplateBox();
-        document.getElementById('templateBtn').addEventListener('click', () => {
-            const box = document.getElementById('templateBox');
-            box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+        document.getElementById('planKidAdd').addEventListener('click', () => {
+            const inp = document.getElementById('planKidInput');
+            const v = inp.value.trim().replace(/\s+/g, ' ');
+            if (!v) { inp.focus(); return; }
+            planDraftKids.push(v.slice(0, MAX_LENGTH));
+            inp.value = '';
+            renderPlanKids();
+            inp.focus();
         });
-        document.getElementById('templateBox').addEventListener('click', e => {
-            const b = e.target.closest('[data-template]');
+        document.getElementById('planKidInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('planKidAdd').click();
+            }
+        });
+        document.getElementById('planKidChips').addEventListener('click', e => {
+            const b = e.target.closest('[data-plankid]');
             if (!b) return;
-            createGroupFromTemplate(b.dataset.template);
-            document.getElementById('templateBox').style.display = 'none';
+            planDraftKids.splice(parseInt(b.dataset.plankid, 10), 1);
+            renderPlanKids();
+        });
+
+        document.getElementById('templateBtn').addEventListener('click', openTemplateModal);
+        document.getElementById('tplClose').addEventListener('click', closeTemplateModal);
+        document.getElementById('templateModal').addEventListener('click', e => {
+            if (e.target.id === 'templateModal') closeTemplateModal();
+        });
+        document.getElementById('tplList').addEventListener('click', e => {
+            const b = e.target.closest('[data-tpl]');
+            if (!b) return;
+            const tpl = PLAN_TEMPLATES.find(x => x.id === b.dataset.tpl);
+            if (!tpl) return;
+            tplDraft = { name: tpl.title, kids: [...tpl.children], startAt: null, endAt: null };
+            document.getElementById('tplName').value = tpl.title;
+            renderTplDates();
+            renderTplKids();
+            document.getElementById('tplList').style.display = 'none';
+            document.getElementById('tplConfig').style.display = '';
+            document.getElementById('tplKidAdd').style.display = '';
+            document.getElementById('tplBack').style.display = '';
+            document.getElementById('tplCreate').style.display = '';
+        });
+        document.getElementById('tplBack').addEventListener('click', () => {
+            tplDraft = null;
+            renderTemplateList();
+            document.getElementById('tplList').style.display = '';
+            document.getElementById('tplConfig').style.display = 'none';
+            document.getElementById('tplKidAdd').style.display = 'none';
+            document.getElementById('tplBack').style.display = 'none';
+            document.getElementById('tplCreate').style.display = 'none';
+        });
+        document.getElementById('tplKidAdd').addEventListener('click', () => {
+            const inp = document.getElementById('tplKidInput');
+            const v = inp.value.trim().replace(/\s+/g, ' ');
+            if (!v || !tplDraft) { inp.focus(); return; }
+            tplDraft.kids.push(v.slice(0, MAX_LENGTH));
+            inp.value = '';
+            renderTplKids();
+            inp.focus();
+        });
+        document.getElementById('tplKidInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('tplKidAdd').click();
+            }
+        });
+        document.getElementById('tplKids').addEventListener('click', e => {
+            const b = e.target.closest('[data-tplkid]');
+            if (!b || !tplDraft) return;
+            tplDraft.kids.splice(parseInt(b.dataset.tplkid, 10), 1);
+            renderTplKids();
+        });
+        document.getElementById('tplCreate').addEventListener('click', () => {
+            if (!tplDraft) return;
+            const name = document.getElementById('tplName').value.trim();
+            if (!name) {
+                document.getElementById('tplName').focus();
+                return;
+            }
+            const kids = [...tplDraft.kids];
+            const startAt = tplDraft.startAt;
+            const endAt = tplDraft.endAt;
+            closeTemplateModal();
+            createPlanCustom(name, kids, { startAt, endAt });
+        });
+        function renderTplDates() {
+            const el = document.getElementById('tplDatesLine');
+            if (!el) return;
+            if (!tplDraft) {
+                el.textContent = '';
+                return;
+            }
+            const fmt = iso => {
+                try {
+                    return new Date(iso).toLocaleDateString('fa-IR', { day: 'numeric', month: 'long' });
+                } catch {
+                    return '';
+                }
+            };
+            const parts = [];
+            if (tplDraft.startAt) parts.push('از ' + fmt(tplDraft.startAt));
+            if (tplDraft.endAt) parts.push('تا ' + fmt(tplDraft.endAt));
+            el.textContent = parts.length ? '📅 ' + parts.join(' ') : '';
+        }
+        document.getElementById('tplStartBtn').addEventListener('click', () => {
+            if (!tplDraft) return;
+            openPicker('tpldate', iso => {
+                tplDraft.startAt = iso;
+                if (tplDraft.endAt && new Date(tplDraft.endAt) < new Date(iso)) tplDraft.endAt = null;
+                renderTplDates();
+            });
+        });
+        document.getElementById('tplEndBtn').addEventListener('click', () => {
+            if (!tplDraft) return;
+            openPicker('tpldate', iso => {
+                tplDraft.endAt = iso;
+                renderTplDates();
+            });
         });
 
         /* بج نمونه‌کار حذف شد؛ لینک سازنده در فوتر است */
+
+        document.getElementById('heroDescToggle').addEventListener('click', e => {
+            const desc = document.getElementById('heroDesc');
+            const open = desc.hidden;
+            desc.hidden = !open;
+            e.currentTarget.setAttribute('aria-expanded', String(open));
+        });
 
         document.getElementById('mapToggle').addEventListener('click', () => {
             prefs.mapVisible = !prefs.mapVisible;
             savePrefs();
             applyMapVisibility();
+            if (prefs.mapVisible) initMap();
         });
 
         function initSettings() {
@@ -88,31 +303,45 @@
             on.checked = prefs.remindOn !== false;
             mins.value = String(prefs.remindMin || 60);
             dig.checked = prefs.digestOn !== false;
+            const pro = document.getElementById('setProMode');
+            if (pro) {
+                pro.checked = prefs.proMode === true;
+                pro.addEventListener('change', () => {
+                    prefs.proMode = pro.checked;
+                    savePrefs();
+                    applyProMode();
+                    syncDisclosure();
+                });
+            }
             on.addEventListener('change', () => { prefs.remindOn = on.checked; savePrefs(); });
             mins.addEventListener('change', () => { prefs.remindMin = parseInt(mins.value, 10) || 60; savePrefs(); });
             dig.addEventListener('change', () => { prefs.digestOn = dig.checked; savePrefs(); });
+            const snd = document.getElementById('setSoundOn');
+            if (snd) {
+                snd.checked = prefs.soundOn !== false;
+                snd.addEventListener('change', () => { prefs.soundOn = snd.checked; savePrefs(); });
+            }
             document.getElementById('notifPermBtn').addEventListener('click', async () => {
                 await ensureNotifPerm();
                 updateNotifStatus();
             });
             document.getElementById('notifTestBtn').addEventListener('click', async () => {
                 const ok = await ensureNotifPerm();
-                if (ok) fireNotification('🔔 اعلان آزمایشی', 'یادآورها فعال‌اند و درست کار می‌کنند.');
+                if (ok) {
+                    fireNotification('🔔 اعلان آزمایشی', 'یادآورها فعال‌اند و درست کار می‌کنند.');
+                    playChime();
+                }
                 updateNotifStatus();
             });
+            window.addEventListener('pointerdown', ensureAudio);
+            window.addEventListener('keydown', ensureAudio);
             updateNotifStatus();
         }
 
-        function applyLevel(level, save) {
-            if (!['beginner', 'intermediate', 'advanced'].includes(level)) level = 'beginner';
-            prefs.level = level;
-            if (save !== false) savePrefs();
-            document.body.setAttribute('data-level', level);
-            document.querySelectorAll('#levelRow .kind-btn').forEach(b => b.classList.toggle('active', b.dataset.level === level));
-            if (level === 'beginner' && pendingKind !== 'task') {
-                pendingKind = 'task';
-                document.querySelectorAll('#kindRow .kind-btn').forEach(x => x.classList.toggle('active', x.dataset.kind === 'task'));
-                input.placeholder = 'وظیفه جدید را بنویسید...';
+        function applyProMode() {
+            if (prefs.proMode) {
+                tasks.forEach(t => { if (t.kind === 'plan') expandedPlans.add(String(t.id)); });
+                render();
             }
         }
 
@@ -205,6 +434,7 @@
             if (overlay.style.display === 'flex') closePicker();
             else if (document.getElementById('calOverlay').style.display === 'flex') closeCal();
             else if (document.getElementById('trashPage').style.display === 'block') closeTrash();
+            else if (document.getElementById('templateModal').style.display === 'flex') closeTemplateModal();
             else if (currentDetailId) closeDetail();
             else if (document.querySelector('.map-wrap.fullscreen')) toggleFullscreen();
         });
@@ -266,6 +496,14 @@
                     render();
                 }
             }
+            else if (action === 'archive') {
+                const found = findTask(id);
+                if (found) {
+                    found.task.archived = true;
+                    saveTasks();
+                    render();
+                }
+            }
             else if (action === 'pick-loc') {
                 const found = findTask(id);
                 if (!found) return;
@@ -280,7 +518,7 @@
                 }
             }
             else if (action === 'check-all') {
-                const g = tasks.find(t => String(t.id) === String(id) && t.kind === 'group');
+                const g = tasks.find(t => String(t.id) === String(id) && t.kind === 'plan');
                 if (g) {
                     (g.children || []).forEach(c => { c.completed = true; });
                     saveTasks();
@@ -289,13 +527,22 @@
             }
             else if (action === 'expand') {
                 const gid = String(id);
-                if (expandedGroups.has(gid)) expandedGroups.delete(gid);
-                else expandedGroups.add(gid);
+                if (expandedPlans.has(gid)) expandedPlans.delete(gid);
+                else expandedPlans.add(gid);
                 render();
             }
             else if (action === 'child-date') {
                 openPicker('child', iso => {
                     const arr = childDrafts[id] || (childDrafts[id] = []);
+                    if (hasSessionAt(arr, iso)) {
+                        const ci = taskList.querySelector(`.task-item[data-id="${id}"] .child-input`);
+                        if (ci) {
+                            ci.classList.remove('input-error');
+                            void ci.offsetWidth;
+                            ci.classList.add('input-error');
+                        }
+                        return;
+                    }
                     arr.push({ id: uid(), at: iso });
                     render();
                     const ni = taskList.querySelector(`.task-item[data-id="${id}"] .child-input`);
@@ -471,7 +718,7 @@
             smartTimer = setTimeout(() => {
                 const v = input.value.trim();
                 hideSmart();
-                if (!v || v === smartDismissedFor) return;
+                if (!v || v === smartDismissedFor || pendingKind === 'plan') return;
                 const iso = parseFaDateTime(v, getNow());
                 if (!iso) return;
                 if (addDraftSessions.some(s => Math.abs(new Date(s.at).getTime() - new Date(iso).getTime()) < 60000)) return;
@@ -508,13 +755,20 @@
             }
         })();
 
-        // تاریخ امروز شمسی در هدر
+        // تاریخ امروز شمسی در هدر + سال کپی‌رایت فوتر
         try {
             document.getElementById('todayLine').textContent =
                 'امروز: ' + new Date().toLocaleDateString('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' });
+            document.getElementById('copyYear').textContent =
+                new Date().toLocaleDateString('fa-IR', { year: 'numeric' });
         } catch { /* نادیده */ }
         bindDetailInputs();
         loadPrefs();
+        (function () {
+            const dc = document.getElementById('dueChips');
+            if (dc) window.__dueHome = { p: dc.parentElement, n: dc.nextElementSibling };
+        })();
+        setKind(prefs.pendingKind || 'task');
         if (!prefs.tourSeen) {
             document.getElementById('welcomeOverlay').style.display = 'flex';
             document.getElementById('welcomeStart').addEventListener('click', () => {
@@ -528,12 +782,9 @@
         applyMapVisibility();
         loadTasks().then(async () => {
             await loadTrash();
-            if (!prefs.level) {
-                prefs.level = tasks.length ? 'advanced' : 'beginner';
-                savePrefs();
-            }
-            applyLevel(prefs.level, false);
+            if (prefs.proMode) tasks.forEach(t => { if (t.kind === 'plan') expandedPlans.add(String(t.id)); });
             updateDueChips();
+            syncDisclosure();
             render();
             renderTrash();
             initMap();

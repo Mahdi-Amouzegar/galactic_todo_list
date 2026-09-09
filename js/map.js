@@ -12,6 +12,11 @@
         let relocateTaskId = null;
         let mapHintTimer = null;
         let markerTimer = null;
+        let mapDomClickHandler = null;
+        let mapLoadHandler = null;
+        let mapInitTimers = [];
+        let routeLayer = null;
+        let routeController = null;
 
         const TILES = {
             normal: {
@@ -69,7 +74,9 @@
                 if (typeof p.digestOn === 'boolean') prefs.digestOn = p.digestOn;
                 if (typeof p.lastDigest === 'string') prefs.lastDigest = p.lastDigest;
                 if (typeof p.tourSeen === 'boolean') prefs.tourSeen = p.tourSeen;
-                if (['beginner', 'intermediate', 'advanced'].includes(p.level)) prefs.level = p.level;
+                if (typeof p.proMode === 'boolean') prefs.proMode = p.proMode;
+                if (typeof p.soundOn === 'boolean') prefs.soundOn = p.soundOn;
+                if (['task', 'series', 'plan'].includes(p.pendingKind)) prefs.pendingKind = p.pendingKind;
             } catch { /* پیش‌فرض */ }
         }
 
@@ -79,11 +86,42 @@
             } catch { /* نادیده */ }
         }
 
+        function destroyMap() {
+            clearTimeout(mapHintTimer);
+            clearTimeout(markerTimer);
+            mapInitTimers.forEach(clearTimeout);
+            mapInitTimers = [];
+            if (routeController) routeController.abort();
+            routeController = null;
+            const mapEl = document.getElementById('map');
+            if (mapEl && mapDomClickHandler) mapEl.removeEventListener('click', mapDomClickHandler);
+            if (mapLoadHandler) window.removeEventListener('load', mapLoadHandler);
+            mapDomClickHandler = null;
+            mapLoadHandler = null;
+            window.__initMapRetry = null;
+            if (map) map.remove();
+            map = null;
+            markersLayer = null;
+            pickMarker = null;
+            youMarker = null;
+            routeLayer = null;
+            mapReady = false;
+            if (mapEl) mapEl.replaceChildren();
+            const wrap = document.querySelector('.map-wrap');
+            if (wrap) wrap.classList.remove('fullscreen');
+            const exit = document.getElementById('fsExit');
+            if (exit) exit.style.display = 'none';
+        }
+
         function applyMapVisibility() {
             document.body.classList.toggle('map-hidden', !prefs.mapVisible);
             const btn = document.getElementById('mapToggle');
             if (btn) btn.textContent = prefs.mapVisible ? '🗺 نقشه: روشن' : '🗺 نقشه: خاموش';
-            if (prefs.mapVisible && mapReady) setTimeout(() => map.invalidateSize(), 60);
+            if (!prefs.mapVisible) {
+                destroyMap();
+                return;
+            }
+            if (mapReady) setTimeout(() => map.invalidateSize(), 60);
         }
 
         // هر عملی که به نقشه نیاز دارد، اول آن را روشن می‌کند
@@ -92,6 +130,7 @@
             prefs.mapVisible = true;
             savePrefs();
             applyMapVisibility();
+            initMap();
         }
 
         function dotIcon(cls) {
@@ -103,6 +142,9 @@
         }
 
         function initMap() {
+            if (!prefs.mapVisible || mapReady) return;
+            const mapEl = document.getElementById('map');
+            if (!mapEl) return;
             if (typeof L === 'undefined') {
                 // اگر CDN جایگزین در حال لود است، بعداً دوباره تلاش می‌شود
                 window.__initMapRetry = initMap;
@@ -128,19 +170,23 @@
             mapReady = true;
             map.on('click', onMapClick);
             map.on('moveend zoomend', () => scheduleMarkerRefresh());
-            document.getElementById('map').addEventListener('click', e => {
+            mapDomClickHandler = e => {
                 const r = e.target.closest('[data-pproute]');
                 if (r) { showRouteTo(r.dataset.pproute); return; }
                 const b = e.target.closest('[data-ppdetail]');
                 if (!b) return;
                 openDetail(b.dataset.ppdetail);
-            });
+            };
+            mapEl.addEventListener('click', mapDomClickHandler);
             locateUser(false);
             refreshMarkers();
             // اگر نقشه در لحظه ساخت صفر بوده، بعد از settle شدن چیدمان اصلاح شود
-            setTimeout(() => { if (map) map.invalidateSize(); }, 350);
-            setTimeout(() => { if (map) map.invalidateSize(); }, 1500);
-            window.addEventListener('load', () => { if (map) map.invalidateSize(); });
+            mapInitTimers = [
+                setTimeout(() => { if (mapReady && map) map.invalidateSize(); }, 350),
+                setTimeout(() => { if (mapReady && map) map.invalidateSize(); }, 1500)
+            ];
+            mapLoadHandler = () => { if (mapReady && map) map.invalidateSize(); };
+            window.addEventListener('load', mapLoadHandler);
         }
 
         // بازسازی مارکرها با تاخیر کوتاه تا تایپ سریع باعث چشمک‌زدن نقشه نشود
@@ -153,9 +199,9 @@
         function refreshMarkers() {
             if (!mapReady) return;
             markersLayer.clearLayers();
-            const addMarker = t => {
-                if (!t.location) return;
-                const m = L.marker([t.location.lat, t.location.lng], { icon: dotIcon(t.completed ? 'done' : '') });
+            const displayLoc = t => t.location || (t.sessions || []).map(s => s.location).find(Boolean) || null;
+            const addMarker = (t, loc) => {
+                const m = L.marker([loc.lat, loc.lng], { icon: dotIcon(t.completed ? 'done' : '') });
                 m.on('click', () => { suppressMapClickUntil = Date.now() + 400; });
                 const n = nearestUpcoming(t);
                 const dateLine = n ? faShort(n.at) : ((t.sessions && t.sessions.length) ? 'همه جلسات گذشته' : 'بدون سررسید');
@@ -170,22 +216,28 @@
             };
             const pts = [];
             tasks.forEach(t => {
-                if (t.kind === 'group') (t.children || []).forEach(c => { if (c.location) pts.push(c); });
-                else if (t.location) pts.push(t);
+                if (t.kind === 'plan') (t.children || []).forEach(c => {
+                    const l = displayLoc(c);
+                    if (l) pts.push({ t: c, loc: l });
+                });
+                else {
+                    const l = displayLoc(t);
+                    if (l) pts.push({ t, loc: l });
+                }
             });
             // خوشه‌بندی سبک شبکه‌ای (بدون پلاگین): خانه ۶۴ پیکسلی
             const CELL = 64;
             const cells = new Map();
-            pts.forEach(t => {
-                const p = map.latLngToContainerPoint([t.location.lat, t.location.lng]);
+            pts.forEach(it => {
+                const p = map.latLngToContainerPoint([it.loc.lat, it.loc.lng]);
                 const k = Math.floor(p.x / CELL) + ':' + Math.floor(p.y / CELL);
                 if (!cells.has(k)) cells.set(k, []);
-                cells.get(k).push(t);
+                cells.get(k).push(it);
             });
             cells.forEach(list => {
-                if (list.length === 1) { addMarker(list[0]); return; }
-                const lat = list.reduce((a, t) => a + t.location.lat, 0) / list.length;
-                const lng = list.reduce((a, t) => a + t.location.lng, 0) / list.length;
+                if (list.length === 1) { addMarker(list[0].t, list[0].loc); return; }
+                const lat = list.reduce((a, it) => a + it.loc.lat, 0) / list.length;
+                const lng = list.reduce((a, it) => a + it.loc.lng, 0) / list.length;
                 const m = L.marker([lat, lng], {
                     icon: L.divIcon({ className: '', html: `<span class="mk-cluster">${toFa(list.length)}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] })
                 });
@@ -200,16 +252,16 @@
         function flyToTask(id) {
             const found = findTask(id);
             const t = found ? found.task : null;
-            if (!t || !t.location || !mapReady) return;
+            if (!t || !mapReady) return;
+            const loc = t.location || (nearestUpcoming(t) && nearestUpcoming(t).location) || (t.sessions || []).map(s => s.location).find(Boolean);
+            if (!loc) return;
             switchToTab('map');
             document.getElementById('panelMap').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            map.flyTo([t.location.lat, t.location.lng], 14, { duration: 1 });
+            map.flyTo([loc.lat, loc.lng], 14, { duration: 1 });
             markersLayer.eachLayer(m => {
                 if (String(m._taskId) === String(id)) setTimeout(() => m.openPopup(), 1100);
             });
         }
-
-        let routeLayer = null;
 
         function clearRoute() {
             if (routeLayer && mapReady) { map.removeLayer(routeLayer); routeLayer = null; }
@@ -257,11 +309,12 @@
                 return;
             }
             const d = t.location;
-            const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), 12000);
+            routeController = new AbortController();
+            const timer = setTimeout(() => routeController && routeController.abort(), 12000);
             try {
-                const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson`, { signal: ctrl.signal });
+                const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson`, { signal: routeController.signal });
                 clearTimeout(timer);
+                if (!mapReady || !map) return;
                 if (!r.ok) throw new Error('bad');
                 const j = await r.json();
                 const route = j.routes && j.routes[0];
@@ -273,7 +326,9 @@
                 mapHint(`🧭 تا «${t.text}»: ${fmtDist(route.distance)}، حدود ${fmtDur(route.duration)}`, 6000);
             } catch {
                 clearTimeout(timer);
-                mapHint('مسیریابی ناموفق بود (اینترنت؟)');
+                if (mapReady) mapHint('مسیریابی ناموفق بود (اینترنت؟)');
+            } finally {
+                routeController = null;
             }
         }
 
@@ -301,7 +356,24 @@
         function onMapClick(e) {
             if (Date.now() < suppressMapClickUntil) return;
             const loc = { lat: +e.latlng.lat.toFixed(5), lng: +e.latlng.lng.toFixed(5) };
-            if (relocateTaskId) {
+            if (relocateSess || relocateTaskId) {
+                if (relocateSess) {
+                    const found = findTask(relocateSess.taskId);
+                    const s = found && (found.task.sessions || []).find(x => String(x.id) === String(relocateSess.sessId));
+                    const ret = pendingReturnDetail;
+                    relocateSess = null;
+                    pendingReturnDetail = null;
+                    if (s) {
+                        s.location = loc;
+                        saveTasks();
+                        render();
+                        refreshMarkers();
+                        mapHint('محل جلسه ذخیره شد ✓');
+                    }
+                    if (ret) openDetail(ret);
+                    else if (s && found) flyToTask(found.task.id);
+                    return;
+                }
                 const found = findTask(relocateTaskId);
                 relocateTaskId = null;
                 if (found) {
@@ -329,13 +401,14 @@
         function locateUser(fly) {
             if (!mapReady || !navigator.geolocation) return;
             navigator.geolocation.getCurrentPosition(pos => {
+                if (!mapReady || !map) return;
                 const ll = [pos.coords.latitude, pos.coords.longitude];
                 if (youMarker) youMarker.setLatLng(ll);
                 else youMarker = L.circleMarker(ll, { radius: 8, color: '#fff', weight: 2, fillColor: '#00d4ff', fillOpacity: 1 }).addTo(map).bindPopup('<div class="pp"><div class="pp-title">موقعیت شما</div></div>');
                 if (fly) map.flyTo(ll, 14, { duration: 1.2 });
                 else map.flyTo(ll, 13, { duration: 1.5 });
             }, () => {
-                if (fly) mapHint('دسترسی به موقعیت داده نشد');
+                if (fly && mapReady) mapHint('دسترسی به موقعیت داده نشد');
             }, { timeout: 8000 });
         }
 
@@ -370,4 +443,3 @@
                 remove.style.display = 'none';
             }
         }
-

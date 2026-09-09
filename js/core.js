@@ -31,10 +31,14 @@
         let editingId = null;
         let addDraftSessions = []; // سررسیدهای پیش‌نویس فرم افزودن
         let pendingLoc = null;     // محل پیش‌نویس فرم افزودن {lat, lng}
-        let pendingKind = 'task';  // نوع مورد جدید: task | group
-        let expandedGroups = new Set(); // شناسه گروه‌های باز (رشته)
-        let childDrafts = {};      // سررسیدهای پیش‌نویس زیرکارها به تفکیک گروه
-        let prefs = { mapVisible: true, remindOn: true, remindMin: 60, digestOn: true, lastDigest: '', tourSeen: false, level: null }; // ترجیحات (localStorage جدا)
+        let pendingKind = 'task';  // نوع مورد جدید: task | series | plan
+        let expandedPlans = new Set(); // شناسه برنامه‌های باز (رشته)
+        let childDrafts = {};      // سررسیدهای پیش‌نویس کارها به تفکیک برنامه
+        let planDraftKids = [];    // نام کارهای پیش‌نویس برنامه در فرم ساخت
+        let seriesType = 'daily';    // نوع تکرار دوره در فرم ساخت
+        let seriesN = 8;             // عدد تکرار ساعتی در فرم ساخت
+        let seriesDays = [];         // روزهای انتخاب‌شده تکرار در فرم ساخت
+        let prefs = { mapVisible: true, remindOn: true, remindMin: 60, digestOn: true, lastDigest: '', tourSeen: false, proMode: false, pendingKind: 'task', soundOn: true }; // ترجیحات (localStorage جدا)
         let selectedDay = null; // فیلتر روز تقویم: 'gy-gm-gd' یا null
         let calJy = 0, calJm = 1; // ماه جاری نمای تقویم
 
@@ -45,6 +49,8 @@
 
         // وظیفه‌ای که صفحه جزئیاتش باز است
         let currentDetailId = null;
+        let relocateSess = null;      // {taskId, sessId} برای ثبت محل جلسه
+        let pendingReturnDetail = null;
 
         // اختلاف ساعت دستگاه با سرور (میلی‌ثانیه)
         let timeOffsetMs = 0;

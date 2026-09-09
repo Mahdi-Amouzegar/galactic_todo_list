@@ -1,24 +1,31 @@
 // © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 // Service Worker: آفلاین‌سازی پوسته برنامه (فقط فایل‌های همین‌سایت)
-const CACHE = 'space-todo-v8';
+const CACHE = 'space-todo-v25';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=4',
+  './styles.css?v=10',
   './manifest.webmanifest',
   './fonts/vazirmatn-arabic.woff2',
   './fonts/vazirmatn-latin.woff2',
-  './js/core.js?v=4',
-  './js/jalali.js?v=4',
-  './js/time.js?v=4',
+  './icons/logo.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/apple-touch-icon.png',
+  './icons/favicon-32.ico',
+  './icons/favicon-96x96.png',
+  './icons/favicon.svg',
+  './js/core.js?v=7',
+  './js/jalali.js?v=7',
+  './js/time.js?v=7',
   './js/notify.js',
-  './js/store.js?v=4',
-  './js/sessions.js?v=4',
-  './js/picker.js?v=4',
-  './js/map.js?v=4',
-  './js/detail.js?v=4',
-  './js/ui.js?v=4',
-  './js/app.js?v=4'
+  './js/store.js?v=7',
+  './js/sessions.js?v=7',
+  './js/picker.js?v=7',
+  './js/map.js?v=7',
+  './js/detail.js?v=8',
+  './js/ui.js?v=10',
+  './js/app.js?v=8'
 ];
 
 self.addEventListener('notificationclick', e => {

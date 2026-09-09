@@ -35,6 +35,42 @@
             }
         }
 
+        let audioCtx = null;
+
+        function ensureAudio() {
+            try {
+                if (!audioCtx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (!AC) return;
+                    audioCtx = new AC();
+                }
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            } catch { /* نادیده */ }
+        }
+
+        // زنگ ملایم کاملاً آفلاین (بدون فایل صوتی): دو نت سینوسی
+        function playChime() {
+            if (prefs.soundOn === false) return;
+            try {
+                ensureAudio();
+                if (!audioCtx || audioCtx.state !== 'running') return;
+                const t0 = audioCtx.currentTime;
+                [[659.25, 0], [880, 0.35]].forEach(([freq, dt]) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.0001, t0 + dt);
+                    gain.gain.exponentialRampToValueAtTime(0.25, t0 + dt + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.9);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(t0 + dt);
+                    osc.stop(t0 + dt + 1);
+                });
+            } catch { /* نادیده */ }
+        }
+
         function fireNotification(title, body, tag) {
             if (!notifGranted()) return false;
             try {
@@ -58,12 +94,14 @@
         function checkReminders() {
             if (!prefs.remindOn || !notifGranted()) return;
             const now = Date.now();
-            const win = (prefs.remindMin || 60) * 60 * 1000;
             allSessions(true).forEach(s => {
                 if (s.reminded) return;
+                const rm = (s.remindMin != null) ? s.remindMin : prefs.remindMin;
+                if (!rm) return; // ۰ یعنی خاموش برای این جلسه
                 const v = new Date(s.at).getTime();
-                if (isNaN(v) || v <= now || v - now > win) return;
+                if (isNaN(v) || v <= now || v - now > rm * 60 * 1000) return;
                 if (fireNotification('⏰ یادآور جلسه', `${s.owner} — ${faShort(s.at)}`, 'sess-' + s.id)) {
+                    playChime();
                     markReminded(s.taskId, s.id);
                 }
             });
@@ -80,6 +118,7 @@
                 ? `امروز ${toFa(todays.length)} جلسه داری: ${todays.slice(0, 3).map(s => s.owner).join('، ')}${todays.length > 3 ? ' و…' : ''}`
                 : 'امروز جلسه‌ای نداری 🎉';
             if (fireNotification('📅 برنامه امروز', body, 'digest-' + day)) {
+                playChime();
                 prefs.lastDigest = day;
                 savePrefs();
             }

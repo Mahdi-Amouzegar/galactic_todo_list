@@ -89,6 +89,10 @@
                 closePicker();
                 cb(iso);
             } else {
+                if (hasSessionAt(addDraftSessions, iso)) {
+                    err.textContent = 'این سررسید قبلاً ثبت شده است.';
+                    return;
+                }
                 addDraftSessions.push({ id: uid(), at: iso });
                 updateDueChips();
                 closePicker();
