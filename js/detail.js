@@ -9,12 +9,18 @@
         }
 
         function openDetail(id) {
+            const pageEl = document.getElementById('detailPage');
+            const wasAlreadyOpen = pageEl && pageEl.style.display === 'block';
+            const prevScroll = wasAlreadyOpen ? pageEl.scrollTop : 0;
+
             currentDetailId = id;
             const task = getDetailTask();
             if (!task) return;
             document.getElementById('detailTitle').textContent = (task.kind === 'plan' ? '📁 ' : '') + task.text;
             document.getElementById('fTitle').value = task.text;
             document.getElementById('fLocField').style.display = task.kind === 'plan' ? 'none' : '';
+            const locAccordion = document.querySelector('.detail-accordion.location');
+            if (locAccordion) locAccordion.style.display = task.kind === 'plan' ? 'none' : '';
             document.getElementById('fDesc').value = task.description || '';
             document.getElementById('fPhone').value = task.phone || '';
             document.getElementById('fAddr').value = task.address || '';
@@ -28,16 +34,23 @@
             updateUrlLink();
             updateCallBtn();
             renderDetailSessions();
-            renderDetailLoc();
+            if (typeof window.refreshSavedLocationUI === 'function') {
+                window.refreshSavedLocationUI();
+            }
             renderDetailPhotos();
             renderTimer();
             clearInterval(timerTick);
-            // به‌روزرسانی هر ۱ دقیقه (نه هر ثانیه) تا مصرف منابع کم شود؛
-            // محاسبه بر مبنای اختلاف ساعت واقعی است پس دقت مجموع زمان حفظ می‌شود
             timerTick = setInterval(() => { if (getDetailTask()) renderTimer(); }, 60000);
-            document.getElementById('detailPage').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            document.getElementById('detailBack').focus();
+            pageEl.style.display = 'block';
+            if (window.matchMedia('(max-width: 900px)').matches) {
+                document.body.style.overflow = 'hidden';
+            }
+            if (!wasAlreadyOpen) {
+                document.getElementById('detailBack').focus();
+            } else {
+                pageEl.scrollTop = prevScroll;
+                requestAnimationFrame(() => { pageEl.scrollTop = prevScroll; });
+            }
         }
 
         function closeDetail() {
@@ -45,7 +58,39 @@
             clearInterval(timerTick);
             document.getElementById('detailPage').style.display = 'none';
             document.body.style.overflow = '';
+            if (typeof window.__hideMobilePickBanner === 'function') {
+                window.__hideMobilePickBanner();
+            }
             render();
+        }
+
+        // ورود به حالت انتخاب مکان بدون بستن صفحه جزئیات
+        function enterLocationPickMode(taskId, mode) {
+            if (typeof ensureMapVisible === 'function') ensureMapVisible();
+            if (typeof switchToTab === 'function') switchToTab('map');
+
+            if (mode === 'change') {
+                try { relocateTaskId = taskId; } catch (_) {}
+                try { relocateSess = null; } catch (_) {}
+                try { pendingReturnDetail = currentDetailId; } catch (_) {}
+
+                // روی موبایل: صفحه جزئیات مخفی می‌شود تا کاربر مستقیم نقشه را ببیند.
+                // بعد از انتخاب مکان، map.js#onMapClick با openDetail صفحه را برمی‌گرداند.
+                if (window.matchMedia('(max-width: 900px)').matches) {
+                    const pageEl = document.getElementById('detailPage');
+                    if (pageEl) pageEl.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+
+                if (typeof mapHint === 'function') mapHint('روی نقشه کلیک کنید تا محل جدید ثبت شود');
+                if (typeof window.__showMobilePickBanner === 'function') {
+                    window.__showMobilePickBanner('روی نقشه ضربه بزنید تا محل جدید ثبت شود. برای انصراف، دکمه لغو را بزنید.');
+                }
+            } else if (mode === 'show') {
+                if (typeof flyToTask === 'function') flyToTask(taskId);
+            } else if (mode === 'route') {
+                if (typeof showRouteTo === 'function') showRouteTo(taskId);
+            }
         }
 
         let saveHintTimer = null;
@@ -297,11 +342,18 @@
                     relocateSess = { taskId: currentDetailId, sessId: locBtn.dataset.sessLoc };
                     relocateTaskId = null;
                     pendingReturnDetail = currentDetailId;
-                    closeDetail();
                     ensureMapVisible();
                     switchToTab('map');
-                    document.getElementById('panelMap').scrollIntoView({ behavior: 'smooth' });
+                    // روی موبایل، صفحه جزئیات مخفی شود تا کاربر نقشه را ببیند
+                    if (window.matchMedia('(max-width: 900px)').matches) {
+                        const pageEl = document.getElementById('detailPage');
+                        if (pageEl) pageEl.style.display = 'none';
+                        document.body.style.overflow = '';
+                    }
                     mapHint('روی نقشه کلیک کنید تا محل جلسه ثبت شود');
+                    if (typeof window.__showMobilePickBanner === 'function') {
+                        window.__showMobilePickBanner('روی نقشه ضربه بزنید تا محل جلسه ثبت شود. برای انصراف، دکمه لغو را بزنید.');
+                    }
                     return;
                 }
                 const btn = e.target.closest('[data-sess]');
@@ -331,27 +383,21 @@
             document.getElementById('detailLocShow').addEventListener('click', () => {
                 const t = getDetailTask();
                 if (!t || !t.location) return;
-                const id = t.id;
-                closeDetail();
-                ensureMapVisible();
-                flyToTask(id);
+                enterLocationPickMode(t.id, 'show');
             });
             document.getElementById('detailLocChange').addEventListener('click', () => {
                 const t = getDetailTask();
                 if (!t) return;
-                relocateTaskId = t.id;
-                closeDetail();
-                ensureMapVisible();
-                switchToTab('map');
-                document.getElementById('panelMap').scrollIntoView({ behavior: 'smooth' });
-                mapHint('روی نقشه کلیک کنید تا محل ثبت شود');
+                enterLocationPickMode(t.id, 'change');
             });
             document.getElementById('detailLocRemove').addEventListener('click', () => {
                 const t = getDetailTask();
                 if (!t) return;
                 t.location = null;
                 saveTasks();
-                renderDetailLoc();
+                if (typeof window.refreshSavedLocationUI === 'function') {
+                    window.refreshSavedLocationUI();
+                }
                 render();
                 refreshMarkers();
                 flashSaved('محل حذف شد');
@@ -454,9 +500,7 @@
             document.getElementById('detailLocRoute').addEventListener('click', () => {
                 const t = getDetailTask();
                 if (!t || !t.location) return;
-                const id = t.id;
-                closeDetail();
-                showRouteTo(id);
+                enterLocationPickMode(t.id, 'route');
             });
             const photoInput = document.getElementById('photoInput');
             photoInput.addEventListener('change', () => {
@@ -523,4 +567,3 @@
                 showUndoFor([id], 'به سطل زباله منتقل شد');
             });
         }
-

@@ -50,11 +50,20 @@
             }));
         }
 
+        // اعتبارسنجی لوکیشن + نگه‌داشتن نام (در صورت وجود)
+        // ساختار خروجی: { lat, lng, name: string | null }
         function validLoc(v) {
-            return (v && Number.isFinite(+v.lat) && Number.isFinite(+v.lng) &&
-                Math.abs(+v.lat) <= 90 && Math.abs(+v.lng) <= 180)
-                ? { lat: +v.lat, lng: +v.lng }
-                : null;
+            if (!v || !Number.isFinite(+v.lat) || !Number.isFinite(+v.lng) ||
+                Math.abs(+v.lat) > 90 || Math.abs(+v.lng) > 180) {
+                return null;
+            }
+            const out = { lat: +v.lat, lng: +v.lng };
+            if (typeof v.name === 'string' && v.name.trim()) {
+                out.name = v.name.trim().replace(/\s+/g, ' ').slice(0, 80);
+            } else {
+                out.name = null;
+            }
+            return out;
         }
 
         // پاک‌سازی و اعتبارسنجی + مهاجرت مدل قدیمی (dueAt تکی، kind گروه→برنامه)

@@ -10,11 +10,22 @@
             pickerCallback = typeof onConfirm === 'function' ? onConfirm : null;
             const lastAdd = addDraftSessions.length ? addDraftSessions[addDraftSessions.length - 1].at : null;
             const draft = mode === 'add' ? lastAdd : null;
-            const base = draft ? new Date(draft) : new Date(getNow().getTime() + 24 * 3600 * 1000);
+
+            // برای سررسید جدید، زمان پیش‌فرض همیشه نزدیک‌ترین بازهٔ ۵ دقیقه‌ای در آینده است.
+            // مثال: ۱۱:۴۷ → ۱۱:۵۰، و ۱۱:۵۰ → ۱۱:۵۵.
+            let base;
+            if (draft) {
+                base = new Date(draft);
+            } else {
+                base = new Date(getNow());
+                base.setSeconds(0, 0);
+                base.setMinutes(Math.floor(base.getMinutes() / 5) * 5 + 5);
+            }
+
             const j = gregorianToJalali(base.getFullYear(), base.getMonth() + 1, base.getDate());
             pickerJy = j.jy;
             pickerJm = j.jm;
-            pickerDay = draft ? j.jd : null;
+            pickerDay = j.jd;
             document.getElementById('pickerHour').value = String(base.getHours()).padStart(2, '0');
             document.getElementById('pickerMinute').value = String(Math.floor(base.getMinutes() / 5) * 5).padStart(2, '0');
             document.getElementById('pickerError').textContent = '';
@@ -79,7 +90,7 @@
             const hit = findConflict(picked.getTime());
             if (hit && !conflictArmed) {
                 conflictArmed = true;
-                err.textContent = `⚠ تداخل با «${hit.owner}» (${faShort(hit.at)}) — برای تأیید دوباره بزنید.`;
+                err.textContent = `⚠️ تداخل زمانی: «${hit.owner}» در ${faShort(hit.at)} برنامه‌ریزی شده و کمتر از ۳۰ دقیقه با زمان انتخاب‌شده فاصله دارد. برای ثبت این سررسید، دوباره تأیید کنید.`;
                 return;
             }
             const iso = picked.toISOString();
@@ -105,7 +116,7 @@
             closePicker();
         }
 
-        // نزدیک‌ترین جلسه آینده هر مالک، در پنجره ۳۰ دقیقه‌ای؟
+        // بررسی تداخل با وظایف آینده در بازه ۳۰ دقیقه‌ای
         function findConflict(ms) {
             const now = getNow().getTime();
             const list = allSessions(true);
@@ -137,4 +148,3 @@
             document.getElementById('pickerMinute').value = '00';
             renderPicker();
         }
-

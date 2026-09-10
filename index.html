@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="وظایف و قرارهای روزانه را با یادآور، نقشه و تقویم شمسی مدیریت کن. بدون حساب کاربری، حتی آفلاین.">
     <meta name="theme-color" content="#0a0a1a">
-    <title>راه فردا | مدیریت وظایف و قرارها</title>
+    <title>راه فردا | برنامه‌ریزی شخصی و مدیریت کارها</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="mobile-web-app-capable" content="yes">
@@ -17,6 +17,8 @@
     <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png">
     <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
     <link rel="stylesheet" href="styles.css?v=11">
+    <link rel="stylesheet" href="ui-fixes.css">
+    <link rel="stylesheet" href="visual-fixes.css?v=5">
 </head>
 <body>
     <div class="container">
@@ -35,352 +37,315 @@
                     <div class="map-hint" id="mapHint"></div>
                     <button class="fs-exit" id="fsExit" type="button" style="display: none;">✕ بستن نقشه تمام‌صفحه</button>
                 </div>
+                <div class="mobile-pick-banner" id="mobilePickBanner" style="display: none;">
+                    <span class="mobile-pick-banner-text" id="mobilePickBannerText">روی نقشه ضربه بزنید تا محل جدید ثبت شود. برای انصراف، دکمه لغو را بزنید.</span>
+                    <button class="mobile-pick-banner-cancel" id="mobilePickBannerCancel" type="button">لغو</button>
+                </div>
                 <p class="map-note">روی هر نقطه از نقشه کلیک کنید تا محل وظیفه جدید انتخاب و فرم ثبت باز شود. از دکمه لایه‌ها (بالا سمت چپ نقشه) حالت معمولی، تاریک یا ماهواره‌ای را انتخاب کنید.</p>
             </div>
-            <div class="right-flow">
-        <div class="header">
-            <img class="site-logo" src="icons/logo.png" alt="لوگوی برنامه" onerror="this.style.display='none'">
-            <div class="header-main">
-                <h1>راه فردا</h1>
-                <button class="tagline-toggle" id="heroDescToggle" type="button" aria-expanded="false" aria-controls="heroDesc">کارهایت، زمانت، مسیرت.</button>
-                <p class="hero-desc" id="heroDesc" hidden>وظایف و قرارهای روزانه را با یادآور، نقشه و تقویم شمسی مدیریت کن، بدون حساب کاربری، حتی آفلاین.</p>
-            </div>
-            <div class="header-side">
-                <p class="today-line" id="todayLine"></p>
-                <p class="time-source" id="timeSource">در حال اتصال به سرور زمان...</p>
-                <div class="header-actions">
-                    <button class="btn-small" id="installBtn" type="button" style="display: none;">⬇ نصب اپلیکیشن</button>
-                    <button class="btn-small" id="mapToggle" type="button">🗺 نقشه: روشن</button>
+
+            <div class="right-flow-container">
+                <button class="btn-small map-context-toggle map-divider-toggle" id="mapToggle" type="button" aria-label="نمایش یا پنهان کردن نقشه" title="نمایش یا پنهان کردن نقشه">🗺 نقشه: روشن</button>
+                <div class="right-flow">
+                    <div class="header">
+                        <img class="site-logo" src="icons/logo.png" alt="لوگوی برنامه" onerror="this.style.display='none'">
+                        <div class="header-main">
+                            <h1>راه فردا</h1>
+                            <button class="tagline-toggle" id="heroDescToggle" type="button" aria-expanded="false" aria-controls="heroDesc">کارهایت، زمانت، مسیرت.</button>
+                            <p class="hero-desc" id="heroDesc" hidden>وظایف و قرارهای روزانه را با یادآور، نقشه و تقویم شمسی مدیریت کن، بدون حساب کاربری، حتی آفلاین.</p>
+                        </div>
+                        <div class="header-side">
+                            <p class="today-line" id="todayLine"></p>
+                            <p class="time-source" id="timeSource">در حال اتصال به سرور زمان...</p>
+                            <div class="header-actions">
+                                <button class="btn-small" id="installBtn" type="button" style="display: none;">⬇ نصب اپلیکیشن</button>
+                            </div>
+                            <details class="trust">
+                                <summary>🔒 حریم خصوصی شما</summary>
+                                <p>همه اطلاعات شما (وظایف، تاریخ‌ها و محل‌ها) فقط در همین دستگاه و مرورگر خودتان ذخیره می‌شود و به هیچ سروری ارسال نمی‌شود. نقشه صرفاً تصویر اینترنتی است و چیزی از شما آپلود نمی‌کند.</p>
+                            </details>
+                        </div>
+                    </div>
+
+                    <div class="mobile-tabs" role="tablist" aria-label="انتخاب نما">
+                        <button class="mobile-tab active" data-tab="tasks" role="tab" type="button">📋 وظایف</button>
+                        <button class="mobile-tab" data-tab="map" role="tab" type="button">🗺 نقشه</button>
+                    </div>
+
+                    <div class="layout">
+                        <div class="panel active" id="panelTasks">
+                            <section class="task-zone create-zone" aria-label="افزودن">
+                                <h2 class="task-zone-title">افزودن</h2>
+                                <div class="kind3" role="group" aria-label="نوع مورد جدید">
+                                    <button class="kind3-btn active" data-kind="task" type="button">📝 یک کار</button>
+                                    <button class="kind3-btn" data-kind="plan" type="button">📂 یک برنامه</button>
+                                    <button class="kind3-btn" data-kind="series" type="button">📅 یک دوره</button>
+                                </div>
+                                <div class="input-section">
+                                    <input type="text" id="taskInput" placeholder="کار جدید را بنویسید..." maxlength="200" autocomplete="off" aria-label="متن وظیفه جدید" autofocus>
+                                    <button class="btn-icon mic-btn" id="micBtn" type="button" aria-label="ورود صوتی">🎤</button>
+                                </div>
+                                <div class="smart-chip" id="smartChip" style="display: none;">
+                                    <span id="smartChipText"></span>
+                                    <button id="smartAccept" type="button">✓ اضافه کن</button>
+                                    <button id="smartDismiss" type="button" aria-label="بی‌خیال">✕</button>
+                                </div>
+                                <div class="due-row">
+                                    <button class="due-btn" id="dueBtn" type="button" aria-label="تعیین سررسید برای وظیفه جدید">📅 <span>تعیین سررسید (اختیاری)</span></button>
+                                    <button class="due-btn" id="locBtn" type="button" aria-label="انتخاب محل روی نقشه">📍 انتخاب محل روی نقشه</button>
+                                </div>
+                                <div class="due-chips" id="dueChips" style="display: none;"></div>
+                                <div class="loc-chip" id="locChip" style="display: none;">
+                                    <span id="locChipText"></span>
+                                    <button type="button" data-locclear aria-label="حذف محل">✕</button>
+                                </div>
+                                <div id="seriesRecurWrap" style="display: none;">
+                                    <div class="field-label" style="margin-bottom: 6px;">تکرار دوره</div>
+                                    <div class="recur-list" id="seriesRecurList">
+                                        <button type="button" data-srecur="hourly">ساعتی</button>
+                                        <button type="button" data-srecur="daily" class="on">روزانه</button>
+                                        <button type="button" data-srecur="weekly">هفتگی</button>
+                                        <button type="button" data-srecur="monthly">ماهانه</button>
+                                        <button type="button" data-srecur="hourlyN">هر چند ساعت...</button>
+                                        <button type="button" data-srecur="weeklyDays">روزهای هفته...</button>
+                                        <button type="button" data-srecur="monthlyDays">روزهای ماه...</button>
+                                        <button type="button" data-srecur="dates">تاریخ سررسید</button>
+                                    </div>
+                                    <div id="seriesSubHours" style="display: none;">
+                                        <div class="chip-row" style="margin-bottom: 8px;">
+                                            <button type="button" class="day-chip" data-snh="2">۲</button>
+                                            <button type="button" class="day-chip" data-snh="4">۴</button>
+                                            <button type="button" class="day-chip" data-snh="6">۶</button>
+                                            <button type="button" class="day-chip" data-snh="8">۸</button>
+                                            <button type="button" class="day-chip" data-snh="12">۱۲</button>
+                                            <button type="button" class="day-chip" data-snh="24">۲۴</button>
+                                        </div>
+                                        <label class="more-row"><span>هر چند ساعت؟</span><input type="number" id="seriesN" min="1" max="168" value="8"></label>
+                                    </div>
+                                    <div id="seriesSubWeek" style="display: none;">
+                                        <div class="chip-row">
+                                            <button type="button" class="day-chip" data-swday="6">شنبه</button>
+                                            <button type="button" class="day-chip" data-swday="0">یکشنبه</button>
+                                            <button type="button" class="day-chip" data-swday="1">دوشنبه</button>
+                                            <button type="button" class="day-chip" data-swday="2">سه‌شنبه</button>
+                                            <button type="button" class="day-chip" data-swday="3">چهارشنبه</button>
+                                            <button type="button" class="day-chip" data-swday="4">پنجشنبه</button>
+                                            <button type="button" class="day-chip" data-swday="5">جمعه</button>
+                                        </div>
+                                    </div>
+                                    <div id="seriesSubMonth" style="display: none;">
+                                        <div class="chip-row" id="seriesMonthChips"></div>
+                                    </div>
+                                    <div id="dueChipsSlot"></div>
+                                    <button class="due-btn" id="seriesAddDate" type="button" style="display: none;">＋ افزودن تاریخ سررسید</button>
+                                    <div class="field-error" id="seriesError"></div>
+                                </div>
+                                <details class="more-details" id="moreDetails">
+                                    <summary>＋ جزئیات بیشتر</summary>
+                                    <div class="more-grid">
+                                        <label class="more-row"><span>اولویت</span>
+                                            <select id="prioritySelect" class="priority-select" aria-label="سطح اولویت">
+                                                <option value="low">اولویت کم</option>
+                                                <option value="medium" selected>اولویت متوسط</option>
+                                                <option value="high">اولویت زیاد</option>
+                                            </select>
+                                        </label>
+                                        <label class="more-row"><span>توضیح</span>
+                                            <input type="text" id="descInput" maxlength="200" placeholder="توضیح کوتاه..." aria-label="توضیح">
+                                        </label>
+                                    </div>
+                                </details>
+                                <div id="planKidsWrap" style="display: none;">
+                                    <div class="due-chips" id="planKidChips" style="display: none;"></div>
+                                    <div class="child-add">
+                                        <input type="text" class="child-input" id="planKidInput" placeholder="کار جدید..." maxlength="200" aria-label="عنوان کار جدید">
+                                        <button class="btn-add btn-child-add" id="planKidAdd" type="button">افزودن</button>
+                                    </div>
+                                </div>
+                                <button class="due-btn template-toggle" id="templateBtn" type="button" style="display: none;">📁 ساخت برنامه از قالب آماده</button>
+                                <div class="form-actions">
+                                    <button class="btn-add" id="addBtn">افزودن کار</button>
+                                </div>
+                            </section>
+
+                            <section class="task-zone settings-zone" aria-label="تنظیمات یادآور">
+                                <h2 class="task-zone-title">تنظیمات یادآور</h2>
+                                <details class="settings" id="settingsBox">
+                                    <summary>🔔 تنظیمات یادآور</summary>
+                                    <div class="settings-row">
+                                        <label><input type="checkbox" id="setRemindOn"> یادآور جلسات</label>
+                                        <label>چند دقیقه قبل؟
+                                            <select id="setRemindMin" class="sort-select">
+                                                <option value="15">۱۵ دقیقه</option>
+                                                <option value="30">۳۰ دقیقه</option>
+                                                <option value="60" selected>۱ ساعت</option>
+                                                <option value="180">۳ ساعت</option>
+                                                <option value="1440">۱ روز</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="settings-row">
+                                        <label><input type="checkbox" id="setDigestOn"> خلاصه صبحگاهی</label>
+                                        <button class="btn-small" id="notifPermBtn" type="button">فعال‌سازی اعلان‌ها</button>
+                                        <button class="btn-small" id="notifTestBtn" type="button">ارسال آزمایشی</button>
+                                    </div>
+                                    <div class="settings-row">
+                                        <label><input type="checkbox" id="setProMode"> 🚀 حالت حرفه‌ای (همه گزینه‌ها همیشه باز)</label>
+                                        <label><input type="checkbox" id="setSoundOn"> 🔔 صدای یادآور</label>
+                                    </div>
+                                    <div class="settings-status" id="notifStatus"></div>
+                                </details>
+                            </section>
+
+                            <section class="task-zone list-zone" aria-label="جستجوی وظایف">
+                                <h2 class="task-zone-title">جستجوی وظایف</h2>
+                                <div class="search-row">
+                                    <span class="search-icon" aria-hidden="true">🔍</span>
+                                    <input type="search" id="searchInput" placeholder="جستجو در وظایف..." autocomplete="off" aria-label="جستجو در وظایف">
+                                </div>
+                                <div class="filters" role="group" aria-label="فیلتر وظایف">
+                                    <button class="filter-btn active" data-filter="all">همه</button>
+                                    <button class="filter-btn" data-filter="active">انجام نشده</button>
+                                    <button class="filter-btn" data-filter="completed">انجام شده</button>
+                                    <button class="filter-btn" id="dayChip" type="button" style="display: none;"></button>
+                                    <button class="filter-btn" data-filter="hasloc">📍 محل‌دار</button>
+                                    <button class="filter-btn" data-filter="hasdue">📅 سررسیددار</button>
+                                    <button class="filter-btn" data-filter="archived">📦 بایگانی</button>
+                                </div>
+                                <div class="sort-row">
+                                    <label for="sortSelect">مرتب‌سازی:</label>
+                                    <select id="sortSelect" class="sort-select" title="نکته: در حالت «دستی» می‌توانید کارت‌ها را با درگ جابه‌جا کنید">
+                                        <option value="newest">جدیدترین</option>
+                                        <option value="due">نزدیک‌ترین سررسید</option>
+                                        <option value="oldest">قدیمی‌ترین</option>
+                                        <option value="alpha">الفبا</option>
+                                        <option value="manual">دستی (درگ)</option>
+                                    </select>
+                                    <button class="btn-small" id="calBtn" type="button">📅 تقویم</button>
+                                    <button class="btn-small" id="trashBtn" type="button">🗑 سطل<span id="trashCount"></span></button>
+                                </div>
+                                <div class="progress-wrap">
+                                    <div class="progress-label">
+                                        <span>پیشرفت انجام وظایف</span>
+                                        <span class="pct" id="progressPct">۰٪</span>
+                                    </div>
+                                    <div class="progress" role="progressbar" aria-label="درصد پیشرفت" aria-valuemin="0" aria-valuemax="100" id="progressBar">
+                                        <div class="progress-fill" id="progressFill"></div>
+                                    </div>
+                                </div>
+                                <div class="stats">
+                                    <span>کل: <span class="num" id="totalCount">۰</span></span>
+                                    <span>انجام شده: <span class="num" id="doneCount">۰</span></span>
+                                    <span>باقی‌مانده: <span class="num" id="remainCount">۰</span></span>
+                                </div>
+                                <div class="task-list" id="taskList" aria-live="polite"></div>
+                                <button class="btn-clear" id="clearDone" style="display: none;">پاک کردن انجام شده‌ها</button>
+                                <button class="btn-clear" id="archiveDone" type="button" style="display: none;">📦 بایگانی انجام‌شده‌ها</button>
+                                <div class="insight-zone">
+                                    <h2 class="task-zone-title">گزارش پیشرفت</h2>
+                                    <div class="stats-box" id="statsBox"></div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <footer class="app-footer">
+                        <div>
+                            <span>ساخته‌شده با ❤ توسط <a href="https://www.linkedin.com/in/mahdi-amouzegar/" target="_blank" rel="noopener">مهدی آموزگار</a></span>
+                            <span class="app-footer__sep">·</span>
+                            <span class="donate-soon" title="به‌زودی: درگاه حمایت مالی">☕ حمایت مالی (به‌زودی)</span>
+                        </div>
+                        <div class="app-footer__small">© <span id="copyYear">۱۴۰۵</span> — همه حقوق محفوظ است · 🔒 اطلاعات شما فقط روی همین دستگاه می‌ماند</div>
+                    </footer>
+
+                    <section class="detail-page" id="detailPage" style="display: none;" aria-label="جزئیات وظیفه">
+                        <div class="detail-inner">
+                            <div class="detail-header">
+                                <button class="btn-icon" id="detailBack" aria-label="بازگشت به لیست">→</button>
+                                <h2 id="detailTitle">جزئیات وظیفه</h2>
+                            </div>
+                            <div class="detail-card">
+                                <details class="detail-accordion basic" open>
+                                    <summary>اطلاعات اصلی</summary>
+                                    <div class="detail-accordion-body">
+                                        <label class="field"><span class="field-label">عنوان</span><input type="text" id="fTitle" maxlength="200" autocomplete="off"></label>
+                                        <label class="field"><span class="field-label">سطح اولویت</span><select id="fPriority" class="sort-select"><option value="low">اولویت کم</option><option value="medium">اولویت متوسط</option><option value="high">اولویت زیاد</option></select></label>
+                                        <div class="field pin-row"><input type="checkbox" id="fPin"><label class="field-label" for="fPin">📌 سنجاق به بالای لیست</label></div>
+                                        <label class="field"><span class="field-label">توضیح بیشتر</span><textarea id="fDesc" rows="3" maxlength="1000" placeholder="مثلاً نام پزشک، علت مراجعه..."></textarea></label>
+                                    </div>
+                                </details>
+                                <details class="detail-accordion recurrence">
+                                    <summary>تکرار و زمان‌بندی</summary>
+                                    <div class="detail-accordion-body">
+                                        <label class="field"><span class="field-label">تکرار</span><select id="fRecur" class="sort-select"><option value="none">بدون تکرار</option><option value="daily">روزانه</option><option value="weekly">هفتگی</option><option value="monthly">ماهانه</option><option value="custom">هر چند روز...</option><option value="hourly">هر چند ساعت...</option><option value="weeklyDays">روزهای هفته...</option><option value="monthlyDays">روزهای ماه...</option></select></label>
+                                        <div class="field" id="fRecurWeekRow" style="display: none;"><span class="field-label">کدام روزها؟</span><div class="chip-row" id="fRecurWeekChips"></div></div>
+                                        <div class="field" id="fRecurMonthRow" style="display: none;"><span class="field-label">کدام روزهای ماه؟</span><div class="chip-row" id="fRecurMonthChips"></div></div>
+                                        <div class="field" id="fRecurNRow" style="display: none;"><span class="field-label">هر چند روز؟</span><input type="number" id="fRecurN" min="1" max="365" value="2"></div>
+                                    </div>
+                                </details>
+                                <details class="detail-accordion contact">
+                                    <summary>تماس و منابع</summary>
+                                    <div class="detail-accordion-body">
+                                        <div class="field"><label class="field-label" for="fPhone">تلفن تماس</label><input type="tel" id="fPhone" class="ltr" maxlength="20" placeholder="0912..." autocomplete="off"><a class="due-btn call-btn" id="fPhoneCall" href="#" style="display: none;">📞 تماس گرفتن</a><span class="field-error" id="fPhoneError"></span></div>
+                                        <label class="field"><span class="field-label">آدرس پستی</span><textarea id="fAddr" rows="2" maxlength="500" placeholder="آدرس مطب یا محل..."></textarea></label>
+                                        <div class="field"><label class="field-label" for="fUrl">آدرس اینترنتی</label><input type="url" id="fUrl" class="ltr" maxlength="300" placeholder="https://..." autocomplete="off" dir="ltr"><div class="link-row"><a class="field-link" id="fUrlOpen" href="#" target="_blank" rel="noopener" style="display: none;">باز کردن پیوند ↗</a><button class="due-btn" id="fUrlCopy" type="button" style="display: none;">📋 کپی لینک</button></div></div>
+                                    </div>
+                                </details>
+                                <details class="detail-accordion sessions">
+                                    <summary>جلسه‌ها و تاریخ‌ها</summary>
+                                    <div class="detail-accordion-body">
+                                        <div class="field"><span class="field-label">جلسه‌ها / تاریخ‌ها <span class="count-badge" id="sessCount"></span></span><div class="session-list" id="sessList"></div><button class="due-btn" id="addSessionBtn" type="button">＋ افزودن جلسه</button></div>
+                                    </div>
+                                </details>
+                                <details class="detail-accordion location">
+                                    <summary>محل روی نقشه</summary>
+                                    <div class="detail-accordion-body">
+                                        <div class="field" id="fLocField"><span class="field-label">محل روی نقشه</span><div class="loc-line" id="detailLocLine"></div><div class="loc-btns"><button class="due-btn" id="detailLocShow" type="button">نمایش روی نقشه</button><button class="due-btn" id="detailLocRoute" type="button">🧭 فاصله و مسیر</button><button class="due-btn" id="detailLocChange" type="button">تغییر محل</button><button class="due-clear" id="detailLocRemove" type="button" aria-label="حذف محل">✕</button></div></div>
+                                    </div>
+                                </details>
+                                <details class="detail-accordion timer">
+                                    <summary>زمان صرف‌شده</summary>
+                                    <div class="detail-accordion-body">
+                                        <div class="field"><span class="field-label">⏱ زمان صرف‌شده</span><div class="loc-btns"><span class="loc-line" id="timerLabel">۰ دقیقه</span><button class="due-btn" id="timerToggle" type="button">▶ شروع</button></div></div>
+                                    </div>
+                                </details>
+                                <details class="detail-accordion photos">
+                                    <summary>تصاویر و مدارک</summary>
+                                    <div class="detail-accordion-body">
+                                        <div class="field"><span class="field-label">📷 تصاویر و مدارک <span class="count-badge" id="photoCount"></span></span><div class="photo-grid" id="photoGrid"></div><label class="due-btn" for="photoInput" style="cursor: pointer;">＋ افزودن عکس</label><input type="file" id="photoInput" accept="image/*" multiple hidden></div>
+                                    </div>
+                                </details>
+                                <div class="detail-actions"><button class="btn-clear" id="detailDelete" type="button">حذف این وظیفه</button></div>
+                                <div class="save-hint" id="saveHint" aria-live="polite"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="detail-page" id="trashPage" style="display: none;" aria-label="سطل زباله">
+                        <div class="detail-inner">
+                            <div class="detail-header">
+                                <button class="btn-icon" id="trashBack" aria-label="بازگشت به لیست">→</button>
+                                <h2>🗑 سطل زباله</h2>
+                            </div>
+                            <div class="detail-card">
+                                <div class="session-list" id="trashList"></div>
+                                <div class="detail-actions"><button class="btn-clear" id="trashEmpty" type="button">خالی کردن سطل</button></div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
-                <details class="trust">
-                    <summary>🔒 حریم خصوصی شما</summary>
-                    <p>همه اطلاعات شما (وظایف، تاریخ‌ها و محل‌ها) فقط در همین دستگاه و مرورگر خودتان ذخیره می‌شود و به هیچ سروری ارسال نمی‌شود. نقشه صرفاً تصویر اینترنتی است و چیزی از شما آپلود نمی‌کند.</p>
-                </details>
-            </div>
-        </div>
-
-        <div class="mobile-tabs" role="tablist" aria-label="انتخاب نما">
-            <button class="mobile-tab active" data-tab="tasks" role="tab" type="button">📋 وظایف</button>
-            <button class="mobile-tab" data-tab="map" role="tab" type="button">🗺 نقشه</button>
-        </div>
-
-        <div class="layout">
-            <div class="panel active" id="panelTasks">
-
-        <div class="kind3" role="group" aria-label="نوع مورد جدید">
-            <button class="kind3-btn active" data-kind="task" type="button">📝 یک کار</button>
-            <button class="kind3-btn" data-kind="plan" type="button">📂 یک برنامه</button>
-            <button class="kind3-btn" data-kind="series" type="button">📅 یک دوره</button>
-        </div>
-
-        <div class="input-section">
-            <input type="text" id="taskInput" placeholder="کار جدید را بنویسید..." maxlength="200" autocomplete="off" aria-label="متن وظیفه جدید" autofocus>
-            <button class="btn-icon mic-btn" id="micBtn" type="button" aria-label="ورود صوتی">🎤</button>
-        </div>
-
-        <div class="smart-chip" id="smartChip" style="display: none;">
-            <span id="smartChipText"></span>
-            <button id="smartAccept" type="button">✓ اضافه کن</button>
-            <button id="smartDismiss" type="button" aria-label="بی‌خیال">✕</button>
-        </div>
-
-        <div class="due-row">
-            <button class="due-btn" id="dueBtn" type="button" aria-label="تعیین سررسید برای وظیفه جدید">📅 <span>تعیین سررسید (اختیاری)</span></button>
-            <button class="due-btn" id="locBtn" type="button" aria-label="انتخاب محل روی نقشه">📍 انتخاب محل روی نقشه</button>
-        </div>
-
-        <div class="due-chips" id="dueChips" style="display: none;"></div>
-
-        <div class="loc-chip" id="locChip" style="display: none;">
-            <span id="locChipText"></span>
-            <button type="button" data-locclear aria-label="حذف محل">✕</button>
-        </div>
-
-        <div id="seriesRecurWrap" style="display: none;">
-            <div class="field-label" style="margin-bottom: 6px;">تکرار دوره</div>
-            <div class="recur-list" id="seriesRecurList">
-                <button type="button" data-srecur="hourly">ساعتی</button>
-                <button type="button" data-srecur="daily" class="on">روزانه</button>
-                <button type="button" data-srecur="weekly">هفتگی</button>
-                <button type="button" data-srecur="monthly">ماهانه</button>
-                <button type="button" data-srecur="hourlyN">هر چند ساعت...</button>
-                <button type="button" data-srecur="weeklyDays">روزهای هفته...</button>
-                <button type="button" data-srecur="monthlyDays">روزهای ماه...</button>
-                <button type="button" data-srecur="dates">تاریخ سررسید</button>
-            </div>
-            <div id="seriesSubHours" style="display: none;">
-                <div class="chip-row" style="margin-bottom: 8px;">
-                    <button type="button" class="day-chip" data-snh="2">۲</button>
-                    <button type="button" class="day-chip" data-snh="4">۴</button>
-                    <button type="button" class="day-chip" data-snh="6">۶</button>
-                    <button type="button" class="day-chip" data-snh="8">۸</button>
-                    <button type="button" class="day-chip" data-snh="12">۱۲</button>
-                    <button type="button" class="day-chip" data-snh="24">۲۴</button>
-                </div>
-                <label class="more-row"><span>هر چند ساعت؟</span><input type="number" id="seriesN" min="1" max="168" value="8"></label>
-            </div>
-            <div id="seriesSubWeek" style="display: none;">
-                <div class="chip-row">
-                    <button type="button" class="day-chip" data-swday="6">شنبه</button>
-                    <button type="button" class="day-chip" data-swday="0">یکشنبه</button>
-                    <button type="button" class="day-chip" data-swday="1">دوشنبه</button>
-                    <button type="button" class="day-chip" data-swday="2">سه‌شنبه</button>
-                    <button type="button" class="day-chip" data-swday="3">چهارشنبه</button>
-                    <button type="button" class="day-chip" data-swday="4">پنجشنبه</button>
-                    <button type="button" class="day-chip" data-swday="5">جمعه</button>
-                </div>
-            </div>
-            <div id="seriesSubMonth" style="display: none;">
-                <div class="chip-row" id="seriesMonthChips"></div>
-            </div>
-            <div id="dueChipsSlot"></div>
-            <button class="due-btn" id="seriesAddDate" type="button" style="display: none;">＋ افزودن تاریخ سررسید</button>
-            <div class="field-error" id="seriesError"></div>
-        </div>
-
-        <details class="more-details" id="moreDetails">
-            <summary>＋ جزئیات بیشتر</summary>
-            <div class="more-grid">
-                <label class="more-row"><span>اولویت</span>
-                    <select id="prioritySelect" class="priority-select" aria-label="سطح اولویت">
-                        <option value="low">اولویت کم</option>
-                        <option value="medium" selected>اولویت متوسط</option>
-                        <option value="high">اولویت زیاد</option>
-                    </select>
-                </label>
-                <label class="more-row"><span>توضیح</span>
-                    <input type="text" id="descInput" maxlength="200" placeholder="توضیح کوتاه..." aria-label="توضیح">
-                </label>
-            </div>
-        </details>
-
-        <div id="planKidsWrap" style="display: none;">
-            <div class="due-chips" id="planKidChips" style="display: none;"></div>
-            <div class="child-add">
-                <input type="text" class="child-input" id="planKidInput" placeholder="کار جدید..." maxlength="200" aria-label="عنوان کار جدید">
-                <button class="btn-add btn-child-add" id="planKidAdd" type="button">افزودن</button>
-            </div>
-        </div>
-
-        <button class="due-btn template-toggle" id="templateBtn" type="button" style="display: none;">📁 ساخت برنامه از قالب آماده</button>
-
-        <div class="form-actions">
-            <button class="btn-add" id="addBtn">افزودن کار</button>
-        </div>
-
-        <details class="settings" id="settingsBox">
-            <summary>🔔 تنظیمات یادآور</summary>
-            <div class="settings-row">
-                <label><input type="checkbox" id="setRemindOn"> یادآور جلسات</label>
-                <label>چند دقیقه قبل؟
-                    <select id="setRemindMin" class="sort-select">
-                        <option value="15">۱۵ دقیقه</option>
-                        <option value="30">۳۰ دقیقه</option>
-                        <option value="60" selected>۱ ساعت</option>
-                        <option value="180">۳ ساعت</option>
-                        <option value="1440">۱ روز</option>
-                    </select>
-                </label>
-            </div>
-            <div class="settings-row">
-                <label><input type="checkbox" id="setDigestOn"> خلاصه صبحگاهی</label>
-                <button class="btn-small" id="notifPermBtn" type="button">فعال‌سازی اعلان‌ها</button>
-                <button class="btn-small" id="notifTestBtn" type="button">ارسال آزمایشی</button>
-            </div>
-            <div class="settings-row">
-                <label><input type="checkbox" id="setProMode"> 🚀 حالت حرفه‌ای (همه گزینه‌ها همیشه باز)</label>
-                <label><input type="checkbox" id="setSoundOn"> 🔔 صدای یادآور</label>
-            </div>
-            <div class="settings-status" id="notifStatus"></div>
-        </details>
-
-        <div class="search-row">
-            <span class="search-icon" aria-hidden="true">🔍</span>
-            <input type="search" id="searchInput" placeholder="جستجو در وظایف..." autocomplete="off" aria-label="جستجو در وظایف">
-        </div>
-
-        <div class="filters" role="group" aria-label="فیلتر وظایف">
-            <button class="filter-btn active" data-filter="all">همه</button>
-            <button class="filter-btn" data-filter="active">انجام نشده</button>
-            <button class="filter-btn" data-filter="completed">انجام شده</button>
-            <button class="filter-btn" id="dayChip" type="button" style="display: none;"></button>
-            <button class="filter-btn" data-filter="hasloc">📍 محل‌دار</button>
-            <button class="filter-btn" data-filter="hasdue">📅 سررسیددار</button>
-            <button class="filter-btn" data-filter="archived">📦 بایگانی</button>
-        </div>
-
-        <div class="sort-row">
-            <label for="sortSelect">مرتب‌سازی:</label>
-            <select id="sortSelect" class="sort-select" title="نکته: در حالت «دستی» می‌توانید کارت‌ها را با درگ جابه‌جا کنید">
-                <option value="newest">جدیدترین</option>
-                <option value="due">نزدیک‌ترین سررسید</option>
-                <option value="oldest">قدیمی‌ترین</option>
-                <option value="alpha">الفبا</option>
-                <option value="manual">دستی (درگ)</option>
-            </select>
-            <button class="btn-small" id="calBtn" type="button">📅 تقویم</button>
-            <button class="btn-small" id="trashBtn" type="button">🗑 سطل<span id="trashCount"></span></button>
-        </div>
-
-        <div class="progress-wrap">
-            <div class="progress-label">
-                <span>پیشرفت انجام وظایف</span>
-                <span class="pct" id="progressPct">۰٪</span>
-            </div>
-            <div class="progress" role="progressbar" aria-label="درصد پیشرفت" aria-valuemin="0" aria-valuemax="100" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-        </div>
-
-        <div class="stats">
-            <span>کل: <span class="num" id="totalCount">۰</span></span>
-            <span>انجام شده: <span class="num" id="doneCount">۰</span></span>
-            <span>باقی‌مانده: <span class="num" id="remainCount">۰</span></span>
-        </div>
-
-        <div class="stats-box" id="statsBox"></div>
-
-        <div class="task-list" id="taskList" aria-live="polite"></div>
-
-        <button class="btn-clear" id="clearDone" style="display: none;">پاک کردن انجام شده‌ها</button>
-        <button class="btn-clear" id="archiveDone" type="button" style="display: none;">📦 بایگانی انجام‌شده‌ها</button>
-            </div>
-
-        </div>
-        <footer class="app-footer">
-            <div>
-                <span>ساخته‌شده با ❤ توسط <a href="https://www.linkedin.com/in/mahdi-amouzegar/" target="_blank" rel="noopener">مهدی آموزگار</a></span>
-                <span class="app-footer__sep">·</span>
-                <span class="donate-soon" title="به‌زودی: درگاه حمایت مالی">☕ حمایت مالی (به‌زودی)</span>
-            </div>
-            <div class="app-footer__small">© <span id="copyYear">۱۴۰۵</span> — همه حقوق محفوظ است · 🔒 اطلاعات شما فقط روی همین دستگاه می‌ماند</div>
-        </footer>
             </div>
         </div>
     </div>
 
-    <section class="detail-page" id="detailPage" style="display: none;" aria-label="جزئیات وظیفه">
-        <div class="detail-inner">
-            <div class="detail-header">
-                <button class="btn-icon" id="detailBack" aria-label="بازگشت به لیست">→</button>
-                <h2 id="detailTitle">جزئیات وظیفه</h2>
-            </div>
-            <div class="detail-card">
-                <label class="field">
-                    <span class="field-label">عنوان</span>
-                    <input type="text" id="fTitle" maxlength="200" autocomplete="off">
-                </label>
-                <label class="field">
-                    <span class="field-label">سطح اولویت</span>
-                    <select id="fPriority" class="sort-select">
-                        <option value="low">اولویت کم</option>
-                        <option value="medium">اولویت متوسط</option>
-                        <option value="high">اولویت زیاد</option>
-                    </select>
-                </label>
-                <label class="field">
-                    <span class="field-label">تکرار</span>
-                    <select id="fRecur" class="sort-select">
-                        <option value="none">بدون تکرار</option>
-                        <option value="daily">روزانه</option>
-                        <option value="weekly">هفتگی</option>
-                        <option value="monthly">ماهانه</option>
-                        <option value="custom">هر چند روز...</option>
-                        <option value="hourly">هر چند ساعت...</option>
-                        <option value="weeklyDays">روزهای هفته...</option>
-                        <option value="monthlyDays">روزهای ماه...</option>
-                    </select>
-                </label>
-                <div class="field" id="fRecurWeekRow" style="display: none;">
-                    <span class="field-label">کدام روزها؟</span>
-                    <div class="chip-row" id="fRecurWeekChips"></div>
-                </div>
-                <div class="field" id="fRecurMonthRow" style="display: none;">
-                    <span class="field-label">کدام روزهای ماه؟</span>
-                    <div class="chip-row" id="fRecurMonthChips"></div>
-                </div>
-                <div class="field" id="fRecurNRow" style="display: none;">
-                    <span class="field-label">هر چند روز؟</span>
-                    <input type="number" id="fRecurN" min="1" max="365" value="2">
-                </div>
-                <div class="field pin-row">
-                    <input type="checkbox" id="fPin">
-                    <label class="field-label" for="fPin">📌 سنجاق به بالای لیست</label>
-                </div>
-                <label class="field">
-                    <span class="field-label">توضیح بیشتر</span>
-                    <textarea id="fDesc" rows="3" maxlength="1000" placeholder="مثلاً نام پزشک، علت مراجعه..."></textarea>
-                </label>
-                <div class="field">
-                    <label class="field-label" for="fPhone">تلفن تماس</label>
-                    <input type="tel" id="fPhone" class="ltr" maxlength="20" placeholder="0912..." autocomplete="off">
-                    <a class="due-btn call-btn" id="fPhoneCall" href="#" style="display: none;">📞 تماس گرفتن</a>
-                    <span class="field-error" id="fPhoneError"></span>
-                </div>
-                <label class="field">
-                    <span class="field-label">آدرس پستی</span>
-                    <textarea id="fAddr" rows="2" maxlength="500" placeholder="آدرس مطب یا محل..."></textarea>
-                </label>
-                <div class="field">
-                    <label class="field-label" for="fUrl">آدرس اینترنتی</label>
-                    <input type="url" id="fUrl" class="ltr" maxlength="300" placeholder="https://..." autocomplete="off" dir="ltr">
-                    <div class="link-row">
-                        <a class="field-link" id="fUrlOpen" href="#" target="_blank" rel="noopener" style="display: none;">باز کردن پیوند ↗</a>
-                        <button class="due-btn" id="fUrlCopy" type="button" style="display: none;">📋 کپی لینک</button>
-                    </div>
-                </div>
-                <div class="field">
-                    <span class="field-label">⏱ زمان صرف‌شده</span>
-                    <div class="loc-btns">
-                        <span class="loc-line" id="timerLabel">۰ دقیقه</span>
-                        <button class="due-btn" id="timerToggle" type="button">▶ شروع</button>
-                    </div>
-                </div>
-                <div class="field">
-                    <span class="field-label">📷 تصاویر و مدارک <span class="count-badge" id="photoCount"></span></span>
-                    <div class="photo-grid" id="photoGrid"></div>
-                    <label class="due-btn" for="photoInput" style="cursor: pointer;">＋ افزودن عکس</label>
-                    <input type="file" id="photoInput" accept="image/*" multiple hidden>
-                </div>
-                <div class="field">
-                    <span class="field-label">جلسه‌ها / تاریخ‌ها <span class="count-badge" id="sessCount"></span></span>
-                    <div class="session-list" id="sessList"></div>
-                    <button class="due-btn" id="addSessionBtn" type="button">＋ افزودن جلسه</button>
-                </div>
-                <div class="field" id="fLocField">
-                    <span class="field-label">محل روی نقشه</span>
-                    <div class="loc-line" id="detailLocLine"></div>
-                    <div class="loc-btns">
-                        <button class="due-btn" id="detailLocShow" type="button">نمایش روی نقشه</button>
-                        <button class="due-btn" id="detailLocRoute" type="button">🧭 فاصله و مسیر</button>
-                        <button class="due-btn" id="detailLocChange" type="button">تغییر محل</button>
-                        <button class="due-clear" id="detailLocRemove" type="button" aria-label="حذف محل">✕</button>
-                    </div>
-                </div>
-                <div class="detail-actions">
-                    <button class="btn-clear" id="detailDelete" type="button">حذف این وظیفه</button>
-                </div>
-                <div class="save-hint" id="saveHint" aria-live="polite"></div>
-            </div>
-        </div>
-    </section>
-
-    <div class="snackbar" id="snackbar" role="status" aria-live="polite">
-        <span id="snackMsg"></span>
-        <button id="snackUndo" type="button">بازگردانی</button>
-    </div>
-
-    <div class="lightbox" id="lightbox" style="display: none;">
-        <img id="lightboxImg" alt="تصویر وظیفه">
-    </div>
+    <div class="snackbar" id="snackbar" role="status" aria-live="polite"><span id="snackMsg"></span><button id="snackUndo" type="button">بازگردانی</button></div>
+    <div class="lightbox" id="lightbox" style="display: none;"><img id="lightboxImg" alt="تصویر وظیفه"></div>
 
     <div class="picker-overlay" id="welcomeOverlay" style="display: none;">
         <div class="picker" role="dialog" aria-modal="true" aria-label="خوش آمدید">
             <div class="picker-title">👋 خوش آمدید</div>
             <p class="welcome-text">این دستیار وظایف شماست — کاملاً آفلاین و خصوصی.<br>• عنوان را بنویسید و Enter بزنید<br>• با 📅 تاریخ، با 📍 محل اضافه کنید<br>• با «+ افزودن» کار، برنامه یا دوره بسازید</p>
-            <div class="picker-actions">
-                <button class="btn-add picker-confirm" id="welcomeStart">شروع</button>
-            </div>
+            <div class="picker-actions"><button class="btn-add picker-confirm" id="welcomeStart">شروع</button></div>
         </div>
     </div>
 
@@ -396,15 +361,10 @@
             <div id="tplList"></div>
             <div id="tplConfig" style="display: none;">
                 <label class="more-row"><span>نام برنامه</span><input type="text" id="tplName" maxlength="200"></label>
-                <div class="child-add" style="margin-top: 8px;">
-                    <button class="due-btn" id="tplStartBtn" type="button">📅 تاریخ شروع</button>
-                    <button class="due-btn" id="tplEndBtn" type="button">📅 تاریخ پایان</button>
-                </div>
+                <div class="child-add" style="margin-top: 8px;"><button class="due-btn" id="tplStartBtn" type="button">📅 تاریخ شروع</button><button class="due-btn" id="tplEndBtn" type="button">📅 تاریخ پایان</button></div>
                 <div class="loc-line" id="tplDatesLine" style="margin-top: 6px;"></div>
                 <div class="session-list" id="tplKids" style="margin: 10px 0;"></div>
-                <div class="child-add">
-                    <input type="text" class="child-input" id="tplKidInput" placeholder="کار جدید..." maxlength="200" aria-label="افزودن کار به قالب">
-                </div>
+                <div class="child-add"><input type="text" class="child-input" id="tplKidInput" placeholder="کار جدید..." maxlength="200" aria-label="افزودن کار به قالب"></div>
             </div>
         </div>
     </div>
@@ -412,71 +372,67 @@
     <div class="picker-overlay" id="calOverlay" style="display: none;">
         <div class="picker cal-wide" role="dialog" aria-modal="true" aria-label="تقویم جلسات">
             <div class="picker-title">📅 تقویم جلسات</div>
-            <div class="picker-nav">
-                <button class="picker-nav-btn" id="calPrev" aria-label="ماه قبل">›</button>
-                <div class="picker-month" id="calLabel"></div>
-                <button class="picker-nav-btn" id="calNext" aria-label="ماه بعد">‹</button>
-            </div>
-            <div class="picker-weekdays">
-                <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span>
-            </div>
+            <div class="picker-nav"><button class="picker-nav-btn" id="calPrev" aria-label="ماه قبل">›</button><div class="picker-month" id="calLabel"></div><button class="picker-nav-btn" id="calNext" aria-label="ماه بعد">‹</button></div>
+            <div class="picker-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span></div>
             <div class="picker-days" id="calDays"></div>
-            <div class="picker-actions">
-                <button class="btn-clear" id="calClose">بستن</button>
-            </div>
+            <div class="picker-actions"><button class="btn-clear" id="calClose">بستن</button></div>
         </div>
     </div>
-
-    <section class="detail-page" id="trashPage" style="display: none;" aria-label="سطل زباله">
-        <div class="detail-inner">
-            <div class="detail-header">
-                <button class="btn-icon" id="trashBack" aria-label="بازگشت به لیست">→</button>
-                <h2>🗑 سطل زباله</h2>
-            </div>
-            <div class="detail-card">
-                <div class="session-list" id="trashList"></div>
-                <div class="detail-actions">
-                    <button class="btn-clear" id="trashEmpty" type="button">خالی کردن سطل</button>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <div class="picker-overlay" id="pickerOverlay" style="display: none;">
         <div class="picker" role="dialog" aria-modal="true" aria-label="انتخاب سررسید">
             <div class="picker-title">انتخاب سررسید</div>
-            <div class="picker-chips">
-                <button type="button" data-preset="evening">امروز عصر</button>
-                <button type="button" data-preset="tomorrow">فردا ۹ صبح</button>
-                <button type="button" data-preset="week">هفته بعد</button>
-            </div>
-            <div class="picker-nav">
-                <button class="picker-nav-btn" id="pickerPrev" aria-label="ماه قبل">›</button>
-                <div class="picker-month" id="pickerMonthLabel"></div>
-                <button class="picker-nav-btn" id="pickerNext" aria-label="ماه بعد">‹</button>
-            </div>
-            <div class="picker-weekdays">
-                <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span>
-            </div>
+            <div class="picker-chips"><button type="button" data-preset="evening">امروز عصر</button><button type="button" data-preset="tomorrow">فردا ۹ صبح</button><button type="button" data-preset="week">هفته بعد</button></div>
+            <div class="picker-nav"><button class="picker-nav-btn" id="pickerPrev" aria-label="ماه قبل">›</button><div class="picker-month" id="pickerMonthLabel"></div><button class="picker-nav-btn" id="pickerNext" aria-label="ماه بعد">‹</button></div>
+            <div class="picker-weekdays"><span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span></div>
             <div class="picker-days" id="pickerDays"></div>
-            <div class="picker-time">
-                <span>ساعت</span>
-                <select id="pickerHour" aria-label="ساعت سررسید"></select>
-                <span>:</span>
-                <select id="pickerMinute" aria-label="دقیقه سررسید"></select>
-            </div>
+            <div class="picker-time"><span>ساعت</span><select id="pickerHour" aria-label="ساعت سررسید"></select><span>:</span><select id="pickerMinute" aria-label="دقیقه سررسید"></select></div>
             <div class="picker-error" id="pickerError" aria-live="polite"></div>
+            <div class="picker-actions"><button class="btn-add picker-confirm" id="pickerConfirm">تأیید</button><button class="btn-clear" id="pickerRemove">حذف سررسید</button><button class="btn-clear" id="pickerCancel">انصراف</button></div>
+        </div>
+    </div>
+
+    <div class="picker-overlay" id="namePromptModal" style="display: none;">
+        <div class="picker" role="dialog" aria-modal="true" aria-label="نام مکان">
+            <div class="picker-title" id="namePromptTitle">📌 نام این مکان</div>
+            <p class="name-prompt-hint" id="namePromptHint">یک نام کوتاه برای این مکان انتخاب کنید تا در لیست مکان‌های ذخیره‌شده دیده شود.</p>
+            <label class="more-row name-prompt-row">
+                <span>نام</span>
+                <input type="text" id="namePromptInput" maxlength="80" autocomplete="off" placeholder="مثلاً: خانه، مطب دکتر، محل کار...">
+            </label>
+            <div class="picker-error" id="namePromptError" aria-live="polite"></div>
             <div class="picker-actions">
-                <button class="btn-add picker-confirm" id="pickerConfirm">تأیید</button>
-                <button class="btn-clear" id="pickerRemove">حذف سررسید</button>
-                <button class="btn-clear" id="pickerCancel">انصراف</button>
+                <button class="btn-add picker-confirm" id="namePromptConfirm" type="button">ذخیره</button>
+                <button class="btn-clear" id="namePromptCancel" type="button">انصراف</button>
             </div>
+        </div>
+    </div>
+
+    <div class="picker-overlay" id="nameConflictModal" style="display: none;">
+        <div class="picker" role="dialog" aria-modal="true" aria-label="نام تکراری">
+            <div class="picker-title">⚠️ نام تکراری</div>
+            <p class="name-prompt-hint" id="nameConflictText">این نام قبلاً برای مکان دیگری ذخیره شده است.</p>
+            <div class="picker-actions" style="flex-direction: column;">
+                <button class="btn-add picker-confirm" id="nameConflictReplace" type="button">نام مکان قبلی را جایگزین کن</button>
+                <button class="btn-add picker-confirm" id="nameConflictPickAnother" type="button">نام دیگری انتخاب کن</button>
+                <button class="btn-clear" id="nameConflictCancel" type="button">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="picker-overlay" id="savedLocationsModal" style="display: none;">
+        <div class="picker cal-wide" role="dialog" aria-modal="true" aria-label="مدیریت مکان‌های ذخیره‌شده">
+            <div class="picker-title">📌 مکان‌های ذخیره‌شده <span class="saved-locations-count" id="savedLocationsModalCount"></span></div>
+            <div class="picker-actions tpl-actions" style="position: sticky; top: 0; z-index: 2;">
+                <button class="btn-add picker-confirm" id="savedLocationsAddNew" type="button">＋ افزودن مکان جدید از روی نقشه</button>
+                <button class="btn-clear" id="savedLocationsClose" type="button">بستن</button>
+            </div>
+            <div id="savedLocationsBody"></div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // CDN جایگزین در صورت در دسترس نبودن unpkg
         if (typeof L === 'undefined') {
             var _ls = document.createElement('script');
             _ls.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
@@ -493,8 +449,10 @@
     <script src="js/sessions.js?v=8" defer></script>
     <script src="js/picker.js?v=7" defer></script>
     <script src="js/map.js?v=7" defer></script>
-    <script src="js/detail.js?v=9" defer></script>
+    <script src="js/detail.js?v=11" defer></script>
     <script src="js/ui.js?v=10" defer></script>
+    <script src="js/route-ui.js?v=1" defer></script>
+    <script src="js/location-ui.js?v=2" defer></script>
     <script src="js/app.js?v=8" defer></script>
 </body>
 </html>

@@ -109,15 +109,18 @@
         function checkReminders() {
             if (!prefs.remindOn || !notifGranted()) return;
             const now = Date.now();
-            // تلورانس رسیدن به لحظه سررسید: دریفت تایمر ۶۰ ثانیه‌ای و برگشت از پس‌زمینه را پوشش می‌دهد
-            const DUE_GRACE = 2 * 60 * 1000;
+            // تلورانس دو دقیقه‌ای برای دریفت تایمر ۶۰ ثانیه‌ای و برگشت از پس‌زمینه
+            const REMINDER_GRACE = 2 * 60 * 1000;
+            const NEAR_DUE_MIN = 5;
             allSessions(true).forEach(s => {
                 const rm = (s.remindMin != null) ? s.remindMin : prefs.remindMin;
                 if (!rm) return; // ۰ یعنی خاموش برای این جلسه
                 const v = new Date(s.at).getTime();
                 if (isNaN(v)) return;
-                // ۱) هشدار زودهنگام: بازه تنظیم‌شده قبل از جلسه
-                if (!s.reminded && v > now && v - now <= rm * 60 * 1000) {
+
+                // ۱) هشدار زودهنگام: زمان انتخاب‌شده در تنظیمات قبل از جلسه
+                const leadTarget = v - rm * 60 * 1000;
+                if (!s.reminded && now >= leadTarget && now < v) {
                     fireNotification('⏰ یادآور جلسه', `${s.owner} — ${faShort(s.at)}`, 'sess-' + s.id).then(ok => {
                         if (ok) {
                             playChime();
@@ -125,9 +128,11 @@
                         }
                     });
                 }
-                // ۲) هشدار لحظه سررسید
-                if (!s.remindedDue && v <= now && now - v <= DUE_GRACE) {
-                    fireNotification('🔴 شروع جلسه', `${s.owner} — الان زمان آن است (${faShort(s.at)})`, 'due-' + s.id).then(ok => {
+
+                // ۲) هشدار نزدیک جلسه: دقیقاً ۵ دقیقه قبل، با تلورانس برای تأخیر اجرای تایمر
+                const nearDueTarget = v - NEAR_DUE_MIN * 60 * 1000;
+                if (!s.remindedDue && now >= nearDueTarget && now < v && now - nearDueTarget <= REMINDER_GRACE) {
+                    fireNotification('🔔 ۵ دقیقه تا جلسه', `${s.owner} — ${faShort(s.at)}`, 'due-' + s.id).then(ok => {
                         if (ok) {
                             playChime();
                             markReminded(s.taskId, s.id, 'due');
