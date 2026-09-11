@@ -3145,3 +3145,312 @@
         background-color: var(--text-white);
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME OVERRIDE — با data-theme روی <html>
+   ═══════════════════════════════════════════════════════════════════════════
+   وقتی کاربر حالت صریح (dark/light) را انتخاب می‌کند، data-theme روی <html>
+   قرار می‌گیرد و این بلوک‌ها بر @media (prefers-color-scheme) غلبه می‌کنند.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── حالت صریح Dark ── */
+html[data-theme="dark"] {
+    /* Background layers */
+    --bg-0: #080818;
+    --bg-1: #0a0a1a;
+    --bg-2: #0d0d28;
+    --bg-3: #101032;
+    --bg-4: #151542;
+    --bg-5: #0e0e2c;
+    --bg-6: #141432;
+    --bg-7: #0f0f2e;
+    --bg-8: #161640;
+    --bg-9: #0a0a24;
+    --bg-10: #121238;
+    --bg-11: #131338;
+    --bg-12: #181848;
+    --bg-13: #0d0d28;
+    --bg-14: #1a0a4a;
+    --bg-15: #251060;
+    --bg-16: #1a0a28;
+    --bg-17: #251038;
+    --bg-18: #0a1a28;
+    --bg-19: #102838;
+    --bg-20: #1a1408;
+    --bg-21: #26200f;
+    --bg-22: #0a1a15;
+    --bg-23: #0f2a20;
+    --bg-24: #1a0a20;
+    --bg-25: #221030;
+    --bg-26: #23234d;
+    --bg-27: #0a2a1a;
+    --bg-28: #0f3a24;
+    --bg-29: #003322;
+    --bg-30: #005533;
+
+    /* Text */
+    --text-primary: #e0e0ff;
+    --text-secondary: #b98aff;
+    --text-muted: #7a7aaa;
+    --text-faint: #5a5a8a;
+    --text-faintest: #4a4a7a;
+    --text-white: #ffffff;
+    --text-title: #f1f1ff;
+    --text-detail-title: #e8e8fb;
+
+    /* Borders */
+    --border-subtle: #1a1a3e;
+    --border-medium: #2a2a5e;
+    --border-strong: #3a3a6e;
+    --border-purple: #2a1a3e;
+    --border-dark: #202050;
+}
+
+/* ── حالت صریح Light ── */
+html[data-theme="light"] {
+    /* Background layers */
+    --bg-0: #e8e8f0;
+    --bg-1: #f0f0f5;
+    --bg-2: #ffffff;
+    --bg-3: #ffffff;
+    --bg-4: #eaeaf0;
+    --bg-5: #f5f5fa;
+    --bg-6: #e0e0e8;
+    --bg-7: #ffffff;
+    --bg-8: #f0f0f5;
+    --bg-9: #f5f5fa;
+    --bg-10: #eaeaf0;
+    --bg-11: #ffffff;
+    --bg-12: #f5f5fa;
+    --bg-13: #ffffff;
+    --bg-14: #e0d8f5;
+    --bg-15: #d0c8f0;
+    --bg-16: #f5e0e8;
+    --bg-17: #ead0d8;
+    --bg-18: #e0e8f5;
+    --bg-19: #d0d8f0;
+    --bg-20: #f5eed0;
+    --bg-21: #eadfc0;
+    --bg-22: #e0f5e8;
+    --bg-23: #d0ead8;
+    --bg-24: #f5e0e8;
+    --bg-25: #ead0d8;
+    --bg-26: #d0d0d8;
+    --bg-27: #e0f5e8;
+    --bg-28: #d0ead8;
+    --bg-29: #e0f5e8;
+    --bg-30: #d0ead8;
+
+    /* Text */
+    --text-primary: #1a1a2e;
+    --text-secondary: #5a3a9a;
+    --text-muted: #6a6a8a;
+    --text-faint: #8a8aa0;
+    --text-faintest: #a0a0b0;
+    --text-white: #ffffff;
+    --text-title: #1a1a2e;
+    --text-detail-title: #1a1a2e;
+
+    /* Borders */
+    --border-subtle: #d0d0e0;
+    --border-medium: #b8b8cc;
+    --border-strong: #a0a0b8;
+    --border-purple: #c8b8d8;
+    --border-dark: #c0c0d0;
+}
+
+/* ── رنگ‌های ویژه در Light (مستقل از prefers-color-scheme) ── */
+html[data-theme="light"] .task-item.completed .task-text,
+html[data-theme="light"] .child-item.completed .child-text {
+    color: #6a8a7a;
+}
+
+html[data-theme="light"] .leaflet-popup-content-wrapper {
+    background: var(--bg-3);
+}
+
+html[data-theme="light"] .leaflet-popup-tip {
+    background: var(--bg-12);
+}
+
+html[data-theme="light"] .empty-state {
+    color: var(--text-faint);
+}
+
+html[data-theme="light"] .empty-state .icon {
+    opacity: 0.6;
+}
+
+html[data-theme="light"] .map-hint {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .fs-exit {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .pp-loc {
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .pp-save-btn {
+    color: var(--text-primary);
+    background: rgba(0, 212, 255, 0.12);
+}
+
+html[data-theme="light"] .snackbar {
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="light"] .picker {
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(123, 47, 247, 0.08);
+}
+
+html[data-theme="light"] .modal-body {
+    color: var(--text-primary);
+}
+
+html[data-theme="light"] .welcome-text {
+    color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME BUTTON & LANG BUTTON — در header-actions
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-btn,
+.lang-btn {
+    min-width: 52px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: inherit;
+    letter-spacing: 0.02em;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+}
+
+.theme-btn {
+    min-width: 44px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.theme-btn:hover,
+.lang-btn:hover {
+    border-color: var(--accent-cyan-border);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+}
+
+.theme-btn:focus-visible,
+.lang-btn:focus-visible {
+    outline: 2px solid var(--accent-cyan);
+    outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WELCOME SETTINGS — بخش انتخاب theme و language در Welcome overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+.welcome-settings {
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.025);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.welcome-settings-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.welcome-settings-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    flex: 0 0 auto;
+    min-width: 76px;
+}
+
+.welcome-settings-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.welcome-opt {
+    appearance: none;
+    flex: 1 1 auto;
+    min-width: 70px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-sm);
+    background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.welcome-opt:hover {
+    border-color: rgba(0, 212, 255, 0.45);
+    color: var(--text-primary);
+}
+
+.welcome-opt.active {
+    border-color: rgba(0, 212, 255, 0.78);
+    background: linear-gradient(145deg, rgba(0, 212, 255, 0.15), rgba(81, 56, 201, 0.13));
+    color: var(--text-white);
+    box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.10), 0 0 14px rgba(0, 212, 255, 0.10);
+}
+
+.welcome-opt:focus-visible {
+    outline: 2px solid var(--accent-cyan);
+    outline-offset: 2px;
+}
+
+/* ── در Light theme: دکمه‌های welcome ── */
+html[data-theme="light"] .welcome-settings {
+    background: rgba(0, 0, 0, 0.025);
+}
+
+html[data-theme="light"] .welcome-opt {
+    background: var(--bg-2);
+    border-color: var(--border-medium);
+    color: var(--text-muted);
+}
+
+html[data-theme="light"] .welcome-opt.active {
+    background: linear-gradient(145deg, rgba(0, 212, 255, 0.15), rgba(81, 56, 201, 0.10));
+    color: var(--text-primary);
+}
+
+@media (prefers-color-scheme: light) {
+    html:not([data-theme]) .welcome-settings {
+        background: rgba(0, 0, 0, 0.025);
+    }
+
+    html:not([data-theme]) .welcome-opt {
+        background: var(--bg-2);
+        border-color: var(--border-medium);
+        color: var(--text-muted);
+    }
+
+    html:not([data-theme]) .welcome-opt.active {
+        background: linear-gradient(145deg, rgba(0, 212, 255, 0.15), rgba(81, 56, 201, 0.10));
+        color: var(--text-primary);
+    }
+}

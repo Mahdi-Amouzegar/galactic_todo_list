@@ -296,7 +296,6 @@
                 ],
                 buttonText: 'شروع می‌کنم'
             });
-            // بعد از بستن، فوکوس روی input در دسکتاپ
             if (window.matchMedia('(min-width: 901px)').matches) {
                 const ti = document.getElementById('taskInput');
                 if (ti) ti.focus({ preventScroll: true });
@@ -316,12 +315,135 @@
                 ],
                 buttonText: 'فهمیدم'
             });
-            // بعد از بستن، فوکوس روی input در دسکتاپ
             if (window.matchMedia('(min-width: 901px)').matches) {
                 const ti = document.getElementById('taskInput');
                 if (ti) ti.focus({ preventScroll: true });
             }
         });
+
+        /* ---------- Theme (حالت نمایش) و Lang (زبان) ---------- */
+
+        // اعمال theme روی <html>
+        // - 'auto' : حذف data-theme → پیروی از prefers-color-scheme
+        // - 'dark' : data-theme="dark"
+        // - 'light': data-theme="light"
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            if (theme === 'dark' || theme === 'light') {
+                html.setAttribute('data-theme', theme);
+            } else {
+                html.removeAttribute('data-theme');
+            }
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) {
+                const isLight = theme === 'light' ||
+                    (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
+                meta.setAttribute('content', isLight ? '#f0f0f5' : '#0a0a1a');
+            }
+        }
+
+        // به‌روزرسانی آیکن دکمه theme
+        function updateThemeBtn() {
+            const btn = document.getElementById('themeBtn');
+            if (!btn) return;
+            const icons = { auto: '🖥', dark: '🌙', light: '☀️' };
+            const titles = { auto: 'حالت نمایش: خودکار', dark: 'حالت نمایش: تاریک', light: 'حالت نمایش: روشن' };
+            btn.textContent = icons[prefs.theme] || icons.auto;
+            btn.title = titles[prefs.theme] || titles.auto;
+        }
+
+        // به‌روزرسانی متن دکمه language
+        function updateLangBtn() {
+            const btn = document.getElementById('langBtn');
+            if (!btn) return;
+            btn.textContent = prefs.lang === 'en' ? '🌐 EN' : '🌐 FA';
+            btn.title = prefs.lang === 'en' ? 'Switch to Persian' : 'تغییر زبان به انگلیسی';
+        }
+
+        // به‌روزرسانی حالت active در welcome overlay
+        function updateWelcomeOpts() {
+            const themeGroup = document.getElementById('welcomeThemeGroup');
+            if (themeGroup) {
+                themeGroup.querySelectorAll('[data-theme]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.theme === prefs.theme);
+                });
+            }
+            const langGroup = document.getElementById('welcomeLangGroup');
+            if (langGroup) {
+                langGroup.querySelectorAll('[data-lang]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.lang === prefs.lang);
+                });
+            }
+        }
+
+        // اعمال همه تنظیمات نمایشی (theme + lang)
+        function applyDisplaySettings() {
+            applyTheme(prefs.theme);
+            document.documentElement.setAttribute('data-lang', prefs.lang);
+            // نکته: dir و lang در فاز ۸ (i18n) فعال می‌شوند.
+            // الان فقط data-lang ست می‌کنیم تا آماده باشیم.
+            updateThemeBtn();
+            updateLangBtn();
+            updateWelcomeOpts();
+        }
+
+        // دکمه theme در هدر: چرخه auto → dark → light → auto
+        const themeBtnEl = document.getElementById('themeBtn');
+        if (themeBtnEl) {
+            themeBtnEl.addEventListener('click', () => {
+                const cycle = { auto: 'dark', dark: 'light', light: 'auto' };
+                prefs.theme = cycle[prefs.theme] || 'auto';
+                savePrefs();
+                applyDisplaySettings();
+            });
+        }
+
+        // دکمه lang در هدر: toggle fa ↔ en
+        const langBtnEl = document.getElementById('langBtn');
+        if (langBtnEl) {
+            langBtnEl.addEventListener('click', () => {
+                prefs.lang = prefs.lang === 'en' ? 'fa' : 'en';
+                savePrefs();
+                applyDisplaySettings();
+            });
+        }
+
+        // دکمه‌های theme در welcome
+        const _welcomeThemeGroup = document.getElementById('welcomeThemeGroup');
+        if (_welcomeThemeGroup) {
+            _welcomeThemeGroup.addEventListener('click', e => {
+                const btn = e.target.closest('[data-theme]');
+                if (!btn) return;
+                prefs.theme = btn.dataset.theme;
+                savePrefs();
+                applyDisplaySettings();
+            });
+        }
+
+        // دکمه‌های lang در welcome
+        const _welcomeLangGroup = document.getElementById('welcomeLangGroup');
+        if (_welcomeLangGroup) {
+            _welcomeLangGroup.addEventListener('click', e => {
+                const btn = e.target.closest('[data-lang]');
+                if (!btn) return;
+                prefs.lang = btn.dataset.lang;
+                savePrefs();
+                applyDisplaySettings();
+            });
+        }
+
+        // واکنش به تغییر prefers-color-scheme در حالت auto
+        const _themeMedia = window.matchMedia('(prefers-color-scheme: light)');
+        const _onThemeMediaChange = () => {
+            if (prefs.theme === 'auto') applyTheme('auto');
+        };
+        if (_themeMedia.addEventListener) {
+            _themeMedia.addEventListener('change', _onThemeMediaChange);
+        } else if (_themeMedia.addListener) {
+            _themeMedia.addListener(_onThemeMediaChange);
+        }
+
+        /* ---------- پایان بخش Theme/Lang ---------- */
 
         document.getElementById('mapToggle').addEventListener('click', () => {
             prefs.mapVisible = !prefs.mapVisible;
@@ -367,8 +489,6 @@
                 }
                 updateNotifStatus();
             });
-            //window.addEventListener('pointerdown', ensureAudio);
-            //window.addEventListener('keydown', ensureAudio);
             updateNotifStatus();
         }
 
@@ -476,23 +596,25 @@
         document.getElementById('pickerOverlay').addEventListener('click', e => {
             if (e.target.id === 'pickerOverlay') closePicker();
         });
-                // مدیریت متمرکز Escape — به ترتیب اولویت از بالا به پایین
-        // (بالاترین z-index اول)
+
+        // مدیریت متمرکز Escape — به ترتیب اولویت از بالا به پایین
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape') return;
 
-            // ۱. مودال‌های stacked (z-index: 300)
-            const namePrompt = document.getElementById('namePromptModal');
-            if (namePrompt && namePrompt.style.display === 'flex') return; // خودش مدیریت می‌کند
+            // ۱. مودال‌های stacked (z-index: 300) — خودشان مدیریت می‌کنند
+            const stacked = [
+                'confirmModal',
+                'infoModal',
+                'namePromptModal',
+                'nameConflictModal'
+            ];
+            for (const id of stacked) {
+                const el = document.getElementById(id);
+                if (el && el.style.display === 'flex') return;
+            }
 
-            const nameConflict = document.getElementById('nameConflictModal');
-            if (nameConflict && nameConflict.style.display === 'flex') return; // خودش مدیریت می‌کند
-
-            const confirmModal = document.getElementById('confirmModal');
-            if (confirmModal && confirmModal.style.display === 'flex') return; // خودش مدیریت می‌کند
-
-            const infoModal = document.getElementById('infoModal');
-            if (infoModal && infoModal.style.display === 'flex') return; // خودش مدیریت می‌کند
+            const saved = document.getElementById('savedLocationsModal');
+            if (saved && saved.style.display === 'flex') return;
 
             // ۲. مودال‌های عمومی (z-index: 100)
             const picker = document.getElementById('pickerOverlay');
@@ -503,13 +625,6 @@
 
             const tpl = document.getElementById('templateModal');
             if (tpl && tpl.style.display === 'flex') { closeTemplateModal(); return; }
-
-            const saved = document.getElementById('savedLocationsModal');
-            if (saved && saved.style.display === 'flex') {
-                if (typeof closeManageModal === 'function') closeManageModal();
-                else saved.style.display = 'none';
-                return;
-            }
 
             // ۳. صفحه‌های تمام‌صفحه (z-index: 60)
             const trash = document.getElementById('trashPage');
@@ -531,10 +646,8 @@
         });
 
         taskList.addEventListener('click', e => {
-            // حالت ویرایش: کلیک روی اینپوت‌ها نباید کاری کند
             if (e.target.classList.contains('task-edit-input') || e.target.classList.contains('child-input')) return;
 
-            // حذف چیپ سررسید پیش‌نویس زیرکار
             const cdchip = e.target.closest('[data-cdchip]');
             if (cdchip) {
                 const gid = cdchip.dataset.gid;
@@ -552,7 +665,6 @@
             if (!actionEl && editingId) return;
 
             const action = actionEl ? actionEl.dataset.action : null;
-    console.log('🟡 action =', action, '| id =', id, '| scopeEl =', scopeEl);
             if (action === 'toggle') toggleTask(id);
             else if (action === 'delete') deleteTask(id, scopeEl);
             else if (action === 'edit-btn') startEdit(id);
@@ -661,7 +773,6 @@
         taskList.addEventListener('focusout', e => {
             const editInput = e.target.closest('.task-edit-input');
             if (!editInput) return;
-            // اگر فوکوس هنوز داخل همان آیتم است (مثلاً کلیک روی دکمه‌ای داخلش)، ذخیره نکن
             const item = editInput.closest('.task-item');
             if (item && item.contains(e.relatedTarget)) return;
             const scopeEl = editInput.closest('.child-item') || item;
@@ -870,28 +981,18 @@
         }
         initSettings();
         applyMapVisibility();
-loadTasks().then(async () => {
-    await loadTrash();
-    if (prefs.proMode) tasks.forEach(t => { if (t.kind === 'plan') expandedPlans.add(String(t.id)); });
-    updateDueChips();
-    syncDisclosure();
-    try {
-        console.log('🔴 Before render in loadTasks.then');
-        render();
-        console.log('🟢 After render in loadTasks.then');
-    } catch (err) {
-        console.error('❌ Error in render (loadTasks.then):', err);
-    }
-    try {
-        renderTrash();
-        console.log('🟢 After renderTrash');
-    } catch (err) {
-        console.error('❌ Error in renderTrash:', err);
-    }
-    initMap();
-    syncServerTime();
-    startReminderLoop();
-});
+        applyDisplaySettings();
+        loadTasks().then(async () => {
+            await loadTrash();
+            if (prefs.proMode) tasks.forEach(t => { if (t.kind === 'plan') expandedPlans.add(String(t.id)); });
+            updateDueChips();
+            syncDisclosure();
+            render();
+            renderTrash();
+            initMap();
+            syncServerTime();
+            startReminderLoop();
+        });
 
 // Future React entry point can import state/actions from here.
 window.TodoApp = { getTasks: () => tasks, findTask, saveTasks, render };

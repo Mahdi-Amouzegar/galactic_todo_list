@@ -59,6 +59,9 @@ function loadPrefs() {
         if (typeof p.proMode === 'boolean') prefs.proMode = p.proMode;
         if (typeof p.soundOn === 'boolean') prefs.soundOn = p.soundOn;
         if (['task', 'series', 'plan'].includes(p.pendingKind)) prefs.pendingKind = p.pendingKind;
+        // فاز ۵-ج: theme و lang
+        if (['auto', 'dark', 'light'].includes(p.theme)) prefs.theme = p.theme;
+        if (['fa', 'en'].includes(p.lang)) prefs.lang = p.lang;
     } catch { /* پیش‌فرض */ }
 }
 

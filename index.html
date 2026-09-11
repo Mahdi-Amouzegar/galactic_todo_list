@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است -->
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-lang="fa">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://unpkg.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://unpkg.com https://worldtimeapi.org https://timeapi.io https://worldclockapi.com https://routing.openstreetmap.de https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://server.arcgisonline.com; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
@@ -17,14 +17,14 @@
     <link rel="icon" href="icons/favicon-32.ico" sizes="32x32">
     <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png">
     <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
-    <link rel="stylesheet" href="styles.css?v=6">
-    <link rel="stylesheet" href="ui-fixes.css?v=6">
-    <link rel="stylesheet" href="visual-fixes.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=8">
+    <link rel="stylesheet" href="ui-fixes.css?v=8">
+    <link rel="stylesheet" href="visual-fixes.css?v=8">
 </head>
 <body>
     <div class="container">
         <div class="app-shell">
-            <div class="panel panel-map" id="panelMap">
+            <div class="panel" id="panelMap">
                 <div class="map-head">
                     <span class="map-title">🗺 نقشه محل وظایف</span>
                     <div class="map-head-actions">
@@ -60,6 +60,8 @@
                                 <span class="time-source-icon" id="timeSourceIcon" title="در حال اتصال..." aria-label="وضعیت زمان">🕐</span>
                             </p>
                             <div class="header-actions">
+                                <button class="btn-small theme-btn" id="themeBtn" type="button" aria-label="تغییر حالت نمایش" title="حالت نمایش: خودکار">🖥</button>
+                                <button class="btn-small lang-btn" id="langBtn" type="button" aria-label="تغییر زبان" title="تغییر زبان">🌐 FA</button>
                                 <button class="btn-small" id="installBtn" type="button" style="display: none;">⬇ نصب اپلیکیشن</button>
                                 <button class="btn-small" id="privacyBtn" type="button" title="حریم خصوصی شما">🔒 حریم خصوصی</button>
                             </div>
@@ -345,6 +347,23 @@
         <div class="picker" role="dialog" aria-modal="true" aria-label="خوش آمدید">
             <div class="picker-title">👋 خوش آمدید</div>
             <p class="welcome-text">این دستیار وظایف شماست — کاملاً آفلاین و خصوصی.<br>• عنوان را بنویسید و Enter بزنید<br>• با 📅 تاریخ، با 📍 محل اضافه کنید<br>• با «+ افزودن» کار، برنامه یا دوره بسازید</p>
+            <div class="welcome-settings">
+                <div class="welcome-settings-row">
+                    <span class="welcome-settings-label">حالت نمایش:</span>
+                    <div class="welcome-settings-buttons" id="welcomeThemeGroup">
+                        <button type="button" class="welcome-opt" data-theme="auto">🖥 خودکار</button>
+                        <button type="button" class="welcome-opt" data-theme="light">☀️ روشن</button>
+                        <button type="button" class="welcome-opt" data-theme="dark">🌙 تاریک</button>
+                    </div>
+                </div>
+                <div class="welcome-settings-row">
+                    <span class="welcome-settings-label">زبان:</span>
+                    <div class="welcome-settings-buttons" id="welcomeLangGroup">
+                        <button type="button" class="welcome-opt" data-lang="fa">🇮🇷 فارسی</button>
+                        <button type="button" class="welcome-opt" data-lang="en">🇬🇧 English</button>
+                    </div>
+                </div>
+            </div>
             <div class="picker-actions"><button class="btn-add picker-confirm" id="welcomeStart">شروع</button></div>
         </div>
     </div>
@@ -453,18 +472,18 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-    <script src="js/core.js?v=6" defer></script>
-    <script src="js/jalali.js?v=6" defer></script>
-    <script src="js/time.js?v=6" defer></script>
-    <script src="js/notify.js?v=6" defer></script>
-    <script src="js/store.js?v=6" defer></script>
-    <script src="js/sessions.js?v=6" defer></script>
-    <script src="js/picker.js?v=6" defer></script>
-    <script src="js/map.js?v=6" defer></script>
-    <script src="js/detail.js?v=6" defer></script>
-    <script src="js/ui.js?v=6" defer></script>
-    <script src="js/route-ui.js?v=6" defer></script>
-    <script src="js/location-ui.js?v=6" defer></script>
-    <script src="js/app.js?v=6" defer></script>
+    <script src="js/core.js?v=8" defer></script>
+    <script src="js/jalali.js?v=8" defer></script>
+    <script src="js/time.js?v=8" defer></script>
+    <script src="js/notify.js?v=8" defer></script>
+    <script src="js/store.js?v=8" defer></script>
+    <script src="js/sessions.js?v=8" defer></script>
+    <script src="js/picker.js?v=8" defer></script>
+    <script src="js/map.js?v=8" defer></script>
+    <script src="js/detail.js?v=8" defer></script>
+    <script src="js/ui.js?v=8" defer></script>
+    <script src="js/route-ui.js?v=8" defer></script>
+    <script src="js/location-ui.js?v=8" defer></script>
+    <script src="js/app.js?v=8" defer></script>
 </body>
 </html>

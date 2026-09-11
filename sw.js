@@ -27,8 +27,10 @@
 //   v1.0.0.4-2026-09-11 — فاز ۴: UX و دسترس‌پذیری (focus trap، مودال‌های سفارشی، Snackbar دقیق، Escape متمرکز)
 //   v1.1.0.0-2026-09-11 — فاز ۵-الف: Cascade Layers + Logical Properties + رفع باگ findTask
 //   v1.1.0.1-2026-09-11 — فاز ۵-ب: CSS Variables (Design Tokens) برای پشتیبانی از Light theme
+//   v1.1.1.0-2026-09-11 — فاز ۵-ج: دکمه‌های تغییر Theme (auto/dark/light) و Lang (fa/en)
 // ─────────────────────────────────────────────────────────────────────────────
-const CACHE = 'rahefarda-v1.1.0.1-2026-09-11';
+const CACHE = 'rahefarda-v1.1.1.0-2026-09-11';
+
 // فایل‌ها بدون query-string (?v=N) کش می‌شوند.
 // networkFirst + ignoreSearch تضمین می‌کند همیشه نسخه درست لود شود:
 //  - آنلاین: از شبکه (با query جدید)

@@ -36,7 +36,19 @@
         let seriesType = 'daily';    // نوع تکرار دوره در فرم ساخت
         let seriesN = 8;             // عدد تکرار ساعتی در فرم ساخت
         let seriesDays = [];         // روزهای انتخاب‌شده تکرار در فرم ساخت
-        let prefs = { mapVisible: true, remindOn: true, remindMin: 60, digestOn: true, lastDigest: '', tourSeen: false, proMode: false, pendingKind: 'task', soundOn: true }; // ترجیحات (localStorage جدا)
+        let prefs = {
+            mapVisible: true,
+            remindOn: true,
+            remindMin: 60,
+            digestOn: true,
+            lastDigest: '',
+            tourSeen: false,
+            proMode: false,
+            pendingKind: 'task',
+            soundOn: true,
+            theme: 'auto',      // 'auto' | 'dark' | 'light'
+            lang: 'fa'          // 'fa' | 'en'
+        }; // ترجیحات (localStorage جدا)
         let selectedDay = null; // فیلتر روز تقویم: 'gy-gm-gd' یا null
         let calJy = 0, calJm = 1; // ماه جاری نمای تقویم
 
