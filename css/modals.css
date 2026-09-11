@@ -1,0 +1,670 @@
+/* © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است */
+/* modals.css — Picker, Calendar, Templates, Confirm/Info Modals, Snackbar */
+
+@layer components, overrides;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER: components
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+    /* ═══ Picker Overlay ═══ */
+    .picker-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 5, 20, 0.7);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: 20px;
+        animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .picker {
+        width: 100%;
+        max-width: 360px;
+        background: linear-gradient(145deg, var(--bg-3), var(--bg-12));
+        border: 1.5px solid var(--border-medium);
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.6),
+            0 0 40px rgba(123, 47, 247, 0.15);
+    }
+
+    .picker-title {
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 16px;
+    }
+
+    .picker-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .picker-nav-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--border-medium);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+        color: var(--accent-cyan);
+        font-size: 1.2rem;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .picker-nav-btn:hover {
+        border-color: #00d4ff66;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+    }
+
+    .picker-month {
+        font-weight: 700;
+        color: var(--text-secondary);
+    }
+
+    .picker-weekdays,
+    .picker-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        text-align: center;
+    }
+
+    .picker-weekdays {
+        font-size: 0.72rem;
+        color: var(--text-faint);
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .picker-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-primary);
+        cursor: pointer;
+        font-family: inherit;
+        transition: all var(--transition-fast);
+        padding: 0;
+    }
+
+    .picker-day:hover:not(:disabled) {
+        background: rgba(0, 212, 255, 0.1);
+        border-color: var(--accent-cyan-border);
+    }
+
+    .picker-day.today {
+        border-color: var(--accent-purple);
+        color: var(--text-secondary);
+    }
+
+    .picker-day.selected {
+        background: linear-gradient(145deg, var(--accent-purple), #5a1fbd);
+        color: var(--text-white);
+        font-weight: 700;
+        box-shadow: 0 4px 15px var(--accent-purple-soft);
+    }
+
+    .picker-day:disabled {
+        color: #33335a;
+        cursor: not-allowed;
+        text-decoration: line-through;
+    }
+
+    .picker-day.empty {
+        cursor: default;
+    }
+
+    .picker-time {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 16px 0 8px;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .picker-time select {
+        padding: 8px 12px;
+        border: 1.5px solid var(--border-medium);
+        border-radius: var(--radius-sm);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+        color: var(--accent-cyan);
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .picker-error {
+        min-height: 1.5em;
+        text-align: center;
+        color: #ff6da8;
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+    }
+
+    .picker-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .picker-actions .picker-confirm {
+        flex: 1;
+        padding: 12px;
+    }
+
+    .picker-actions .btn-clear {
+        margin: 0;
+        padding: 12px 16px;
+    }
+
+    .picker-chips {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .picker-chips button {
+        flex: 1;
+        padding: 8px 4px;
+        border-radius: var(--radius-sm);
+        border: 1.5px solid var(--border-medium);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+        color: var(--accent-cyan);
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .picker-chips button:hover {
+        border-color: #00d4ff66;
+        box-shadow: 0 0 12px rgba(0, 212, 255, 0.15);
+    }
+
+    /* ═══ Calendar ═══ */
+    .cal-wide {
+        max-width: 430px;
+    }
+
+    .cal-day {
+        flex-direction: column;
+        gap: 2px;
+        padding: 4px 2px;
+    }
+
+    .cal-dots {
+        display: flex;
+        gap: 3px;
+        align-items: center;
+        min-height: 6px;
+    }
+
+    .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .dot.d-high { background: var(--accent-pink); }
+    .dot.d-medium { background: var(--accent-yellow); }
+    .dot.d-low { background: var(--accent-cyan); }
+
+    .dot-more {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+    }
+
+    .cal-day.selected {
+        outline: 2px solid var(--accent-cyan);
+    }
+
+    /* ═══ Templates ═══ */
+    .tpl-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .tpl-opt {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--border-medium);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.25s ease;
+    }
+
+    .tpl-opt:hover {
+        border-color: var(--accent-purple-border);
+        box-shadow: 0 0 15px var(--accent-purple-soft);
+    }
+
+    .tpl-opt span:last-child {
+        font-size: 0.72rem;
+        font-weight: 400;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    #templateModal .picker.cal-wide {
+        max-height: min(82vh, 720px);
+        overflow-y: auto;
+    }
+
+    #templateModal .tpl-actions {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        padding: 0 0 10px;
+        margin-bottom: 10px;
+        background: linear-gradient(145deg, var(--bg-3), var(--bg-12));
+        flex-wrap: wrap;
+    }
+
+    #templateModal .tpl-actions .btn-add,
+    #templateModal .tpl-actions .btn-clear { flex: 1 1 auto; }
+
+    .template-toggle {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    /* ═══ Modal Message / Body ═══ */
+    .modal-message {
+        margin: 0 0 16px;
+        font-size: 0.92rem;
+        line-height: 2;
+        color: var(--text-primary);
+        text-align: start;
+        overflow-wrap: anywhere;
+    }
+
+    .modal-body {
+        margin: 0 0 16px;
+        font-size: 0.9rem;
+        line-height: 2;
+        color: #c8c8e8;
+        text-align: start;
+        max-height: min(60vh, 420px);
+        overflow-y: auto;
+        padding: 2px 4px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(165, 165, 208, 0.34) transparent;
+    }
+
+    .modal-body::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+        background: rgba(165, 165, 208, 0.30);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-pill);
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 212, 255, 0.48);
+    }
+
+    .modal-body p {
+        margin: 0 0 12px;
+    }
+
+    .modal-body p:last-child {
+        margin-bottom: 0;
+    }
+
+    .modal-body strong {
+        color: var(--text-secondary);
+        font-weight: 700;
+    }
+
+    /* ═══ Theme Button & Lang Button ═══ */
+    .theme-btn,
+    .lang-btn {
+        min-width: 52px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        font-family: inherit;
+        letter-spacing: 0.02em;
+        transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+    }
+
+    .theme-btn {
+        min-width: 44px;
+        padding: 8px 10px;
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .theme-btn:hover,
+    .lang-btn:hover {
+        border-color: var(--accent-cyan-border);
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+    }
+
+    .theme-btn:focus-visible,
+    .lang-btn:focus-visible {
+        outline: 2px solid var(--accent-cyan);
+        outline-offset: 2px;
+    }
+
+    /* ═══ Welcome Settings ═══ */
+    .welcome-settings {
+        margin: 0 0 18px;
+        padding: 12px 14px;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.025);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .welcome-settings-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .welcome-settings-label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        flex: 0 0 auto;
+        min-width: 76px;
+    }
+
+    .welcome-settings-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .welcome-opt {
+        appearance: none;
+        flex: 1 1 auto;
+        min-width: 70px;
+        padding: 8px 10px;
+        border: 1.5px solid var(--border-medium);
+        border-radius: var(--radius-sm);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+        color: var(--text-muted);
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .welcome-opt:hover {
+        border-color: rgba(0, 212, 255, 0.45);
+        color: var(--text-primary);
+    }
+
+    .welcome-opt.active {
+        border-color: rgba(0, 212, 255, 0.78);
+        background: linear-gradient(145deg, rgba(0, 212, 255, 0.15), rgba(81, 56, 201, 0.13));
+        color: var(--text-white);
+        box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.10), 0 0 14px rgba(0, 212, 255, 0.10);
+    }
+
+    .welcome-opt:focus-visible {
+        outline: 2px solid var(--accent-cyan);
+        outline-offset: 2px;
+    }
+
+    /* ═══ Snackbar ═══ */
+    .snackbar {
+        position: fixed;
+        bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+        left: 50%;
+        transform: translate(-50%, 80px);
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 18px;
+        border-radius: var(--radius-md);
+        background: linear-gradient(145deg, var(--bg-3), var(--bg-12));
+        border: 1.5px solid var(--border-medium);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+        font-size: 0.82rem;
+        color: var(--text-primary);
+        opacity: 0;
+        transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity var(--transition-base);
+        pointer-events: none;
+        max-width: calc(100vw - 40px);
+    }
+
+    .snackbar.show {
+        transform: translate(-50%, 0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .snackbar button {
+        padding: 6px 16px;
+        border-radius: var(--radius-sm);
+        border: 1.5px solid var(--accent-cyan-border-strong);
+        background: rgba(0, 212, 255, 0.1);
+        color: var(--accent-cyan);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER: overrides
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer overrides {
+    /* ═══ Confirm & Info Modals (از visual-fixes.css) ═══ */
+    #confirmModal .picker,
+    #infoModal .picker {
+        max-width: 440px;
+    }
+
+    #confirmModal .picker-title,
+    #infoModal .picker-title {
+        font-size: 1.1rem;
+        color: var(--text-white);
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 14px;
+    }
+
+    #confirmModal .modal-message {
+        color: #dcdcf4;
+    }
+
+    #infoModal .modal-body {
+        color: #c8c8e8;
+    }
+
+    #infoModal .modal-body p {
+        line-height: 2.1;
+    }
+
+    /* ═══ Name Prompt Modal (از visual-fixes.css) ═══ */
+    .name-prompt-hint {
+        margin: 0 0 12px;
+        font-size: 0.82rem;
+        line-height: 1.9;
+        color: var(--text-muted);
+        text-align: start;
+    }
+
+    .name-prompt-row {
+        margin-bottom: 8px;
+    }
+
+    .name-prompt-row > span {
+        width: 44px;
+    }
+
+    #namePromptInput {
+        flex: 1;
+        min-width: 0;
+        padding: 10px 14px;
+        border: 1.5px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-11));
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #namePromptInput:focus {
+        border-color: rgba(0, 212, 255, 0.58);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.07);
+    }
+
+    #namePromptInput.input-error {
+        border-color: var(--accent-pink);
+        animation: shake 0.4s ease;
+    }
+
+    /* ═══ Name Conflict Modal (از visual-fixes.css) ═══ */
+    #nameConflictModal .picker-actions {
+        gap: 8px;
+    }
+
+    #nameConflictModal .picker-actions .btn-add,
+    #nameConflictModal .picker-actions .btn-clear {
+        margin: 0;
+        width: 100%;
+        padding: 12px;
+    }
+
+    #nameConflictReplace {
+        background: linear-gradient(135deg, #c94a4a, #9b2f2f);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    #nameConflictReplace:hover {
+        box-shadow: 0 0 0 3px rgba(201, 74, 74, 0.18), 0 5px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ═══ Picker overlay stacked ═══ */
+    .picker-overlay--stacked {
+        z-index: 300;
+    }
+
+    /* ═══ Confirm modal — danger button ═══ */
+    #confirmModalOk.danger {
+        background: linear-gradient(135deg, #c94a4a, #9b2f2f) !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+    }
+
+    #confirmModalOk.danger:hover {
+        box-shadow: 0 0 0 3px rgba(201, 74, 74, 0.18), 0 5px 18px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* ═══ Welcome — Light theme overrides ═══ */
+    html[data-theme="light"] .welcome-settings {
+        background: rgba(0, 0, 0, 0.025);
+    }
+
+    html[data-theme="light"] .welcome-opt {
+        background: var(--bg-2);
+        border-color: var(--border-medium);
+        color: var(--text-muted);
+    }
+
+    html[data-theme="light"] .welcome-opt.active {
+        background: linear-gradient(145deg, rgba(0, 212, 255, 0.15), rgba(81, 56, 201, 0.10));
+        color: var(--text-primary);
+    }
+
+    @media (prefers-color-scheme: light) {
+        html:not([data-theme]) .welcome-settings {
+            background: rgba(0, 0, 0, 0.025);
+        }
+
+        html:not([data-theme]) .welcome-opt {
+            background: var(--bg-2);
+            border-color: var(--border-medium);
+            color: var(--text-muted);
+        }
+
+        html:not([data-theme]) .welcome-opt.active {
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.15), rgba(81, 56, 201, 0.10));
+            color: var(--text-primary);
+        }
+    }
+
+    /* ═══ Light theme: modal overrides ═══ */
+    html[data-theme="light"] .picker {
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.15),
+            0 0 40px rgba(123, 47, 247, 0.08);
+    }
+
+    html[data-theme="light"] .modal-body {
+        color: var(--text-primary);
+    }
+
+    @media (prefers-color-scheme: light) {
+        html:not([data-theme]) .picker {
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.15),
+                0 0 40px rgba(123, 47, 247, 0.08);
+        }
+
+        html:not([data-theme]) .modal-body {
+            color: var(--text-primary);
+        }
+    }
+}

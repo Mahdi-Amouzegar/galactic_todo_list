@@ -498,9 +498,10 @@
             progressPct.textContent = toFa(pct) + '٪';
             progressBar.setAttribute('aria-valuenow', pct);
 
-            clearBtn.style.display = done > 0 ? 'block' : 'none';
-            const archBtn = document.getElementById('archiveDone');
-            if (archBtn) archBtn.style.display = done > 0 ? 'block' : 'none';
+            // دکمه‌های «پاک کردن» و «بایگانی» در یک wrapper قرار دارند
+            // (done-actions) و در دسکتاپ کنار هم نمایش داده می‌شوند.
+            const doneActionsEl = document.getElementById('doneActions');
+            if (doneActionsEl) doneActionsEl.style.display = done > 0 ? 'flex' : 'none';
 
             if (filtered.length === 0) {
                 let msg;

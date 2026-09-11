@@ -28,8 +28,9 @@
 //   v1.1.0.0-2026-09-11 — فاز ۵-الف: Cascade Layers + Logical Properties + رفع باگ findTask
 //   v1.1.0.1-2026-09-11 — فاز ۵-ب: CSS Variables (Design Tokens) برای پشتیبانی از Light theme
 //   v1.1.1.0-2026-09-11 — فاز ۵-ج: دکمه‌های تغییر Theme (auto/dark/light) و Lang (fa/en)
+//   v1.1.2.0-2026-09-11 — فاز ۵-د: تقسیم CSS به ۶ فایل منطقی + دکمه‌های done-actions کنار هم
 // ─────────────────────────────────────────────────────────────────────────────
-const CACHE = 'rahefarda-v1.1.1.0-2026-09-11';
+const CACHE = 'rahefarda-v1.1.2.0-2026-09-11';
 
 // فایل‌ها بدون query-string (?v=N) کش می‌شوند.
 // networkFirst + ignoreSearch تضمین می‌کند همیشه نسخه درست لود شود:
@@ -38,9 +39,12 @@ const CACHE = 'rahefarda-v1.1.1.0-2026-09-11';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css',
-  './ui-fixes.css',
-  './visual-fixes.css',
+  './css/base.css',
+  './css/components.css',
+  './css/modals.css',
+  './css/detail.css',
+  './css/map.css',
+  './css/responsive.css',
   './manifest.webmanifest',
   './fonts/vazirmatn-arabic.woff2',
   './fonts/vazirmatn-latin.woff2',

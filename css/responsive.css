@@ -1,0 +1,527 @@
+/* © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است */
+/* responsive.css — Desktop Layout, Mobile Layout, Media Queries */
+
+@layer layout, components;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER: layout — Desktop App Shell & Mobile App Shell
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer layout {
+    /* ═══ Desktop: App Shell ═══ */
+    @media (min-width: 901px) {
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: none;
+            height: 100vh;
+        }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: minmax(360px, 42vw) minmax(0, 1fr);
+            height: 100vh;
+            background: var(--bg-0);
+        }
+
+        .right-flow {
+            grid-column: 2;
+            min-width: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding: 28px 34px 0;
+        }
+
+        #panelMap {
+            grid-column: 1;
+            grid-row: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            height: 100vh;
+            padding: 28px 24px 18px;
+            border-inline-start: 1px solid var(--border-dark);
+            background: var(--bg-1);
+        }
+
+        #panelMap .map-wrap {
+            flex: 1;
+            min-height: 0;
+        }
+
+        #panelMap #map {
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .right-flow .header {
+            margin-bottom: 20px;
+        }
+
+        .right-flow .header-main {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .right-flow .header h1,
+        .right-flow .tagline-toggle {
+            margin-top: 0;
+            white-space: nowrap;
+        }
+
+        .right-flow .layout {
+            display: block;
+        }
+
+        .right-flow .app-footer {
+            margin-top: 24px;
+        }
+
+        body.map-hidden .app-shell {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        body.map-hidden .container {
+            max-width: none;
+        }
+
+        body.map-hidden #panelMap {
+            display: none !important;
+        }
+
+        body.map-hidden .right-flow {
+            grid-column: 1;
+            max-width: 980px;
+            width: 100%;
+            justify-self: center;
+        }
+
+        .plan-body {
+            width: 100%;
+        }
+
+        .child-item {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .child-text {
+            flex: 1 1 auto;
+            white-space: normal;
+        }
+
+        .child-due {
+            flex-shrink: 0;
+        }
+    }
+
+    /* ═══ Mobile: App Shell ═══ */
+    @media (max-width: 900px) {
+        .app-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .right-flow {
+            display: contents;
+        }
+
+        .app-shell .header {
+            grid-row: 1;
+        }
+
+        .app-shell .mobile-tabs {
+            grid-row: 2;
+        }
+
+        .app-shell .layout {
+            grid-row: 3;
+        }
+
+        .app-shell #panelMap {
+            grid-row: 4;
+        }
+
+        .app-shell .app-footer {
+            grid-row: 5;
+        }
+
+        body.map-hidden .mobile-tabs {
+            display: flex;
+        }
+
+        body.map-hidden .mobile-tab[data-tab="map"] {
+            display: none;
+        }
+    }
+
+    /* ═══ Snackbar Mobile ═══ */
+    @media (max-width: 900px) {
+        .snackbar {
+            bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+            padding: 10px 14px;
+            gap: 8px;
+            font-size: 0.78rem;
+            max-width: calc(100vw - 24px);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .snackbar button {
+            padding: 5px 12px;
+            font-size: 0.74rem;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .snackbar {
+            bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px));
+            max-width: calc(100vw - 24px);
+            padding: 8px 14px;
+            font-size: 0.78rem;
+        }
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER: components — Responsive overrides for components
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+    /* ═══ Desktop Header Layout ═══ */
+    @media (min-width: 901px) {
+        .header {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 8px 18px;
+            align-items: center;
+            text-align: start;
+            margin-bottom: 20px;
+        }
+
+        .header .site-logo {
+            width: 54px;
+            height: 54px;
+            margin: 0;
+        }
+
+        .header-side {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-end;
+            font-size: 0.75rem;
+        }
+
+        .header-side .today-line,
+        .header-side .header-actions {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 400px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* در دسکتاپ، .layout داخل right-flow فقط یک فرزند دارد (panelTasks)،
+           پس block کافی است. گرید دوستونه در اینجا معنا ندارد. */
+        .right-flow .layout {
+            display: block;
+        }
+
+        #panelTasks {
+            min-width: 0;
+        }
+
+        .panel-map {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            inset-inline-start: max(20px, calc((100vw - 1180px) / 2));
+            width: min(400px, calc(100vw - 40px));
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 16px 0;
+        }
+
+        .map-wrap {
+            flex: 1;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map {
+            flex: 1;
+            min-height: 400px;
+        }
+
+        .app-footer {
+            grid-column: 1;
+            grid-row: 3;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 4px 8px;
+            flex-wrap: wrap;
+            padding: 10px;
+        }
+    }
+
+    /* ═══ Mobile Overrides ═══ */
+    @media (max-width: 900px) {
+        body {
+            padding: 40px 20px 60px;
+        }
+
+        .mobile-tabs {
+            display: flex;
+        }
+
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .panel-map {
+            position: static;
+        }
+
+        #map {
+            height: 380px;
+        }
+    }
+
+    /* ═══ Mobile Fixes (از styles.css) ═══ */
+    @media (max-width: 900px) {
+        .input-section {
+            flex-wrap: nowrap;
+        }
+
+        .input-section input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-item,
+        .task-content,
+        .child-text {
+            min-width: 0;
+        }
+
+        .task-meta {
+            flex-wrap: wrap;
+        }
+
+        .due-row {
+            flex-wrap: wrap;
+        }
+
+        .due-chip,
+        .loc-chip {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+        }
+
+        .child-add {
+            flex-wrap: wrap;
+        }
+
+        .child-add .child-input {
+            flex: 1 1 100%;
+        }
+
+        .child-add .child-prio {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .child-add .btn-child-add {
+            flex: 2;
+        }
+
+        .sort-row,
+        .stats {
+            flex-wrap: wrap;
+        }
+
+        .child-item {
+            flex-wrap: wrap;
+            row-gap: 6px;
+        }
+
+        .child-item .child-text {
+            flex: 1 1 100%;
+        }
+
+        .child-due {
+            white-space: normal;
+        }
+
+        .child-prio {
+            min-width: 0;
+        }
+    }
+
+    /* ═══ Small Mobile ═══ */
+    @media (max-width: 480px) {
+        .child-add .btn-child-add {
+            padding: 10px 12px;
+            font-size: 0.8rem;
+        }
+
+        .due-row .due-btn {
+            flex: 1 1 100%;
+        }
+
+        .created-date {
+            display: none;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+        }
+
+        .priority-select {
+            padding: 12px 16px;
+        }
+
+        .btn-add {
+            width: 100%;
+        }
+
+        .task-item {
+            padding: 14px 16px;
+            gap: 10px;
+        }
+
+        .stats {
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* دکمه‌های done-actions در موبایل کوچک: عمودی */
+        .done-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .done-actions .btn-clear {
+            width: 100%;
+        }
+    }
+
+    /* ═══ Create Zone Responsive (از ui-fixes.css) ═══ */
+    @media (max-width: 900px) {
+        #panelTasks {
+            padding-bottom: 20px;
+        }
+
+        .task-zone-title {
+            font-size: .98rem;
+        }
+
+        .create-zone {
+            padding: 14px;
+            border-radius: var(--radius-md);
+        }
+
+        .create-zone .kind3 {
+            gap: 6px;
+        }
+
+        .create-zone .kind3-btn {
+            min-height: 42px;
+            padding-inline: 8px;
+            font-size: .9rem;
+        }
+
+        .create-zone .due-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .create-zone .due-row .due-btn {
+            width: 100%;
+        }
+
+        .list-zone {
+            margin-top: 22px;
+        }
+
+        .list-zone .search-row {
+            width: 100%;
+        }
+
+        .list-zone .progress-wrap {
+            margin-top: 15px;
+        }
+
+        .settings-zone {
+            margin-top: 19px;
+        }
+
+        .insight-zone {
+            margin-top: 22px;
+            padding-top: 17px;
+        }
+
+        .map-head-actions .map-context-toggle {
+            display: none !important;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .create-zone {
+            padding: 12px;
+        }
+
+        .create-zone .kind3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 5px;
+        }
+
+        .create-zone .kind3-btn {
+            min-height: 40px;
+            padding: 7px 4px;
+            font-size: .82rem;
+        }
+
+        .list-zone .sort-row {
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .list-zone .sort-row .sort-select {
+            flex: 0 0 150px;
+            min-width: 150px;
+        }
+
+        .list-zone .sort-row .btn-small {
+            flex: 0 0 auto;
+        }
+    }
+}

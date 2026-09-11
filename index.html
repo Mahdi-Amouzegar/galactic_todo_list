@@ -17,9 +17,13 @@
     <link rel="icon" href="icons/favicon-32.ico" sizes="32x32">
     <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png">
     <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
-    <link rel="stylesheet" href="styles.css?v=8">
-    <link rel="stylesheet" href="ui-fixes.css?v=8">
-    <link rel="stylesheet" href="visual-fixes.css?v=8">
+
+    <link rel="stylesheet" href="css/base.css?v=9">
+    <link rel="stylesheet" href="css/components.css?v=9">
+    <link rel="stylesheet" href="css/modals.css?v=9">
+    <link rel="stylesheet" href="css/detail.css?v=9">
+    <link rel="stylesheet" href="css/map.css?v=9">
+    <link rel="stylesheet" href="css/responsive.css?v=9">
 </head>
 <body>
     <div class="container">
@@ -240,8 +244,10 @@
                                     <span>باقی‌مانده: <span class="num" id="remainCount">۰</span></span>
                                 </div>
                                 <div class="task-list" id="taskList" aria-live="polite"></div>
-                                <button class="btn-clear" id="clearDone" style="display: none;">پاک کردن انجام شده‌ها</button>
-                                <button class="btn-clear" id="archiveDone" type="button" style="display: none;">📦 بایگانی انجام‌شده‌ها</button>
+                                <div class="done-actions" id="doneActions" style="display: none;">
+                                    <button class="btn-clear" id="clearDone" type="button">پاک کردن انجام شده‌ها</button>
+                                    <button class="btn-clear" id="archiveDone" type="button">📦 بایگانی انجام‌شده‌ها</button>
+                                </div>
                                 <div class="insight-zone">
                                     <h2 class="task-zone-title">گزارش پیشرفت</h2>
                                     <div class="stats-box" id="statsBox"></div>
@@ -472,18 +478,20 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-    <script src="js/core.js?v=8" defer></script>
-    <script src="js/jalali.js?v=8" defer></script>
-    <script src="js/time.js?v=8" defer></script>
-    <script src="js/notify.js?v=8" defer></script>
-    <script src="js/store.js?v=8" defer></script>
-    <script src="js/sessions.js?v=8" defer></script>
-    <script src="js/picker.js?v=8" defer></script>
-    <script src="js/map.js?v=8" defer></script>
-    <script src="js/detail.js?v=8" defer></script>
-    <script src="js/ui.js?v=8" defer></script>
-    <script src="js/route-ui.js?v=8" defer></script>
-    <script src="js/location-ui.js?v=8" defer></script>
-    <script src="js/app.js?v=8" defer></script>
+
+    <script src="js/core.js?v=9" defer></script>
+    <script src="js/jalali.js?v=9" defer></script>
+    <script src="js/time.js?v=9" defer></script>
+    <script src="js/notify.js?v=9" defer></script>
+    <script src="js/store.js?v=9" defer></script>
+    <script src="js/sessions.js?v=9" defer></script>
+    <script src="js/picker.js?v=9" defer></script>
+    <script src="js/map.js?v=9" defer></script>
+    <script src="js/detail.js?v=9" defer></script>
+    <script src="js/ui.js?v=9" defer></script>
+    <script src="js/route-ui.js?v=9" defer></script>
+    <script src="js/location-ui.js?v=9" defer></script>
+    <script src="js/app.js?v=9" defer></script>
+	
 </body>
 </html>

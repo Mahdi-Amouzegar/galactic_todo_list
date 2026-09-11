@@ -1,0 +1,444 @@
+/* © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است */
+/* base.css — Variables, Reset, Base, Layout, Theme, Utilities */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CSS Variables (Design Tokens)
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+    /* ── Background layers (از عمیق‌ترین به بالاترین) ── */
+    --bg-0: #080818;         /* عمیق‌ترین — app-shell */
+    --bg-1: #0a0a1a;         /* بدنه اصلی — body, detail-page */
+    --bg-2: #0d0d28;         /* کارت‌ها — input, filter-btn */
+    --bg-3: #101032;         /* مودال‌ها — picker, snackbar */
+    --bg-4: #151542;         /* لایه‌های بالاتر — task-item */
+    --bg-5: #0e0e2c;         /* کارت‌های گرادیان — task-item (start) */
+    --bg-6: #141432;         /* progress background */
+    --bg-7: #0f0f2e;         /* input section (start) */
+    --bg-8: #161640;         /* input section (end) */
+    --bg-9: #0a0a24;         /* inner elements — task-checkbox */
+    --bg-10: #121238;        /* task-checkbox (end) */
+    --bg-11: #131338;        /* card (end) */
+    --bg-12: #181848;        /* modal (end) */
+    --bg-13: #0d0d28;        /* search input (start) */
+    --bg-14: #1a0a4a;        /* active kind3 (start) */
+    --bg-15: #251060;        /* active kind3 (end) */
+    --bg-16: #1a0a28;        /* btn-delete (start) */
+    --bg-17: #251038;        /* btn-delete (end) */
+    --bg-18: #0a1a28;        /* btn-edit (start) */
+    --bg-19: #102838;        /* btn-edit (end) */
+    --bg-20: #1a1408;        /* btn-archive (start) */
+    --bg-21: #26200f;        /* btn-archive (end) */
+    --bg-22: #0a1a15;        /* completed item (start) */
+    --bg-23: #0f2a20;        /* completed item (end) */
+    --bg-24: #1a0a20;        /* btn-clear (start) */
+    --bg-25: #221030;        /* btn-clear (end) */
+    --bg-26: #23234d;        /* bar empty */
+    --bg-27: #0a2a1a;        /* btn-ok (start) */
+    --bg-28: #0f3a24;        /* btn-ok (end) */
+    --bg-29: #003322;        /* checkbox checked (start) */
+    --bg-30: #005533;        /* checkbox checked (end) */
+
+    /* ── Text ── */
+    --text-primary: #e0e0ff;
+    --text-secondary: #b98aff;
+    --text-muted: #7a7aaa;
+    --text-faint: #5a5a8a;
+    --text-faintest: #4a4a7a;
+    --text-white: #ffffff;
+    --text-title: #f1f1ff;
+    --text-detail-title: #e8e8fb;
+
+    /* ── Borders ── */
+    --border-subtle: #1a1a3e;
+    --border-medium: #2a2a5e;
+    --border-strong: #3a3a6e;
+    --border-purple: #2a1a3e;
+    --border-dark: #202050;
+
+    /* ── Accents ── */
+    --accent-cyan: #00d4ff;
+    --accent-cyan-soft: rgba(0, 212, 255, 0.08);
+    --accent-cyan-border: #00d4ff44;
+    --accent-cyan-border-strong: #00d4ff55;
+    --accent-cyan-glow: rgba(0, 212, 255, 0.5);
+    --accent-purple: #7b2ff7;
+    --accent-purple-soft: rgba(123, 47, 247, 0.2);
+    --accent-purple-border: #7b2ff766;
+    --accent-pink: #ff4d8d;
+    --accent-pink-soft: rgba(255, 77, 141, 0.08);
+    --accent-pink-border: #ff4d8d55;
+    --accent-green: #00ff88;
+    --accent-green-soft: rgba(0, 255, 136, 0.05);
+    --accent-green-border: #00ff8833;
+    --accent-yellow: #ffd166;
+    --accent-yellow-soft: rgba(255, 209, 102, 0.08);
+    --accent-yellow-border: #ffd16655;
+
+    /* ── Spacing ── */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* ── Radius ── */
+    --radius-xs: 8px;
+    --radius-sm: 10px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-pill: 99px;
+
+    /* ── Shadows ── */
+    --shadow-sm: 0 3px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.6);
+
+    /* ── Transitions ── */
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.3s ease;
+    --transition-slow: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* ── Visual Fixes Variables (از visual-fixes.css) ── */
+    --rf-primary: #5138C9;
+    --rf-primary-soft: rgba(81, 56, 201, .14);
+    --rf-accent: #00d4ff;
+    --rf-accent-soft: rgba(0, 212, 255, .10);
+    --rf-yellow: #F2E338;
+    --rf-text: #f1f1ff;
+    --rf-muted: #a5a5d0;
+    --rf-border: rgba(255, 255, 255, .09);
+    --rf-radius-sm: 10px;
+    --rf-radius-md: 14px;
+    --rf-glow: 0 0 24px rgba(81, 56, 201, .16);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   راهنمای لایه‌ها (Cascade Layers)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer reset, base, layout, components, utilities, overrides;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER: reset
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer reset {
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER: base
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+    @font-face {
+        font-family: 'Vazirmatn';
+        src: url('../fonts/vazirmatn-arabic.woff2') format('woff2');
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+        unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+0870-0887, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFC, U+FEFF;
+    }
+
+    @font-face {
+        font-family: 'Vazirmatn';
+        src: url('../fonts/vazirmatn-latin.woff2') format('woff2');
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    body {
+        font-family: 'Vazirmatn', 'IRANSans', Tahoma, sans-serif;
+        min-height: 100vh;
+        background: var(--bg-1);
+        color: var(--text-primary);
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+        overflow-x: hidden;
+        position: relative;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+
+    input,
+    textarea,
+    select,
+    .task-text,
+    .child-text,
+    .session-date,
+    .due-line,
+    .loc-line,
+    .pp-title,
+    .pp-date,
+    .pp-loc,
+    .slr-name,
+    .slr-coords,
+    .modal-message,
+    .modal-body,
+    .welcome-text,
+    .name-prompt-hint,
+    .hero-desc,
+    a[href] {
+        -webkit-user-select: text;
+        user-select: text;
+    }
+
+    select option {
+        color: var(--bg-3);
+        background-color: var(--text-white);
+    }
+
+    input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent-purple);
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+        outline: 2px solid var(--accent-cyan);
+        outline-offset: 2px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER: layout — عمومی
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer layout {
+    .container {
+        width: 100%;
+        max-width: 1180px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        align-items: start;
+        min-width: 0;
+    }
+
+    .panel,
+    .task-list {
+        min-width: 0;
+    }
+
+    .panel-map {
+        position: sticky;
+        top: 20px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER: utilities
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+    /* کلاس‌های کمکی در آینده اضافه می‌شوند */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME OVERRIDE — با data-theme روی <html>
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── حالت صریح Dark ── */
+html[data-theme="dark"] {
+    --bg-0: #080818;
+    --bg-1: #0a0a1a;
+    --bg-2: #0d0d28;
+    --bg-3: #101032;
+    --bg-4: #151542;
+    --bg-5: #0e0e2c;
+    --bg-6: #141432;
+    --bg-7: #0f0f2e;
+    --bg-8: #161640;
+    --bg-9: #0a0a24;
+    --bg-10: #121238;
+    --bg-11: #131338;
+    --bg-12: #181848;
+    --bg-13: #0d0d28;
+    --bg-14: #1a0a4a;
+    --bg-15: #251060;
+    --bg-16: #1a0a28;
+    --bg-17: #251038;
+    --bg-18: #0a1a28;
+    --bg-19: #102838;
+    --bg-20: #1a1408;
+    --bg-21: #26200f;
+    --bg-22: #0a1a15;
+    --bg-23: #0f2a20;
+    --bg-24: #1a0a20;
+    --bg-25: #221030;
+    --bg-26: #23234d;
+    --bg-27: #0a2a1a;
+    --bg-28: #0f3a24;
+    --bg-29: #003322;
+    --bg-30: #005533;
+
+    --text-primary: #e0e0ff;
+    --text-secondary: #b98aff;
+    --text-muted: #7a7aaa;
+    --text-faint: #5a5a8a;
+    --text-faintest: #4a4a7a;
+    --text-white: #ffffff;
+    --text-title: #f1f1ff;
+    --text-detail-title: #e8e8fb;
+
+    --border-subtle: #1a1a3e;
+    --border-medium: #2a2a5e;
+    --border-strong: #3a3a6e;
+    --border-purple: #2a1a3e;
+    --border-dark: #202050;
+}
+
+/* ── حالت صریح Light ── */
+html[data-theme="light"] {
+    --bg-0: #e8e8f0;
+    --bg-1: #f0f0f5;
+    --bg-2: #ffffff;
+    --bg-3: #ffffff;
+    --bg-4: #eaeaf0;
+    --bg-5: #f5f5fa;
+    --bg-6: #e0e0e8;
+    --bg-7: #ffffff;
+    --bg-8: #f0f0f5;
+    --bg-9: #f5f5fa;
+    --bg-10: #eaeaf0;
+    --bg-11: #ffffff;
+    --bg-12: #f5f5fa;
+    --bg-13: #ffffff;
+    --bg-14: #e0d8f5;
+    --bg-15: #d0c8f0;
+    --bg-16: #f5e0e8;
+    --bg-17: #ead0d8;
+    --bg-18: #e0e8f5;
+    --bg-19: #d0d8f0;
+    --bg-20: #f5eed0;
+    --bg-21: #eadfc0;
+    --bg-22: #e0f5e8;
+    --bg-23: #d0ead8;
+    --bg-24: #f5e0e8;
+    --bg-25: #ead0d8;
+    --bg-26: #d0d0d8;
+    --bg-27: #e0f5e8;
+    --bg-28: #d0ead8;
+    --bg-29: #e0f5e8;
+    --bg-30: #d0ead8;
+
+    --text-primary: #1a1a2e;
+    --text-secondary: #5a3a9a;
+    --text-muted: #6a6a8a;
+    --text-faint: #8a8aa0;
+    --text-faintest: #a0a0b0;
+    --text-white: #ffffff;
+    --text-title: #1a1a2e;
+    --text-detail-title: #1a1a2e;
+
+    --border-subtle: #d0d0e0;
+    --border-medium: #b8b8cc;
+    --border-strong: #a0a0b8;
+    --border-purple: #c8b8d8;
+    --border-dark: #c0c0d0;
+}
+
+/* ── رنگ‌های ویژه در Light ── */
+html[data-theme="light"] .task-item.completed .task-text,
+html[data-theme="light"] .child-item.completed .child-text {
+    color: #6a8a7a;
+}
+
+html[data-theme="light"] .empty-state {
+    color: var(--text-faint);
+}
+
+html[data-theme="light"] .empty-state .icon {
+    opacity: 0.6;
+}
+
+html[data-theme="light"] .snackbar {
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Light theme با prefers-color-scheme (وقتی data-theme نیست) ── */
+@media (prefers-color-scheme: light) {
+    html:not([data-theme]) {
+        --bg-0: #e8e8f0;
+        --bg-1: #f0f0f5;
+        --bg-2: #ffffff;
+        --bg-3: #ffffff;
+        --bg-4: #eaeaf0;
+        --bg-5: #f5f5fa;
+        --bg-6: #e0e0e8;
+        --bg-7: #ffffff;
+        --bg-8: #f0f0f5;
+        --bg-9: #f5f5fa;
+        --bg-10: #eaeaf0;
+        --bg-11: #ffffff;
+        --bg-12: #f5f5fa;
+        --bg-13: #ffffff;
+        --bg-14: #e0d8f5;
+        --bg-15: #d0c8f0;
+        --bg-16: #f5e0e8;
+        --bg-17: #ead0d8;
+        --bg-18: #e0e8f5;
+        --bg-19: #d0d8f0;
+        --bg-20: #f5eed0;
+        --bg-21: #eadfc0;
+        --bg-22: #e0f5e8;
+        --bg-23: #d0ead8;
+        --bg-24: #f5e0e8;
+        --bg-25: #ead0d8;
+        --bg-26: #d0d0d8;
+        --bg-27: #e0f5e8;
+        --bg-28: #d0ead8;
+        --bg-29: #e0f5e8;
+        --bg-30: #d0ead8;
+
+        --text-primary: #1a1a2e;
+        --text-secondary: #5a3a9a;
+        --text-muted: #6a6a8a;
+        --text-faint: #8a8aa0;
+        --text-faintest: #a0a0b0;
+        --text-white: #ffffff;
+        --text-title: #1a1a2e;
+        --text-detail-title: #1a1a2e;
+
+        --border-subtle: #d0d0e0;
+        --border-medium: #b8b8cc;
+        --border-strong: #a0a0b8;
+        --border-purple: #c8b8d8;
+        --border-dark: #c0c0d0;
+    }
+
+    html:not([data-theme]) .task-item.completed .task-text,
+    html:not([data-theme]) .child-item.completed .child-text {
+        color: #6a8a7a;
+    }
+
+    html:not([data-theme]) .empty-state {
+        color: var(--text-faint);
+    }
+
+    html:not([data-theme]) .empty-state .icon {
+        opacity: 0.6;
+    }
+
+    html:not([data-theme]) .snackbar {
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+    }
+}
