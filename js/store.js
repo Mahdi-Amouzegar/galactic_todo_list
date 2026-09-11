@@ -39,12 +39,18 @@
             }));
         }
 
-        function idbPutAll(storeName, items) {
+        // نوشتن کامل در یک store.
+        // opts.allowEmptyClear: اگر items خالی است، به‌صورت پیش‌فرض چیزی پاک نمی‌شود
+        // مگر این flag صریحاً true باشد (برای جلوگیری از پاک شدن ناخواسته کل داده).
+        function idbPutAll(storeName, items, opts) {
+            const options = opts || {};
             return idbOpen().then(db => new Promise((resolve, reject) => {
                 const tx = db.transaction(storeName, 'readwrite');
                 const store = tx.objectStore(storeName);
-                store.clear();
-                items.forEach(item => store.put(item));
+                if (items.length > 0 || options.allowEmptyClear) {
+                    store.clear();
+                    items.forEach(item => store.put(item));
+                }
                 tx.oncomplete = () => resolve();
                 tx.onerror = () => reject(tx.error);
             }));
@@ -137,10 +143,21 @@
         }
 
         // ذخیره غیردرنگ: حافظه و رابط کاربری فوری به‌روز می‌شود، نوشتن در IDB در پس‌زمینه
+        // structuredClone: کپی عمیق کامل (children, sessions, photos) — بدون وابستگی به ساختار دستی.
         function saveTasks() {
-            const snapshot = tasks.map(t => ({ ...t, sessions: t.sessions.map(s => ({ ...s })) }));
+            let snapshot;
+            try {
+                snapshot = structuredClone(tasks);
+            } catch (e) {
+                console.error('saveTasks: structuredClone failed', e);
+                return Promise.reject(e);
+            }
+
+            // ابطال ایندکس جستجو (پیاده‌سازی در فاز ۳ کامل می‌شود؛ اگر تابع موجود نبود، نادیده بگیر)
+            if (typeof invalidateTaskIndex === 'function') invalidateTaskIndex();
+
             const p = useIDB
-                ? idbPutAll(IDB_STORE, snapshot)
+                ? idbPutAll(IDB_STORE, snapshot, { allowEmptyClear: true })
                 : (function () {
                     try {
                         localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
@@ -384,7 +401,7 @@
         }
 
         function saveTrash() {
-            const p = useIDB ? idbPutAll(IDB_TRASH, trash) : Promise.resolve();
+            const p = useIDB ? idbPutAll(IDB_TRASH, trash, { allowEmptyClear: true }) : Promise.resolve();
             p.catch(() => {});
             return p;
         }

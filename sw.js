@@ -1,12 +1,12 @@
 // © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 // Service Worker: آفلاین‌سازی پوسته برنامه (فقط فایل‌های همین‌سایت)
-const CACHE = 'space-todo-v43';
+const CACHE = 'space-todo-v1.0.0.1-2026-09-11';
 const ASSETS = [
   './',
   './index.html',
   './styles.css?v=11',
   './ui-fixes.css',
-  './visual-fixes.css?v=3',
+  './visual-fixes.css',
   './manifest.webmanifest',
   './fonts/vazirmatn-arabic.woff2',
   './fonts/vazirmatn-latin.woff2',
@@ -46,9 +46,18 @@ self.addEventListener('notificationclick', e => {
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(async cache => {
+      let failed = 0;
       await Promise.all(ASSETS.map(async asset => {
-        try { await cache.add(asset); } catch (_) {}
+        try {
+          await cache.add(asset);
+        } catch (_) {
+          failed++;
+        }
       }));
+      // اگر بیش از ۳۰٪ assetها fail شوند، نصب را fail کن تا کاربر با SW ناقص نماند.
+      if (failed > ASSETS.length * 0.3) {
+        throw new Error(`SW install failed: ${failed}/${ASSETS.length} assets could not be cached`);
+      }
     }).then(() => self.skipWaiting())
   );
 });
@@ -65,6 +74,9 @@ function isCodeAsset(request) {
   return request.destination === 'script' || request.destination === 'style' || /\.(?:js|css)$/i.test(new URL(request.url).pathname);
 }
 
+// برای code assets: اول شبکه، اگر fail شد (آفلاین) از کش.
+// مهم: ابتدا exact match (با query)، سپس در صورت نبود، ignoreSearch.
+// این ترتیب از باگ «نسخه قدیمی CSS بعد از bump» جلوگیری می‌کند.
 function networkFirst(request) {
   return fetch(request).then(res => {
     if (res && res.ok) {
@@ -73,7 +85,9 @@ function networkFirst(request) {
     }
     return res;
   }).catch(() =>
-    caches.match(request).then(hit => hit || caches.match(request, { ignoreSearch: true }))
+    caches.match(request).then(hit =>
+      hit || caches.match(request, { ignoreSearch: true })
+    )
   );
 }
 
