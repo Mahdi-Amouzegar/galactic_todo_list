@@ -113,7 +113,22 @@
                 copy.style.display = 'none';
                 return;
             }
-            link.href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+            // لایه دوم امنیت: حتی اگر sanitizeUrl در store.js دور زده شود، اینجا دوباره چک می‌کنیم.
+            // فقط http و https مجاز است.
+            let safe = null;
+            try {
+                const candidate = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+                const u = new URL(candidate);
+                if (['http:', 'https:'].includes(u.protocol)) safe = u.href;
+            } catch { /* نادیده */ }
+
+            if (!safe) {
+                link.style.display = 'none';
+                link.removeAttribute('href');
+                copy.style.display = 'none';
+                return;
+            }
+            link.href = safe;
             link.style.display = '';
             copy.style.display = '';
         }

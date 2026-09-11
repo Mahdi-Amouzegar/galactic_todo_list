@@ -75,9 +75,13 @@
             return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
         }
 
+        // escape سریع با regex — بدون ساخت DOM
+        // نکته: برای امنیت در innerHTML استفاده می‌شود. تک‌کوتیشن (') هم escape می‌شود
+        // چون در attribute‌های HTML داخل template literal استفاده می‌کنیم.
+        const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        const ESCAPE_REGEX = /[&<>"']/g;
         function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
+            if (str == null) return '';
+            return String(str).replace(ESCAPE_REGEX, c => ESCAPE_MAP[c]);
         }
 

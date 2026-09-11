@@ -72,6 +72,40 @@
             return out;
         }
 
+        // اعتبارسنجی و پاک‌سازی URL — فقط http و https مجاز است.
+        // از ذخیره‌ی javascript:, data:, vbscript:, file: و مشابه جلوگیری می‌کند.
+        // اگر کاربر بدون protocol وارد کند و دامنه معتبر باشد، https اضافه می‌شود.
+        // خروجی: رشته‌ی URL امن یا '' (رشته خالی).
+        function sanitizeUrl(raw) {
+            if (typeof raw !== 'string') return '';
+            const v = raw.trim().slice(0, 300);
+            if (!v) return '';
+
+            // اگر protocol دارد، باید http یا https باشد
+            if (/^[a-z][a-z0-9+.-]*:/i.test(v)) {
+                try {
+                    const u = new URL(v);
+                    if (!['http:', 'https:'].includes(u.protocol)) return '';
+                    return u.href.slice(0, 300);
+                } catch {
+                    return '';
+                }
+            }
+
+            // بدون protocol: اگر شبیه دامنه بود، https اضافه کن
+            if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/i.test(v)) {
+                try {
+                    const u = new URL('https://' + v);
+                    if (!['http:', 'https:'].includes(u.protocol)) return '';
+                    return u.href.slice(0, 300);
+                } catch {
+                    return '';
+                }
+            }
+
+            return '';
+        }
+
         // پاک‌سازی و اعتبارسنجی + مهاجرت مدل قدیمی (dueAt تکی، kind گروه→برنامه)
         function sanitizeTask(t) {
             const sessions = Array.isArray(t.sessions)
@@ -110,7 +144,7 @@
                 description: typeof t.description === 'string' ? t.description.slice(0, 1000) : '',
                 phone: typeof t.phone === 'string' ? t.phone.slice(0, 20) : '',
                 address: typeof t.address === 'string' ? t.address.slice(0, 500) : '',
-                url: typeof t.url === 'string' ? t.url.slice(0, 300) : '',
+                url: sanitizeUrl(t.url),
                 sessions,
                 kind,
                 children,
