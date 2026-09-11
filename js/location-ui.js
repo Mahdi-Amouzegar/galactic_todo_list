@@ -111,6 +111,12 @@
             err.textContent = '';
             title.textContent = defaultValue ? '✏️ تغییر نام مکان' : '📌 نام این مکان';
             overlay.style.display = 'flex';
+
+            // focus trap
+            let trapCleanup = null;
+            if (typeof trapFocus === 'function') {
+                trapCleanup = trapFocus(overlay);
+            }
             setTimeout(() => { input.focus(); input.select(); }, 60);
 
             const cleanup = () => {
@@ -120,8 +126,10 @@
                 cancelBtn.removeEventListener('click', onCancel);
                 input.removeEventListener('keydown', onKey);
                 overlay.removeEventListener('click', onOverlay);
+                if (trapCleanup) { trapCleanup(); trapCleanup = null; }
             };
             const finish = value => { cleanup(); resolve(value); };
+            // ... بقیه بدون تغییر
             const submit = () => {
                 const v = input.value.trim().replace(/\s+/g, ' ').slice(0, 80);
                 if (!v) {
@@ -137,8 +145,8 @@
             const onOk = () => submit();
             const onCancel = () => finish(null);
             const onKey = e => {
-                if (e.key === 'Enter') { e.preventDefault(); submit(); }
-                else if (e.key === 'Escape') { e.preventDefault(); finish(null); }
+                if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); submit(); }
+                else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(null); }
             };
             const onOverlay = e => { if (e.target === overlay) finish(null); };
 
@@ -160,7 +168,6 @@
             const renameBtn = document.getElementById('nameConflictPickAnother');
             const cancelBtn = document.getElementById('nameConflictCancel');
             if (!overlay || !replaceBtn || !renameBtn || !cancelBtn) {
-                // fallback: در نبود مودال، از confirm استفاده کن
                 const ok = window.confirm(
                     `نام «${name}» قبلاً برای مکان دیگری ذخیره شده است.\n` +
                     `تأیید = جایگزینی نام مکان قبلی\n` +
@@ -176,6 +183,14 @@
             overlay.classList.add('picker-overlay--stacked');
             overlay.style.display = 'flex';
 
+            // focus trap
+            let trapCleanup = null;
+            if (typeof trapFocus === 'function') {
+                trapCleanup = trapFocus(overlay);
+            }
+            // فوکوس روی دکمه تأیید
+            setTimeout(() => replaceBtn.focus(), 60);
+
             const cleanup = () => {
                 overlay.style.display = 'none';
                 overlay.classList.remove('picker-overlay--stacked');
@@ -183,7 +198,9 @@
                 renameBtn.removeEventListener('click', onRename);
                 cancelBtn.removeEventListener('click', onCancel);
                 overlay.removeEventListener('click', onOverlay);
+                if (trapCleanup) { trapCleanup(); trapCleanup = null; }
             };
+            // ... بقیه بدون تغییر
             const finish = value => { cleanup(); resolve(value); };
             const onReplace = () => finish('replace');
             const onRename = () => finish('rename');
@@ -333,13 +350,25 @@
         `).join('')}</div>`;
     }
 
+    let _savedLocTrapCleanup = null;
+
     function openManageModal() {
         renderManageList();
         const modal = document.getElementById('savedLocationsModal');
-        if (modal) modal.style.display = 'flex';
+        if (!modal) return;
+        modal.style.display = 'flex';
+        // focus trap
+        if (_savedLocTrapCleanup) _savedLocTrapCleanup();
+        if (typeof trapFocus === 'function') {
+            _savedLocTrapCleanup = trapFocus(modal);
+        }
+        // فوکوس روی دکمه بستن
+        const close = document.getElementById('savedLocationsClose');
+        if (close) setTimeout(() => close.focus(), 60);
     }
 
     function closeManageModal() {
+        if (_savedLocTrapCleanup) { _savedLocTrapCleanup(); _savedLocTrapCleanup = null; }
         const modal = document.getElementById('savedLocationsModal');
         if (modal) modal.style.display = 'none';
     }
@@ -740,6 +769,17 @@
                 }
             });
         }
+
+        // Escape برای بستن مودال مدیریت مکان‌ها (خودش مدیریت می‌کند)
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            const modal = document.getElementById('savedLocationsModal');
+            if (modal && modal.style.display === 'flex') {
+                e.preventDefault();
+                e.stopPropagation();
+                closeManageModal();
+            }
+        }, true); // ← capture phase برای اینکه قبل از listener‌های دیگر اجرا شود
     }
 
     /* ---------- شروع مکان جدید از روی نقشه ---------- */

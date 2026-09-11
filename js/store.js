@@ -306,7 +306,6 @@
             }
         }
 
-        // یافتن وظیفه یا زیرکار در همه‌جا (برمی‌گرداند {task, parent})
         // ایندکس جستجوی O(1) برای یافتن سریع task یا زیرکار.
         // بعد از هر تغییر در tasks، invalidateTaskIndex صدا زده می‌شود تا بازسازی شود.
         let _taskIndex = null;
@@ -335,7 +334,7 @@
             if (!_taskIndex) buildTaskIndex();
             return _taskIndex.get(String(id)) || null;
         }
-	
+
         function planStats(g) {
             const k = visibleChildren(g);
             return { total: k.length, done: k.filter(c => c.completed).length };
@@ -481,6 +480,7 @@
             if (found.parent) found.parent.children = found.parent.children.filter(c => String(c.id) !== String(id));
             else tasks = tasks.filter(t => String(t.id) !== String(id));
             trash.unshift({ ...found.task, parentId: found.parent ? found.parent.id : null, deletedAt: new Date().toISOString() });
+            invalidateTaskIndex();
             saveTrash();
             saveTasks();
             return true;
@@ -512,15 +512,28 @@
             render();
         }
 
-        function deleteTask(id, el) {
+        async function deleteTask(id, el) {
             const pre = findTask(id);
-            if (pre && !pre.parent && pre.task.kind === 'plan' && (pre.task.children || []).length > 0) {
-                if (!confirm(`این برنامه ${toFa(pre.task.children.length)} کار دارد. همه با هم به سطل منتقل شوند؟`)) return;
+            if (!pre) return;
+            // اگر برنامه‌ای با زیرکار است، از کاربر بپرس
+            if (!pre.parent && pre.task.kind === 'plan' && (pre.task.children || []).length > 0) {
+                const ok = await showConfirmModal({
+                    title: 'حذف برنامه',
+                    message: `این برنامه ${toFa(pre.task.children.length)} کار دارد. همه با هم به سطل زباله منتقل شوند؟`,
+                    confirmText: 'بله، منتقل کن',
+                    cancelText: 'انصراف',
+                    danger: true
+                });
+                if (!ok) return;
             }
             const remove = () => {
-                if (!moveToTrashById(id)) return;
+                invalidateTaskIndex();
+                if (!moveToTrashById(id)) {
+                    render();
+                    return;
+                }
                 render();
-                showUndoFor([id], 'به سطل زباله منتقل شد');
+                showUndoFor([id]);
             };
             if (el) {
                 el.classList.add('removing');
@@ -543,17 +556,24 @@
             render();
         }
 
-        function clearCompleted() {
+        async function clearCompleted() {
             const ids = [];
             tasks.forEach(t => {
                 if (t.kind === 'plan') (t.children || []).forEach(c => { if (c.completed && !c.archived) ids.push(c.id); });
                 else if (t.completed && !t.archived) ids.push(t.id);
             });
             if (ids.length === 0) return;
-            if (!confirm(`${toFa(ids.length)} وظیفه انجام‌شده به سطل زباله منتقل شود؟`)) return;
+            const ok = await showConfirmModal({
+                title: 'پاک کردن انجام‌شده‌ها',
+                message: `${toFa(ids.length)} وظیفه انجام‌شده به سطل زباله منتقل شود؟`,
+                confirmText: 'بله، منتقل کن',
+                cancelText: 'انصراف',
+                danger: true
+            });
+            if (!ok) return;
             ids.forEach(moveToTrashById);
             render();
-            showUndoFor(ids, `${toFa(ids.length)} مورد به سطل منتقل شد`);
+            showUndoFor(ids);
         }
 
         const PLAN_TEMPLATES = [

@@ -6,7 +6,6 @@
 .btn-small:hover,.btn-add:hover { box-shadow:0 0 0 3px rgba(81,56,201,.10),0 5px 18px rgba(0,0,0,.20); }
 .btn-small:active,.btn-add:active,.create-zone .kind3-btn:active,.list-zone .filter-btn:active { transform:translateY(1px); }
 .header-main .tagline-toggle { margin-top:2px !important; line-height:1.45 !important; }
-.header-main .hero-desc { margin-top:-1px !important; line-height:1.55 !important; color:#b8b8d8; }
 .header-main .tagline-toggle[aria-expanded="true"] { color:#c7c7e9; }
 .create-zone { border-color:rgba(81,56,201,.22); background:linear-gradient(145deg,rgba(81,56,201,.075),rgba(255,255,255,.025)); box-shadow:var(--rf-glow); }
 .create-zone .task-zone-title { color:#fff; letter-spacing:-.01em; }
@@ -57,10 +56,12 @@ body.map-hidden .map-divider-toggle::before { content:'📍' !important; }
 #tplKids::-webkit-scrollbar-track { background:transparent; }
 #tplKids::-webkit-scrollbar-thumb { background:rgba(165,165,208,.30); border:1px solid rgba(255,255,255,.05); border-radius:999px; }
 #tplKids::-webkit-scrollbar-thumb:hover { background:rgba(0,212,255,.48); }
-.time-source { position:fixed !important; top:12px !important; left:50% !important; right:auto !important; z-index:9999 !important; width:max-content !important; max-width:calc(100vw - 24px) !important; box-sizing:border-box !important; margin:0 !important; padding:7px 12px !important; border:1px solid rgba(255,255,255,.12) !important; border-radius:10px !important; background:rgba(16,16,45,.94) !important; color:#dcdcf4 !important; box-shadow:0 7px 22px rgba(0,0,0,.32),0 0 16px rgba(81,56,201,.12) !important; font-size:.78rem !important; line-height:1.5 !important; text-align:center !important; pointer-events:none !important; opacity:1; transform:translateX(-50%); transition:opacity .45s ease,transform .45s ease !important; }
-.time-source.online { border-color:rgba(0,212,255,.22) !important; color:#c9f6ff !important; }
-.time-source.offline { border-color:rgba(242,227,56,.24) !important; color:#f6ed9a !important; }
-.time-source.fade { opacity:0 !important; transform:translate(-50%,-8px) !important; }
+
+/* آیکن ساعت کنار تاریخ — جایگزین .time-source شناور */
+.time-source-icon { display:inline-block; font-size:.85rem; line-height:1; opacity:.75; cursor:help; transition:color .3s ease,opacity .3s ease,transform .3s ease; vertical-align:middle; }
+.time-source-icon.online { color:#00ff88; opacity:1; }
+.time-source-icon.offline { color:#ffd166; opacity:1; }
+.time-source-icon:hover { transform:scale(1.15); }
 
 /* Route summary */
 .route-summary{position:absolute;top:12px;right:12px;width:min(420px,calc(100% - 24px));z-index:1000;direction:rtl;font-family:'Vazirmatn',sans-serif;pointer-events:auto}
@@ -338,6 +339,37 @@ body.map-hidden .map-divider-toggle::before { content:'📍' !important; }
     background: rgba(255, 77, 141, 0.18);
     border-color: rgba(255, 77, 141, 0.7);
 }
+
+/* ============================================================= */
+/* مودال‌های تأیید و اطلاعات (فاز ۴)                              */
+/* ============================================================= */
+
+#confirmModal .picker,
+#infoModal .picker {
+    max-width: 440px;
+}
+
+#confirmModal .picker-title,
+#infoModal .picker-title {
+    font-size: 1.1rem;
+    color: #fff;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 14px;
+}
+
+#confirmModal .modal-message {
+    color: #dcdcf4;
+}
+
+#infoModal .modal-body {
+    color: #c8c8e8;
+}
+
+#infoModal .modal-body p {
+    line-height: 2.1;
+}
+
 @media (max-width: 900px) {
     body.detail-picking-location .mobile-pick-banner {
         display: flex;
@@ -345,13 +377,16 @@ body.map-hidden .map-divider-toggle::before { content:'📍' !important; }
 }
 
 /* ============================================================= */
-/* صفحه جزئیات و سطل زباله: روی دسکتاپ داخل ستون راست، روی موبایل تمام‌صفحه */
+/* صفحه جزئیات و سطل زباله: در body، position: fixed              */
 /* ============================================================= */
 
 .detail-page {
     position: fixed;
-    inset: 0;
-    z-index: 50;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    z-index: 60;
     background: #0a0a1a;
     overflow-y: auto;
     padding: 28px 16px 60px;
@@ -359,32 +394,24 @@ body.map-hidden .map-divider-toggle::before { content:'📍' !important; }
 }
 
 @media (min-width: 901px) {
-    .right-flow-container > .right-flow {
-        position: relative;
+    /* در دسکتاپ: فقط ستون راست (بعد از نقشه) را بپوشاند */
+    .detail-page {
+        left: calc(max(360px, 42vw)) !important;
+        right: 0 !important;
+        padding: 28px 34px 60px !important;
+        z-index: 60 !important;
     }
-    .right-flow > .detail-page {
-        position: absolute;
-        inset: 0;
-        z-index: 20;
-        background: #0a0a1a;
-        overflow-y: auto;
-        padding: 28px 34px 60px;
-        animation: fadeIn 0.25s ease;
-    }
-    .right-flow > .detail-page .detail-inner {
-        max-width: 640px;
+
+    body.map-hidden .detail-page {
+        left: 0 !important;
+        right: 0 !important;
+        max-width: 980px;
         margin: 0 auto;
     }
-}
 
-@media (min-width: 901px) {
-    body > .container ~ .detail-page,
-    body > .detail-page {
-        left: auto;
-        right: 0;
-        width: min(640px, 50vw);
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: -20px 0 60px rgba(0, 0, 0, 0.4);
+    .detail-page .detail-inner {
+        max-width: 640px;
+        margin: 0 auto;
     }
 }
 
@@ -406,4 +433,4 @@ body.map-hidden .map-divider-toggle::before { content:'📍' !important; }
 }
 @media (max-width:900px) { .detail-page .detail-accordion > summary { min-height:44px; padding-right:38px; } .map-divider-toggle { display:none !important; } }
 @media (max-width:600px) { .route-summary{top:8px;right:8px;width:calc(100% - 16px)}.route-summary-title{font-size:11px;padding:8px 10px}.route-option{min-height:42px;padding:6px 9px} }
-@media (max-width:520px) { .list-zone .search-row input { font-size:.84rem; padding-right:36px; } .task-item .mini-link { min-height:27px; padding-inline:8px; font-size:.72rem; } .detail-page .detail-accordion-body { padding-inline:10px; } .time-source { top:8px !important; max-width:calc(100vw - 16px) !important; padding:6px 10px !important; font-size:.72rem !important; } }
+@media (max-width:520px) { .list-zone .search-row input { font-size:.84rem; padding-right:36px; } .task-item .mini-link { min-height:27px; padding-inline:8px; font-size:.72rem; } .detail-page .detail-accordion-body { padding-inline:10px; } }

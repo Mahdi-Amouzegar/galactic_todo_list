@@ -8,8 +8,8 @@
         }
 
         async function syncServerTime() {
-            const badge = document.getElementById('timeSource');
-            if (!badge) return;
+            const icon = document.getElementById('timeSourceIcon');
+            if (!icon) return;
 
             // ترتیب منابع بر اساس دسترس‌پذیری از ایران:
             // ۱. timeapi.io — معمولاً از ایران در دسترس است
@@ -42,6 +42,11 @@
                 }
             ];
 
+            // حالت اولیه: در حال اتصال
+            icon.textContent = '🕐';
+            icon.title = 'در حال اتصال به سرور زمان...';
+            icon.classList.remove('online', 'offline');
+
             for (const fn of sources) {
                 try {
                     const ctrl = new AbortController();
@@ -50,22 +55,17 @@
                     clearTimeout(timer);
                     if (!Number.isFinite(ms)) continue;
                     timeOffsetMs = ms - Date.now();
-                    badge.textContent = '✓ زمان آنلاین';
-                    badge.classList.add('online');
-                    badge.classList.remove('offline');
-                    badge.title = 'زمان از سرور اینترنتی دریافت شد';
-                    scheduleBadgeFade(badge);
+                    icon.textContent = '🕐';
+                    icon.title = '✓ زمان آنلاین — همگام با سرور اینترنتی';
+                    icon.classList.remove('offline');
+                    icon.classList.add('online');
                     return;
                 } catch { /* سرور بعدی */ }
             }
-            badge.textContent = '⚠ آفلاین — مبنا ساعت دستگاه است';
-            badge.classList.add('offline');
-            badge.classList.remove('online');
-            badge.title = 'دسترسی به سرور زمان ممکن نشد؛ از ساعت دستگاه استفاده می‌شود';
-            scheduleBadgeFade(badge);
-        }
 
-        function scheduleBadgeFade(badge) {
-            setTimeout(() => badge.classList.add('fade'), 4000);
-            setTimeout(() => { badge.style.display = 'none'; }, 5000);
+            // همه سرورها fail شدند
+            icon.textContent = '🕐';
+            icon.title = '⚠ آفلاین — مبنا ساعت دستگاه است';
+            icon.classList.remove('online');
+            icon.classList.add('offline');
         }

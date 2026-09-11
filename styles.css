@@ -586,20 +586,6 @@
             box-shadow: 0 3px 15px rgba(255, 77, 141, 0.1);
         }
 
-        .time-source {
-            margin-top: 10px;
-            font-size: 0.75rem;
-            color: #5a5a8a;
-        }
-
-        .time-source.online {
-            color: #00ff88;
-        }
-
-        .time-source.offline {
-            color: #ffd166;
-        }
-
         .due-row {
             display: flex;
             gap: 8px;
@@ -1101,6 +1087,33 @@
             font-weight: 300;
         }
 
+        /* آیکن وضعیت ساعت — کنار تاریخ جاری در هدر */
+        .today-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .time-source-icon {
+            display: inline-block;
+            font-size: 0.85rem;
+            line-height: 1;
+            opacity: 0.7;
+            cursor: help;
+            transition: color 0.3s ease, opacity 0.3s ease;
+            vertical-align: middle;
+        }
+
+        .time-source-icon.online {
+            color: #00ff88;
+            opacity: 1;
+        }
+
+        .time-source-icon.offline {
+            color: #ffd166;
+            opacity: 1;
+        }
+
         .empty-hint {
             font-size: 0.78rem;
             color: #5a5a8a;
@@ -1109,33 +1122,47 @@
             font-weight: 300;
         }
 
-        .snackbar {
-            position: fixed;
-            bottom: 1.2rem;
-            left: 50%;
-            transform: translate(-50%, 80px);
-            z-index: 80;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 18px;
-            border-radius: 14px;
-            background: linear-gradient(145deg, #101032, #181848);
-            border: 1.5px solid #2a2a5e;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
-            font-size: 0.82rem;
-            color: #e0e0ff;
-            opacity: 0;
-            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
-            pointer-events: none;
-            max-width: calc(100vw - 40px);
-        }
+.snackbar {
+    position: fixed;
+    bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translate(-50%, 80px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #101032, #181848);
+    border: 1.5px solid #2a2a5e;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+    font-size: 0.82rem;
+    color: #e0e0ff;
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    pointer-events: none;
+    max-width: calc(100vw - 40px);
+}
 
-        .snackbar.show {
-            transform: translate(-50%, 0);
-            opacity: 1;
-            pointer-events: auto;
-        }
+.snackbar.show {
+    transform: translate(-50%, 0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.snackbar button {
+    padding: 6px 16px;
+    border-radius: 10px;
+    border: 1.5px solid #00d4ff55;
+    background: rgba(0, 212, 255, 0.1);
+    color: #00d4ff;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
 
         .snackbar button {
             padding: 6px 16px;
@@ -1169,14 +1196,6 @@
             justify-content: center;
             flex-wrap: wrap;
             margin-top: 12px;
-        }
-
-        .hero-desc {
-            margin-top: 6px;
-            font-size: 0.88rem;
-            color: #a5a5d0;
-            font-weight: 300;
-            line-height: 2;
         }
 
         .form-actions {
@@ -1229,43 +1248,32 @@
             user-select: none;
         }
 
+        /* استثناها: متن‌هایی که کاربر باید بتواند کپی کند */
         input,
         textarea,
-        select {
+        select,
+        .task-text,
+        .child-text,
+        .session-date,
+        .due-line,
+        .loc-line,
+        .pp-title,
+        .pp-date,
+        .pp-loc,
+        .slr-name,
+        .slr-coords,
+        .modal-message,
+        .modal-body,
+        .welcome-text,
+        .name-prompt-hint,
+        .hero-desc,
+        a[href] {
             -webkit-user-select: text;
             user-select: text;
         }
 
         #installBtn {
             display: block;
-        }
-
-        .trust {
-            margin: 14px auto 0;
-            max-width: 560px;
-            font-size: 0.78rem;
-            color: #7a7aaa;
-            background: rgba(0, 255, 136, 0.05);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            border-radius: 12px;
-            padding: 8px 14px;
-            text-align: right;
-        }
-
-        .trust summary {
-            cursor: pointer;
-            font-weight: 700;
-            color: #00ff88;
-            list-style: none;
-        }
-
-        .trust summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .trust p {
-            margin-top: 6px;
-            line-height: 1.9;
         }
 
         .mobile-tabs {
@@ -1579,14 +1587,6 @@
         .loc-line {
             font-size: 0.85rem;
             color: #e0e0ff;
-        }
-
-        .time-source {
-            transition: opacity 0.8s ease;
-        }
-
-        .time-source.fade {
-            opacity: 0;
         }
 
         .tiles-dark {
@@ -1989,17 +1989,9 @@
             }
 
             .header-side .today-line,
-            .header-side .time-source,
-            .header-side .trust,
             .header-side .header-actions {
                 margin-top: 0;
                 margin-bottom: 0;
-            }
-
-            .header-side .trust {
-                margin-left: 0;
-                margin-right: 0;
-                max-width: 270px;
             }
 
             .layout {
@@ -2693,7 +2685,6 @@
 
         .tagline-toggle:hover,
         .tagline-toggle:focus-visible { color: #00d4ff; outline: none; }
-        .hero-desc[hidden] { display: none; }
 
         #templateModal .picker.cal-wide {
             max-height: min(82vh, 720px);
@@ -2712,6 +2703,72 @@
 
         #templateModal .tpl-actions .btn-add,
         #templateModal .tpl-actions .btn-clear { flex: 1 1 auto; }
+
+        /* ============================================================= */
+        /* مودال‌های عمومی فاز ۴: تأیید و اطلاعات                         */
+        /* ============================================================= */
+
+        .modal-message {
+            margin: 0 0 16px;
+            font-size: 0.92rem;
+            line-height: 2;
+            color: #e0e0ff;
+            text-align: right;
+            overflow-wrap: anywhere;
+        }
+
+        .modal-body {
+            margin: 0 0 16px;
+            font-size: 0.9rem;
+            line-height: 2;
+            color: #c8c8e8;
+            text-align: right;
+            max-height: min(60vh, 420px);
+            overflow-y: auto;
+            padding: 2px 4px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(165, 165, 208, 0.34) transparent;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(165, 165, 208, 0.30);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 212, 255, 0.48);
+        }
+
+        .modal-body p {
+            margin: 0 0 12px;
+        }
+
+        .modal-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-body strong {
+            color: #b98aff;
+            font-weight: 700;
+        }
+
+        #confirmModalOk.danger {
+            background: linear-gradient(135deg, #c94a4a, #9b2f2f) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+
+        #confirmModalOk.danger:hover {
+            box-shadow: 0 0 0 3px rgba(201, 74, 74, 0.18), 0 5px 18px rgba(0, 0, 0, 0.2) !important;
+        }
 
         @media (min-width: 901px) {
             html, body { height: 100%; }
@@ -2748,7 +2805,6 @@
             .right-flow .header-main { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
             .right-flow .header h1,
             .right-flow .tagline-toggle { margin-top: 0; white-space: nowrap; }
-            .right-flow .hero-desc { flex-basis: 100%; width: 100%; margin-top: 8px; }
             .right-flow .layout { display: block; }
             .right-flow .app-footer { margin-top: 24px; }
             body.map-hidden .app-shell { grid-template-columns: minmax(0, 1fr); }
@@ -2778,3 +2834,31 @@
             body.map-hidden .mobile-tabs { display: flex; }
             body.map-hidden .mobile-tab[data-tab="map"] { display: none; }
         }
+
+
+/* موبایل: Snackbar بالای safe area و با اندازه کوچک‌تر */
+@media (max-width: 900px) {
+    .snackbar {
+        bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+        padding: 10px 14px;
+        gap: 8px;
+        font-size: 0.78rem;
+        max-width: calc(100vw - 24px);
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .snackbar button {
+        padding: 5px 12px;
+        font-size: 0.74rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .snackbar {
+        bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px));
+        max-width: calc(100vw - 24px);
+        padding: 8px 14px;
+        font-size: 0.78rem;
+    }
+}

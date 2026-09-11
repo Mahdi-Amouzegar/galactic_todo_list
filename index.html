@@ -3,7 +3,7 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://unpkg.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://unpkg.com https://worldtimeapi.org https://timeapi.io https://routing.openstreetmap.de https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://server.arcgisonline.com; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https://unpkg.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://unpkg.com https://worldtimeapi.org https://timeapi.io https://worldclockapi.com https://routing.openstreetmap.de https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://server.arcgisonline.com; worker-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="وظایف و قرارهای روزانه را با یادآور، نقشه و تقویم شمسی مدیریت کن. بدون حساب کاربری، حتی آفلاین.">
     <meta name="theme-color" content="#0a0a1a">
@@ -17,9 +17,9 @@
     <link rel="icon" href="icons/favicon-32.ico" sizes="32x32">
     <link rel="icon" type="image/png" sizes="96x96" href="icons/favicon-96x96.png">
     <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
-    <link rel="stylesheet" href="styles.css?v=1">
-    <link rel="stylesheet" href="ui-fixes.css?v=1">
-    <link rel="stylesheet" href="visual-fixes.css?v=1">
+    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="ui-fixes.css?v=3">
+    <link rel="stylesheet" href="visual-fixes.css?v=3">
 </head>
 <body>
     <div class="container">
@@ -52,19 +52,17 @@
                         <img class="site-logo" src="icons/logo.png" alt="لوگوی برنامه" onerror="this.style.display='none'">
                         <div class="header-main">
                             <h1>راه فردا</h1>
-                            <button class="tagline-toggle" id="heroDescToggle" type="button" aria-expanded="false" aria-controls="heroDesc">کارهایت، زمانت، مسیرت.</button>
-                            <p class="hero-desc" id="heroDesc" hidden>وظایف و قرارهای روزانه را با یادآور، نقشه و تقویم شمسی مدیریت کن، بدون حساب کاربری، حتی آفلاین.</p>
+                            <button class="tagline-toggle" id="heroDescToggle" type="button">کارهایت، زمانت، مسیرت.</button>
                         </div>
                         <div class="header-side">
-                            <p class="today-line" id="todayLine"></p>
-                            <p class="time-source" id="timeSource">در حال اتصال به سرور زمان...</p>
+                            <p class="today-line">
+                                <span id="todayLine"></span>
+                                <span class="time-source-icon" id="timeSourceIcon" title="در حال اتصال..." aria-label="وضعیت زمان">🕐</span>
+                            </p>
                             <div class="header-actions">
                                 <button class="btn-small" id="installBtn" type="button" style="display: none;">⬇ نصب اپلیکیشن</button>
+                                <button class="btn-small" id="privacyBtn" type="button" title="حریم خصوصی شما">🔒 حریم خصوصی</button>
                             </div>
-                            <details class="trust">
-                                <summary>🔒 حریم خصوصی شما</summary>
-                                <p>همه اطلاعات شما (وظایف، تاریخ‌ها و محل‌ها) فقط در همین دستگاه و مرورگر خودتان ذخیره می‌شود و به هیچ سروری ارسال نمی‌شود. نقشه صرفاً تصویر اینترنتی است و چیزی از شما آپلود نمی‌کند.</p>
-                            </details>
                         </div>
                     </div>
 
@@ -83,7 +81,7 @@
                                     <button class="kind3-btn" data-kind="series" type="button">📅 یک دوره</button>
                                 </div>
                                 <div class="input-section">
-                                    <input type="text" id="taskInput" placeholder="کار جدید را بنویسید..." maxlength="200" autocomplete="off" aria-label="متن وظیفه جدید" autofocus>
+                                    <input type="text" id="taskInput" placeholder="کار جدید را بنویسید..." maxlength="200" autocomplete="off" aria-label="متن وظیفه جدید">
                                     <button class="btn-icon mic-btn" id="micBtn" type="button" aria-label="ورود صوتی">🎤</button>
                                 </div>
                                 <div class="smart-chip" id="smartChip" style="display: none;">
@@ -258,86 +256,87 @@
                         </div>
                         <div class="app-footer__small">© <span id="copyYear">۱۴۰۵</span> — همه حقوق محفوظ است · 🔒 اطلاعات شما فقط روی همین دستگاه می‌ماند</div>
                     </footer>
-
-                    <section class="detail-page" id="detailPage" style="display: none;" aria-label="جزئیات وظیفه">
-                        <div class="detail-inner">
-                            <div class="detail-header">
-                                <button class="btn-icon" id="detailBack" aria-label="بازگشت به لیست">→</button>
-                                <h2 id="detailTitle">جزئیات وظیفه</h2>
-                            </div>
-                            <div class="detail-card">
-                                <details class="detail-accordion basic" open>
-                                    <summary>اطلاعات اصلی</summary>
-                                    <div class="detail-accordion-body">
-                                        <label class="field"><span class="field-label">عنوان</span><input type="text" id="fTitle" maxlength="200" autocomplete="off"></label>
-                                        <label class="field"><span class="field-label">سطح اولویت</span><select id="fPriority" class="sort-select"><option value="low">اولویت کم</option><option value="medium">اولویت متوسط</option><option value="high">اولویت زیاد</option></select></label>
-                                        <div class="field pin-row"><input type="checkbox" id="fPin"><label class="field-label" for="fPin">📌 سنجاق به بالای لیست</label></div>
-                                        <label class="field"><span class="field-label">توضیح بیشتر</span><textarea id="fDesc" rows="3" maxlength="1000" placeholder="مثلاً نام پزشک، علت مراجعه..."></textarea></label>
-                                    </div>
-                                </details>
-                                <details class="detail-accordion recurrence">
-                                    <summary>تکرار و زمان‌بندی</summary>
-                                    <div class="detail-accordion-body">
-                                        <label class="field"><span class="field-label">تکرار</span><select id="fRecur" class="sort-select"><option value="none">بدون تکرار</option><option value="daily">روزانه</option><option value="weekly">هفتگی</option><option value="monthly">ماهانه</option><option value="custom">هر چند روز...</option><option value="hourly">هر چند ساعت...</option><option value="weeklyDays">روزهای هفته...</option><option value="monthlyDays">روزهای ماه...</option></select></label>
-                                        <div class="field" id="fRecurWeekRow" style="display: none;"><span class="field-label">کدام روزها؟</span><div class="chip-row" id="fRecurWeekChips"></div></div>
-                                        <div class="field" id="fRecurMonthRow" style="display: none;"><span class="field-label">کدام روزهای ماه؟</span><div class="chip-row" id="fRecurMonthChips"></div></div>
-                                        <div class="field" id="fRecurNRow" style="display: none;"><span class="field-label">هر چند روز؟</span><input type="number" id="fRecurN" min="1" max="365" value="2"></div>
-                                    </div>
-                                </details>
-                                <details class="detail-accordion contact">
-                                    <summary>تماس و منابع</summary>
-                                    <div class="detail-accordion-body">
-                                        <div class="field"><label class="field-label" for="fPhone">تلفن تماس</label><input type="tel" id="fPhone" class="ltr" maxlength="20" placeholder="0912..." autocomplete="off"><a class="due-btn call-btn" id="fPhoneCall" href="#" style="display: none;">📞 تماس گرفتن</a><span class="field-error" id="fPhoneError"></span></div>
-                                        <label class="field"><span class="field-label">آدرس پستی</span><textarea id="fAddr" rows="2" maxlength="500" placeholder="آدرس مطب یا محل..."></textarea></label>
-                                        <div class="field"><label class="field-label" for="fUrl">آدرس اینترنتی</label><input type="url" id="fUrl" class="ltr" maxlength="300" placeholder="https://..." autocomplete="off" dir="ltr"><div class="link-row"><a class="field-link" id="fUrlOpen" href="#" target="_blank" rel="noopener" style="display: none;">باز کردن پیوند ↗</a><button class="due-btn" id="fUrlCopy" type="button" style="display: none;">📋 کپی لینک</button></div></div>
-                                    </div>
-                                </details>
-                                <details class="detail-accordion sessions">
-                                    <summary>جلسه‌ها و تاریخ‌ها</summary>
-                                    <div class="detail-accordion-body">
-                                        <div class="field"><span class="field-label">جلسه‌ها / تاریخ‌ها <span class="count-badge" id="sessCount"></span></span><div class="session-list" id="sessList"></div><button class="due-btn" id="addSessionBtn" type="button">＋ افزودن جلسه</button></div>
-                                    </div>
-                                </details>
-                                <details class="detail-accordion location">
-                                    <summary>محل روی نقشه</summary>
-                                    <div class="detail-accordion-body">
-                                        <div class="field" id="fLocField"><span class="field-label">محل روی نقشه</span><div class="loc-line" id="detailLocLine"></div><div class="loc-btns"><button class="due-btn" id="detailLocShow" type="button">نمایش روی نقشه</button><button class="due-btn" id="detailLocRoute" type="button">🧭 فاصله و مسیر</button><button class="due-btn" id="detailLocChange" type="button">تغییر محل</button><button class="due-clear" id="detailLocRemove" type="button" aria-label="حذف محل">✕</button></div></div>
-                                    </div>
-                                </details>
-                                <details class="detail-accordion timer">
-                                    <summary>زمان صرف‌شده</summary>
-                                    <div class="detail-accordion-body">
-                                        <div class="field"><span class="field-label">⏱ زمان صرف‌شده</span><div class="loc-btns"><span class="loc-line" id="timerLabel">۰ دقیقه</span><button class="due-btn" id="timerToggle" type="button">▶ شروع</button></div></div>
-                                    </div>
-                                </details>
-                                <details class="detail-accordion photos">
-                                    <summary>تصاویر و مدارک</summary>
-                                    <div class="detail-accordion-body">
-                                        <div class="field"><span class="field-label">📷 تصاویر و مدارک <span class="count-badge" id="photoCount"></span></span><div class="photo-grid" id="photoGrid"></div><label class="due-btn" for="photoInput" style="cursor: pointer;">＋ افزودن عکس</label><input type="file" id="photoInput" accept="image/*" multiple hidden></div>
-                                    </div>
-                                </details>
-                                <div class="detail-actions"><button class="btn-clear" id="detailDelete" type="button">حذف این وظیفه</button></div>
-                                <div class="save-hint" id="saveHint" aria-live="polite"></div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="detail-page" id="trashPage" style="display: none;" aria-label="سطل زباله">
-                        <div class="detail-inner">
-                            <div class="detail-header">
-                                <button class="btn-icon" id="trashBack" aria-label="بازگشت به لیست">→</button>
-                                <h2>🗑 سطل زباله</h2>
-                            </div>
-                            <div class="detail-card">
-                                <div class="session-list" id="trashList"></div>
-                                <div class="detail-actions"><button class="btn-clear" id="trashEmpty" type="button">خالی کردن سطل</button></div>
-                            </div>
-                        </div>
-                    </section>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- صفحه جزئیات و سطل زباله: در body (نه در right-flow) تا از overflow مستقل باشند -->
+    <section class="detail-page" id="detailPage" style="display: none;" aria-label="جزئیات وظیفه">
+        <div class="detail-inner">
+            <div class="detail-header">
+                <button class="btn-icon" id="detailBack" aria-label="بازگشت به لیست">→</button>
+                <h2 id="detailTitle">جزئیات وظیفه</h2>
+            </div>
+            <div class="detail-card">
+                <details class="detail-accordion basic" open>
+                    <summary>اطلاعات اصلی</summary>
+                    <div class="detail-accordion-body">
+                        <label class="field"><span class="field-label">عنوان</span><input type="text" id="fTitle" maxlength="200" autocomplete="off"></label>
+                        <label class="field"><span class="field-label">سطح اولویت</span><select id="fPriority" class="sort-select"><option value="low">اولویت کم</option><option value="medium">اولویت متوسط</option><option value="high">اولویت زیاد</option></select></label>
+                        <div class="field pin-row"><input type="checkbox" id="fPin"><label class="field-label" for="fPin">📌 سنجاق به بالای لیست</label></div>
+                        <label class="field"><span class="field-label">توضیح بیشتر</span><textarea id="fDesc" rows="3" maxlength="1000" placeholder="مثلاً نام پزشک، علت مراجعه..."></textarea></label>
+                    </div>
+                </details>
+                <details class="detail-accordion recurrence">
+                    <summary>تکرار و زمان‌بندی</summary>
+                    <div class="detail-accordion-body">
+                        <label class="field"><span class="field-label">تکرار</span><select id="fRecur" class="sort-select"><option value="none">بدون تکرار</option><option value="daily">روزانه</option><option value="weekly">هفتگی</option><option value="monthly">ماهانه</option><option value="custom">هر چند روز...</option><option value="hourly">هر چند ساعت...</option><option value="weeklyDays">روزهای هفته...</option><option value="monthlyDays">روزهای ماه...</option></select></label>
+                        <div class="field" id="fRecurWeekRow" style="display: none;"><span class="field-label">کدام روزها؟</span><div class="chip-row" id="fRecurWeekChips"></div></div>
+                        <div class="field" id="fRecurMonthRow" style="display: none;"><span class="field-label">کدام روزهای ماه؟</span><div class="chip-row" id="fRecurMonthChips"></div></div>
+                        <div class="field" id="fRecurNRow" style="display: none;"><span class="field-label">هر چند روز؟</span><input type="number" id="fRecurN" min="1" max="365" value="2"></div>
+                    </div>
+                </details>
+                <details class="detail-accordion contact">
+                    <summary>تماس و منابع</summary>
+                    <div class="detail-accordion-body">
+                        <div class="field"><label class="field-label" for="fPhone">تلفن تماس</label><input type="tel" id="fPhone" class="ltr" maxlength="20" placeholder="0912..." autocomplete="off"><a class="due-btn call-btn" id="fPhoneCall" href="#" style="display: none;">📞 تماس گرفتن</a><span class="field-error" id="fPhoneError"></span></div>
+                        <label class="field"><span class="field-label">آدرس پستی</span><textarea id="fAddr" rows="2" maxlength="500" placeholder="آدرس مطب یا محل..."></textarea></label>
+                        <div class="field"><label class="field-label" for="fUrl">آدرس اینترنتی</label><input type="url" id="fUrl" class="ltr" maxlength="300" placeholder="https://..." autocomplete="off" dir="ltr"><div class="link-row"><a class="field-link" id="fUrlOpen" href="#" target="_blank" rel="noopener" style="display: none;">باز کردن پیوند ↗</a><button class="due-btn" id="fUrlCopy" type="button" style="display: none;">📋 کپی لینک</button></div></div>
+                    </div>
+                </details>
+                <details class="detail-accordion sessions">
+                    <summary>جلسه‌ها و تاریخ‌ها</summary>
+                    <div class="detail-accordion-body">
+                        <div class="field"><span class="field-label">جلسه‌ها / تاریخ‌ها <span class="count-badge" id="sessCount"></span></span><div class="session-list" id="sessList"></div><button class="due-btn" id="addSessionBtn" type="button">＋ افزودن جلسه</button></div>
+                    </div>
+                </details>
+                <details class="detail-accordion location">
+                    <summary>محل روی نقشه</summary>
+                    <div class="detail-accordion-body">
+                        <div class="field" id="fLocField"><span class="field-label">محل روی نقشه</span><div class="loc-line" id="detailLocLine"></div><div class="loc-btns"><button class="due-btn" id="detailLocShow" type="button">نمایش روی نقشه</button><button class="due-btn" id="detailLocRoute" type="button">🧭 فاصله و مسیر</button><button class="due-btn" id="detailLocChange" type="button">تغییر محل</button><button class="due-clear" id="detailLocRemove" type="button" aria-label="حذف محل">✕</button></div></div>
+                    </div>
+                </details>
+                <details class="detail-accordion timer">
+                    <summary>زمان صرف‌شده</summary>
+                    <div class="detail-accordion-body">
+                        <div class="field"><span class="field-label">⏱ زمان صرف‌شده</span><div class="loc-btns"><span class="loc-line" id="timerLabel">۰ دقیقه</span><button class="due-btn" id="timerToggle" type="button">▶ شروع</button></div></div>
+                    </div>
+                </details>
+                <details class="detail-accordion photos">
+                    <summary>تصاویر و مدارک</summary>
+                    <div class="detail-accordion-body">
+                        <div class="field"><span class="field-label">📷 تصاویر و مدارک <span class="count-badge" id="photoCount"></span></span><div class="photo-grid" id="photoGrid"></div><label class="due-btn" for="photoInput" style="cursor: pointer;">＋ افزودن عکس</label><input type="file" id="photoInput" accept="image/*" multiple hidden></div>
+                    </div>
+                </details>
+                <div class="detail-actions"><button class="btn-clear" id="detailDelete" type="button">حذف این وظیفه</button></div>
+                <div class="save-hint" id="saveHint" aria-live="polite"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="detail-page" id="trashPage" style="display: none;" aria-label="سطل زباله">
+        <div class="detail-inner">
+            <div class="detail-header">
+                <button class="btn-icon" id="trashBack" aria-label="بازگشت به لیست">→</button>
+                <h2>🗑 سطل زباله</h2>
+            </div>
+            <div class="detail-card">
+                <div class="session-list" id="trashList"></div>
+                <div class="detail-actions"><button class="btn-clear" id="trashEmpty" type="button">خالی کردن سطل</button></div>
+            </div>
+        </div>
+    </section>
 
     <div class="snackbar" id="snackbar" role="status" aria-live="polite"><span id="snackMsg"></span><button id="snackUndo" type="button">بازگردانی</button></div>
     <div class="lightbox" id="lightbox" style="display: none;"><img id="lightboxImg" alt="تصویر وظیفه"></div>
@@ -432,19 +431,40 @@
         </div>
     </div>
 
+    <div class="picker-overlay" id="confirmModal" style="display: none;">
+        <div class="picker" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+            <div class="picker-title" id="confirmModalTitle">تأیید</div>
+            <p class="modal-message" id="confirmModalMessage"></p>
+            <div class="picker-actions">
+                <button class="btn-add picker-confirm" id="confirmModalOk" type="button">تأیید</button>
+                <button class="btn-clear" id="confirmModalCancel" type="button">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="picker-overlay" id="infoModal" style="display: none;">
+        <div class="picker" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+            <div class="picker-title" id="infoModalTitle">اطلاعات</div>
+            <div class="modal-body" id="infoModalBody"></div>
+            <div class="picker-actions">
+                <button class="btn-add picker-confirm" id="infoModalOk" type="button">فهمیدم</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-    <script src="js/core.js?v=2" defer></script>
-    <script src="js/jalali.js?v=2" defer></script>
-    <script src="js/time.js?v=2" defer></script>
-    <script src="js/notify.js?v=2" defer></script>
-    <script src="js/store.js?v=2" defer></script>
-    <script src="js/sessions.js?v=2" defer></script>
-    <script src="js/picker.js?v=2" defer></script>
-    <script src="js/map.js?v=2" defer></script>
-    <script src="js/detail.js?v=2" defer></script>
-    <script src="js/ui.js?v=2" defer></script>
-    <script src="js/route-ui.js?v=2" defer></script>
-    <script src="js/location-ui.js?v=2" defer></script>
-    <script src="js/app.js?v=2" defer></script>
+    <script src="js/core.js?v=4" defer></script>
+    <script src="js/jalali.js?v=4" defer></script>
+    <script src="js/time.js?v=4" defer></script>
+    <script src="js/notify.js?v=4" defer></script>
+    <script src="js/store.js?v=4" defer></script>
+    <script src="js/sessions.js?v=4" defer></script>
+    <script src="js/picker.js?v=4" defer></script>
+    <script src="js/map.js?v=4" defer></script>
+    <script src="js/detail.js?v=4" defer></script>
+    <script src="js/ui.js?v=4" defer></script>
+    <script src="js/route-ui.js?v=4" defer></script>
+    <script src="js/location-ui.js?v=4" defer></script>
+    <script src="js/app.js?v=4" defer></script>
 </body>
 </html>

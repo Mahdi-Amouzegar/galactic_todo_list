@@ -174,6 +174,8 @@
             ).join('') : '<div class="session-empty">همه کارها را حذف کردید؛ کار جدید اضافه کنید.</div>';
         }
 
+        let _tplTrapCleanup = null;
+
         function openTemplateModal() {
             tplDraft = null;
             renderTemplateList();
@@ -182,10 +184,18 @@
             document.getElementById('tplKidAdd').style.display = 'none';
             document.getElementById('tplBack').style.display = 'none';
             document.getElementById('tplCreate').style.display = 'none';
-            document.getElementById('templateModal').style.display = 'flex';
+            const modal = document.getElementById('templateModal');
+            modal.style.display = 'flex';
+            // focus trap
+            if (_tplTrapCleanup) _tplTrapCleanup();
+            _tplTrapCleanup = trapFocus(modal);
+            // فوکوس روی اولین دکمه
+            const first = modal.querySelector('.tpl-opt, button');
+            if (first) setTimeout(() => first.focus(), 60);
         }
 
         function closeTemplateModal() {
+            if (_tplTrapCleanup) { _tplTrapCleanup(); _tplTrapCleanup = null; }
             tplDraft = null;
             document.getElementById('tplKidAdd').style.display = 'none';
             document.getElementById('tplBack').style.display = 'none';
@@ -217,13 +227,23 @@
             }).join('');
         }
 
+        let _trashTrapCleanup = null;
+
         function openTrash() {
             renderTrash();
-            document.getElementById('trashPage').style.display = 'block';
+            const page = document.getElementById('trashPage');
+            page.style.display = 'block';
             document.body.style.overflow = 'hidden';
+            // focus trap برای دسترس‌پذیری
+            if (_trashTrapCleanup) _trashTrapCleanup();
+            _trashTrapCleanup = trapFocus(page);
+            // فوکوس روی دکمه بازگشت
+            const back = document.getElementById('trashBack');
+            if (back) setTimeout(() => back.focus(), 60);
         }
 
         function closeTrash() {
+            if (_trashTrapCleanup) { _trashTrapCleanup(); _trashTrapCleanup = null; }
             document.getElementById('trashPage').style.display = 'none';
             document.body.style.overflow = '';
             render();
@@ -273,6 +293,8 @@
             document.getElementById('calDays').innerHTML = html;
         }
 
+        let _calTrapCleanup = null;
+
         function openCal() {
             let base;
             if (selectedDay) {
@@ -285,10 +307,18 @@
             calJy = base.jy;
             calJm = base.jm;
             renderCalendar();
-            document.getElementById('calOverlay').style.display = 'flex';
+            const overlay = document.getElementById('calOverlay');
+            overlay.style.display = 'flex';
+            // focus trap
+            if (_calTrapCleanup) _calTrapCleanup();
+            _calTrapCleanup = trapFocus(overlay);
+            // فوکوس روی دکمه بستن
+            const close = document.getElementById('calClose');
+            if (close) setTimeout(() => close.focus(), 60);
         }
 
         function closeCal() {
+            if (_calTrapCleanup) { _calTrapCleanup(); _calTrapCleanup = null; }
             document.getElementById('calOverlay').style.display = 'none';
         }
 
@@ -379,10 +409,33 @@
 
         let snackTimer = null;
 
+        // ساخت پیام دقیق بر اساس نوع و نام task
+        function buildTrashMessage(ids) {
+            if (!ids || ids.length === 0) return 'به سطل زباله منتقل شد';
+            if (ids.length === 1) {
+                const found = findTask(ids[0]);
+                if (!found) {
+                    // اگر task پیدا نشد، به trash نگاه کن
+                    const inTrash = (typeof trash !== 'undefined' && trash) ? trash.find(x => String(x.id) === String(ids[0])) : null;
+                    if (inTrash) {
+                        const kindLabel = inTrash.kind === 'plan' ? 'برنامه' : (inTrash.kind === 'series' ? 'دوره' : 'کار');
+                        return `${kindLabel} «${inTrash.text}» به سطل زباله منتقل شد.`;
+                    }
+                    return 'به سطل زباله منتقل شد';
+                }
+                const task = found.task;
+                const kindLabel = task.kind === 'plan' ? 'برنامه' : (task.kind === 'series' ? 'دوره' : 'کار');
+                return `${kindLabel} «${task.text}» به سطل زباله منتقل شد.`;
+            }
+            return `${toFa(ids.length)} مورد به سطل زباله منتقل شد.`;
+        }
+
         function showUndoFor(ids, label) {
             const bar = document.getElementById('snackbar');
             if (!bar) return;
-            document.getElementById('snackMsg').textContent = label;
+            // اگر label نداده شد، پیام دقیق بساز
+            const msg = label || buildTrashMessage(ids);
+            document.getElementById('snackMsg').textContent = msg;
             bar.classList.add('show');
             clearTimeout(snackTimer);
             snackTimer = setTimeout(hideSnackbar, 6000);

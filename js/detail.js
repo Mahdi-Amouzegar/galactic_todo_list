@@ -1,6 +1,7 @@
 // © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 'use strict';
 // detail.js -- detail page  |  React: <TaskDetail/> route
+
         /* ---------- صفحه جزئیات وظیفه ---------- */
 
         function getDetailTask() {
@@ -336,7 +337,6 @@
             flashSaved();
         }, 300);
 
-
         function bindDetailInputs() {
             document.getElementById('fTitle').addEventListener('input', e => {
                 const v = e.target.value.trim().replace(/\s+/g, ' ');
@@ -602,14 +602,21 @@
             });
             document.getElementById('timerToggle').addEventListener('click', toggleTimer);
             document.getElementById('detailBack').addEventListener('click', closeDetail);
-            document.getElementById('detailDelete').addEventListener('click', () => {
+            document.getElementById('detailDelete').addEventListener('click', async () => {
                 const task = getDetailTask();
                 if (!task) return;
-                if (!confirm(`«${task.text}» به سطل زباله منتقل شود؟`)) return;
+                const ok = await showConfirmModal({
+                    title: 'حذف وظیفه',
+                    message: `«${task.text}» به سطل زباله منتقل شود؟`,
+                    confirmText: 'بله، منتقل کن',
+                    cancelText: 'انصراف',
+                    danger: true
+                });
+                if (!ok) return;
                 const id = task.id;
                 closeDetail();
                 moveToTrashById(id);
                 render();
-                showUndoFor([id], 'به سطل زباله منتقل شد');
+                showUndoFor([id]);
             });
         }

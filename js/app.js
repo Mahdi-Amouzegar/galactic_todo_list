@@ -1,6 +1,7 @@
 // © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
 'use strict';
 // app.js -- event wiring + boot  |  React: App.jsx composition root
+
         /* ---------- رویدادها (تفویض رویداد، بدون onclick درون‌خطی) ---------- */
 
         addBtn.addEventListener('click', () => addTask(pendingKind));
@@ -280,13 +281,46 @@
             });
         });
 
-        /* بج نمونه‌کار حذف شد؛ لینک سازنده در فوتر است */
+        /* ---------- دکمه‌های هدر: راهنما و حریم خصوصی (مودال) ---------- */
 
-        document.getElementById('heroDescToggle').addEventListener('click', e => {
-            const desc = document.getElementById('heroDesc');
-            const open = desc.hidden;
-            desc.hidden = !open;
-            e.currentTarget.setAttribute('aria-expanded', String(open));
+        // دکمه «کارهایت، زمانت، مسیرت» → مودال اطلاعات
+        document.getElementById('heroDescToggle').addEventListener('click', async () => {
+            await showInfoModal({
+                title: 'راه فردا',
+                paragraphs: [
+                    'وظایف و قرارهای روزانه را با یادآور، نقشه و تقویم شمسی مدیریت کن — <strong>بدون حساب کاربری</strong>، حتی آفلاین.',
+                    '<strong>📝 کار:</strong> یک وظیفه ساده با تاریخ یا محل.',
+                    '<strong>📂 برنامه:</strong> مجموعه‌ای از زیرکارها (مثلاً سفر، خانه‌تکانی).',
+                    '<strong>📅 دوره:</strong> یک وظیفه تکرارشونده (روزانه، هفتگی، ماهانه یا سفارشی).',
+                    'برای شروع، عنوان را در فیلد بالا بنویس و دکمه <strong>افزودن کار</strong> را بزن.'
+                ],
+                buttonText: 'شروع می‌کنم'
+            });
+            // بعد از بستن، فوکوس روی input در دسکتاپ
+            if (window.matchMedia('(min-width: 901px)').matches) {
+                const ti = document.getElementById('taskInput');
+                if (ti) ti.focus({ preventScroll: true });
+            }
+        });
+
+        // دکمه «🔒 حریم خصوصی» در هدر → مودال اطلاعات
+        document.getElementById('privacyBtn').addEventListener('click', async () => {
+            await showInfoModal({
+                title: '🔒 حریم خصوصی شما',
+                paragraphs: [
+                    '<strong>همه اطلاعات شما</strong> (وظایف، تاریخ‌ها، محل‌ها و تصاویر) فقط در همین دستگاه و مرورگر خودتان ذخیره می‌شود و به هیچ سروری ارسال نمی‌شود.',
+                    '<strong>نقشه</strong> فقط تصویر اینترنتی است و چیزی از شما آپلود نمی‌کند. سرویس‌های نقشه (OpenStreetMap، Esri) فقط tile تصویری دریافت می‌کنند، نه اطلاعات وظایف شما.',
+                    '<strong>همگام‌سازی زمان</strong> با سرورهای عمومی (timeapi.io، worldclockapi.com) فقط برای اصلاح ساعت دستگاه است و هیچ اطلاعاتی ارسال نمی‌کند.',
+                    '<strong>پشتیبان‌گیری:</strong> چون داده‌ها فقط روی دستگاه شماست، توصیه می‌شود از قابلیت Export (به‌زودی) یا پشتیبان‌گیری از مرورگر خود استفاده کنید.',
+                    'برای پاک کردن کامل داده‌ها، از سطل زباله استفاده کنید یا داده‌های سایت را از تنظیمات مرورگر حذف کنید.'
+                ],
+                buttonText: 'فهمیدم'
+            });
+            // بعد از بستن، فوکوس روی input در دسکتاپ
+            if (window.matchMedia('(min-width: 901px)').matches) {
+                const ti = document.getElementById('taskInput');
+                if (ti) ti.focus({ preventScroll: true });
+            }
         });
 
         document.getElementById('mapToggle').addEventListener('click', () => {
@@ -402,20 +436,34 @@
         document.getElementById('dayChip').addEventListener('click', () => setSelectedDay(null));
         document.getElementById('trashBtn').addEventListener('click', openTrash);
         document.getElementById('trashBack').addEventListener('click', closeTrash);
-        document.getElementById('trashEmpty').addEventListener('click', () => {
+        document.getElementById('trashEmpty').addEventListener('click', async () => {
             if (!trash.length) return;
-            if (!confirm('سطل زباله کاملاً خالی شود؟')) return;
+            const ok = await showConfirmModal({
+                title: 'خالی کردن سطل زباله',
+                message: 'همه موارد سطل زباله برای همیشه حذف شوند؟ این عمل قابل بازگشت نیست.',
+                confirmText: 'خالی کن',
+                cancelText: 'انصراف',
+                danger: true
+            });
+            if (!ok) return;
             trash = [];
             saveTrash();
             renderTrash();
             render();
         });
-        document.getElementById('trashList').addEventListener('click', e => {
+        document.getElementById('trashList').addEventListener('click', async e => {
             const b = e.target.closest('[data-tact]');
             if (!b) return;
             if (b.dataset.tact === 'restore') restoreTrash(b.dataset.tid);
             else if (b.dataset.tact === 'purge') {
-                if (!confirm('برای همیشه حذف شود؟')) return;
+                const ok = await showConfirmModal({
+                    title: 'حذف همیشگی',
+                    message: 'این مورد برای همیشه حذف شود؟ این عمل قابل بازگشت نیست.',
+                    confirmText: 'حذف کن',
+                    cancelText: 'انصراف',
+                    danger: true
+                });
+                if (!ok) return;
                 trash = trash.filter(x => String(x.id) !== String(b.dataset.tid));
                 saveTrash();
                 renderTrash();
@@ -428,15 +476,49 @@
         document.getElementById('pickerOverlay').addEventListener('click', e => {
             if (e.target.id === 'pickerOverlay') closePicker();
         });
+                // مدیریت متمرکز Escape — به ترتیب اولویت از بالا به پایین
+        // (بالاترین z-index اول)
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape') return;
-            const overlay = document.getElementById('pickerOverlay');
-            if (overlay.style.display === 'flex') closePicker();
-            else if (document.getElementById('calOverlay').style.display === 'flex') closeCal();
-            else if (document.getElementById('trashPage').style.display === 'block') closeTrash();
-            else if (document.getElementById('templateModal').style.display === 'flex') closeTemplateModal();
-            else if (currentDetailId) closeDetail();
-            else if (document.querySelector('.map-wrap.fullscreen')) toggleFullscreen();
+
+            // ۱. مودال‌های stacked (z-index: 300)
+            const namePrompt = document.getElementById('namePromptModal');
+            if (namePrompt && namePrompt.style.display === 'flex') return; // خودش مدیریت می‌کند
+
+            const nameConflict = document.getElementById('nameConflictModal');
+            if (nameConflict && nameConflict.style.display === 'flex') return; // خودش مدیریت می‌کند
+
+            const confirmModal = document.getElementById('confirmModal');
+            if (confirmModal && confirmModal.style.display === 'flex') return; // خودش مدیریت می‌کند
+
+            const infoModal = document.getElementById('infoModal');
+            if (infoModal && infoModal.style.display === 'flex') return; // خودش مدیریت می‌کند
+
+            // ۲. مودال‌های عمومی (z-index: 100)
+            const picker = document.getElementById('pickerOverlay');
+            if (picker && picker.style.display === 'flex') { closePicker(); return; }
+
+            const cal = document.getElementById('calOverlay');
+            if (cal && cal.style.display === 'flex') { closeCal(); return; }
+
+            const tpl = document.getElementById('templateModal');
+            if (tpl && tpl.style.display === 'flex') { closeTemplateModal(); return; }
+
+            const saved = document.getElementById('savedLocationsModal');
+            if (saved && saved.style.display === 'flex') {
+                if (typeof closeManageModal === 'function') closeManageModal();
+                else saved.style.display = 'none';
+                return;
+            }
+
+            // ۳. صفحه‌های تمام‌صفحه (z-index: 60)
+            const trash = document.getElementById('trashPage');
+            if (trash && trash.style.display === 'block') { closeTrash(); return; }
+
+            if (currentDetailId) { closeDetail(); return; }
+
+            // ۴. نقشه تمام‌صفحه
+            if (document.querySelector('.map-wrap.fullscreen')) toggleFullscreen();
         });
 
         let searchTimer = null;
@@ -778,6 +860,13 @@
                 input.focus();
             }, { once: true });
         }
+        // focus خودکار روی input فقط در دسکتاپ (روی موبایل، کیبورد نباید خودکار باز شود)
+        if (window.matchMedia('(min-width: 901px)').matches && !prefs.tourSeen) {
+            setTimeout(() => {
+                const ti = document.getElementById('taskInput');
+                if (ti) ti.focus({ preventScroll: true });
+            }, 100);
+        }
         initSettings();
         applyMapVisibility();
         loadTasks().then(async () => {
@@ -791,6 +880,6 @@
             syncServerTime();
             startReminderLoop();
         });
-    
+
 // Future React entry point can import state/actions from here.
 window.TodoApp = { getTasks: () => tasks, findTask, saveTasks, render };

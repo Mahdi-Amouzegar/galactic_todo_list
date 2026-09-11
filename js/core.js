@@ -2,8 +2,6 @@
 'use strict';
 // core.js -- shared state + tiny helpers  |  React: store shape + utils
 
-        'use strict';
-
         const STORAGE_KEY = 'spaceTodoTasks';
         const MAX_LENGTH = 200;
 
@@ -107,3 +105,182 @@
             return wrapped;
         }
 
+        /* ---------- Focus trap و مودال‌های عمومی ---------- */
+
+        // Focus trap: وقتی مودالی باز است، Tab و Shift+Tab نباید از مودال خارج شوند.
+        // خروجی: تابع cleanup که باید هنگام بستن مودال صدا زده شود.
+        function trapFocus(container) {
+            if (!container) return () => {};
+            const selectors = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+            const focusables = () => Array.from(container.querySelectorAll(selectors)).filter(el => {
+                if (el.offsetParent === null) return false;
+                if (el.getAttribute('aria-hidden') === 'true') return false;
+                return true;
+            });
+            const handler = e => {
+                if (e.key !== 'Tab') return;
+                const list = focusables();
+                if (list.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+                const first = list[0];
+                const last = list[list.length - 1];
+                const active = document.activeElement;
+                if (e.shiftKey) {
+                    if (active === first || !container.contains(active)) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (active === last || !container.contains(active)) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            };
+            container.addEventListener('keydown', handler);
+            return () => container.removeEventListener('keydown', handler);
+        }
+
+        // مودال تأیید (جایگزین confirm() بومی مرورگر)
+        // options: { title, message, confirmText, cancelText, danger }
+        // خروجی: Promise<boolean>
+        function showConfirmModal(options) {
+            const opts = options || {};
+            const overlay = document.getElementById('confirmModal');
+            if (!overlay) {
+                // fallback به confirm بومی اگر مودال در HTML نبود
+                return Promise.resolve(window.confirm(opts.message || 'مطمئن هستید؟'));
+            }
+
+            const titleEl = document.getElementById('confirmModalTitle');
+            const msgEl = document.getElementById('confirmModalMessage');
+            const okBtn = document.getElementById('confirmModalOk');
+            const cancelBtn = document.getElementById('confirmModalCancel');
+
+            if (titleEl) titleEl.textContent = opts.title || 'تأیید';
+            if (msgEl) msgEl.textContent = opts.message || '';
+            if (okBtn) {
+                okBtn.textContent = opts.confirmText || 'تأیید';
+                okBtn.classList.toggle('danger', Boolean(opts.danger));
+            }
+            if (cancelBtn) cancelBtn.textContent = opts.cancelText || 'انصراف';
+
+            const previousFocus = document.activeElement;
+
+            return new Promise(resolve => {
+                let trapCleanup = null;
+
+                const cleanup = () => {
+                    overlay.style.display = 'none';
+                    overlay.classList.remove('picker-overlay--stacked');
+                    okBtn.removeEventListener('click', onOk);
+                    cancelBtn.removeEventListener('click', onCancel);
+                    overlay.removeEventListener('click', onOverlay);
+                    document.removeEventListener('keydown', onKey);
+                    if (trapCleanup) { trapCleanup(); trapCleanup = null; }
+
+                    // بازگردانی فوکوس به المان قبلی
+                    if (previousFocus && document.body.contains(previousFocus) && typeof previousFocus.focus === 'function') {
+                        setTimeout(() => previousFocus.focus(), 30);
+                    }
+                };
+
+                const finish = value => {
+                    cleanup();
+                    resolve(value);
+                };
+
+                const onOk = e => { e.preventDefault(); finish(true); };
+                const onCancel = e => { e.preventDefault(); finish(false); };
+                const onOverlay = e => { if (e.target === overlay) finish(false); };
+                const onKey = e => {
+                    if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+                };
+
+                okBtn.addEventListener('click', onOk);
+                cancelBtn.addEventListener('click', onCancel);
+                overlay.addEventListener('click', onOverlay);
+                document.addEventListener('keydown', onKey);
+
+                overlay.classList.add('picker-overlay--stacked');
+                overlay.style.display = 'flex';
+                trapCleanup = trapFocus(overlay);
+
+                // فوکوس روی دکمه تأیید (یا انصراف اگر danger است)
+                setTimeout(() => {
+                    if (opts.danger) cancelBtn.focus();
+                    else okBtn.focus();
+                }, 60);
+            });
+        }
+
+        // مودال اطلاعات (جایگزین details/expand برای توضیحات کوتاه)
+        // options: { title, html, paragraphs, buttonText, fallbackAlert }
+        // html: رشته HTML امن (خودت باید escapeHtml کنی) یا آرایه‌ای از پاراگراف‌ها
+        function showInfoModal(options) {
+            const opts = options || {};
+            const overlay = document.getElementById('infoModal');
+            if (!overlay) {
+                if (opts.fallbackAlert) window.alert(opts.fallbackAlert);
+                return Promise.resolve();
+            }
+
+            const titleEl = document.getElementById('infoModalTitle');
+            const bodyEl = document.getElementById('infoModalBody');
+            const okBtn = document.getElementById('infoModalOk');
+
+            if (titleEl) titleEl.textContent = opts.title || 'اطلاعات';
+            if (bodyEl) {
+                if (Array.isArray(opts.paragraphs)) {
+                    bodyEl.innerHTML = opts.paragraphs.map(p => `<p>${p}</p>`).join('');
+                } else if (typeof opts.html === 'string') {
+                    bodyEl.innerHTML = opts.html;
+                } else {
+                    bodyEl.innerHTML = '';
+                }
+            }
+            if (okBtn) okBtn.textContent = opts.buttonText || 'فهمیدم';
+
+            const previousFocus = document.activeElement;
+
+            return new Promise(resolve => {
+                let trapCleanup = null;
+
+                const cleanup = () => {
+                    overlay.style.display = 'none';
+                    overlay.classList.remove('picker-overlay--stacked');
+                    okBtn.removeEventListener('click', onOk);
+                    overlay.removeEventListener('click', onOverlay);
+                    document.removeEventListener('keydown', onKey);
+                    if (trapCleanup) { trapCleanup(); trapCleanup = null; }
+
+                    // بازگردانی فوکوس به المان قبلی
+                    if (previousFocus && document.body.contains(previousFocus) && typeof previousFocus.focus === 'function') {
+                        setTimeout(() => previousFocus.focus(), 30);
+                    }
+                };
+
+                const finish = () => {
+                    cleanup();
+                    resolve();
+                };
+
+                const onOk = e => { e.preventDefault(); finish(); };
+                const onOverlay = e => { if (e.target === overlay) finish(); };
+                const onKey = e => {
+                    if (e.key === 'Escape') { e.preventDefault(); finish(); }
+                };
+
+                okBtn.addEventListener('click', onOk);
+                overlay.addEventListener('click', onOverlay);
+                document.addEventListener('keydown', onKey);
+
+                overlay.classList.add('picker-overlay--stacked');
+                overlay.style.display = 'flex';
+                trapCleanup = trapFocus(overlay);
+
+                setTimeout(() => okBtn.focus(), 60);
+            });
+        }
