@@ -3,20 +3,6 @@
 @layer overrides;
 
 @layer overrides {
-    :root {
-        --rf-primary: #5138C9;
-        --rf-primary-soft: rgba(81, 56, 201, .14);
-        --rf-accent: #00d4ff;
-        --rf-accent-soft: rgba(0, 212, 255, .10);
-        --rf-yellow: #F2E338;
-        --rf-text: #f1f1ff;
-        --rf-muted: #a5a5d0;
-        --rf-border: rgba(255, 255, 255, .09);
-        --rf-radius-sm: 10px;
-        --rf-radius-md: 14px;
-        --rf-glow: 0 0 24px rgba(81, 56, 201, .16);
-    }
-
     /* ═══════════════════════════════════════════════════════════════════════
        Global transitions
        ═══════════════════════════════════════════════════════════════════════ */
@@ -61,7 +47,7 @@
     }
 
     .create-zone .task-zone-title {
-        color: #fff;
+        color: var(--text-white);
         letter-spacing: -.01em;
     }
 
@@ -89,14 +75,14 @@
     }
 
     .list-zone .search-row input {
-        background: linear-gradient(145deg, #15153b, #1b1b48);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
         border-color: rgba(0, 212, 255, .22);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, .045), 0 3px 12px rgba(0, 0, 0, .16);
     }
 
     .list-zone .search-row input:focus {
         border-color: rgba(0, 212, 255, .58);
-        background: linear-gradient(145deg, #171740, #1e1e4e);
+        background: linear-gradient(145deg, var(--bg-7), var(--bg-8));
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, .055), 0 0 0 3px rgba(0, 212, 255, .07), 0 4px 16px rgba(0, 0, 0, .18);
     }
 
@@ -120,7 +106,7 @@
         margin-inline-start: 2px;
         padding: 3px 9px;
         border: 1px solid rgba(0, 212, 255, .34);
-        border-radius: 999px;
+        border-radius: var(--radius-pill);
         background: rgba(0, 212, 255, .075);
         color: #bfefff;
         font: inherit;
@@ -134,7 +120,7 @@
     .task-item .mini-link:hover {
         background: rgba(0, 212, 255, .14);
         border-color: rgba(0, 212, 255, .62);
-        color: #fff;
+        color: var(--text-white);
     }
 
     .task-item .mini-link:active {
@@ -160,7 +146,7 @@
         align-items: center;
         min-height: 46px;
         padding: 10px 40px 10px 14px;
-        color: #e8e8fb;
+        color: var(--text-detail-title);
         font-weight: 700;
         cursor: pointer;
         user-select: none;
@@ -189,12 +175,12 @@
 
     .detail-page .detail-accordion[open] > summary {
         background: rgba(81, 56, 201, .075);
-        color: #fff;
+        color: var(--text-white);
     }
 
     .detail-page .detail-accordion[open] > summary::before {
         transform: translateY(-50%) rotate(90deg);
-        color: #00d4ff;
+        color: var(--accent-cyan);
     }
 
     .detail-page .detail-accordion > summary:hover {
@@ -238,7 +224,7 @@
     .map-divider-toggle::before {
         content: '📍';
         display: block;
-        color: #fff;
+        color: var(--text-white);
         font-size: 18px;
         font-family: "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         line-height: 30px;
@@ -270,7 +256,7 @@
     }
 
     .map-divider-toggle:focus-visible {
-        outline: 2px solid #00d4ff;
+        outline: 2px solid var(--accent-cyan);
         outline-offset: 3px;
     }
 
@@ -295,41 +281,18 @@
     .list-zone .filters::-webkit-scrollbar-track,
     .list-zone .sort-row::-webkit-scrollbar-track {
         background: rgba(81, 56, 201, .06);
-        border-radius: 999px;
+        border-radius: var(--radius-pill);
     }
 
     .list-zone .filters::-webkit-scrollbar-thumb,
     .list-zone .sort-row::-webkit-scrollbar-thumb {
         background: rgba(81, 56, 201, .48);
-        border-radius: 999px;
+        border-radius: var(--radius-pill);
     }
 
     .list-zone .filters::-webkit-scrollbar-thumb:hover,
     .list-zone .sort-row::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 212, 255, .68);
-    }
-
-    .detail-page {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(165, 165, 208, .34) transparent;
-    }
-
-    .detail-page::-webkit-scrollbar {
-        width: 7px;
-    }
-
-    .detail-page::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .detail-page::-webkit-scrollbar-thumb {
-        background: rgba(165, 165, 208, .30);
-        border: 1px solid rgba(255, 255, 255, .05);
-        border-radius: 999px;
-    }
-
-    .detail-page::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 212, 255, .48);
     }
 
     /* ═══════════════════════════════════════════════════════════════════════
@@ -344,7 +307,8 @@
     .create-zone,
     .list-zone,
     .right-flow-container,
-    .right-flow {
+    .right-flow,
+    .detail-page {
         scrollbar-width: thin;
         scrollbar-color: rgba(165, 165, 208, .34) transparent;
     }
@@ -358,7 +322,8 @@
     .create-zone::-webkit-scrollbar,
     .list-zone::-webkit-scrollbar,
     .right-flow-container::-webkit-scrollbar,
-    .right-flow::-webkit-scrollbar {
+    .right-flow::-webkit-scrollbar,
+    .detail-page::-webkit-scrollbar {
         width: 7px;
     }
 
@@ -371,7 +336,8 @@
     .create-zone::-webkit-scrollbar-track,
     .list-zone::-webkit-scrollbar-track,
     .right-flow-container::-webkit-scrollbar-track,
-    .right-flow::-webkit-scrollbar-track {
+    .right-flow::-webkit-scrollbar-track,
+    .detail-page::-webkit-scrollbar-track {
         background: transparent;
     }
 
@@ -384,10 +350,11 @@
     .create-zone::-webkit-scrollbar-thumb,
     .list-zone::-webkit-scrollbar-thumb,
     .right-flow-container::-webkit-scrollbar-thumb,
-    .right-flow::-webkit-scrollbar-thumb {
+    .right-flow::-webkit-scrollbar-thumb,
+    .detail-page::-webkit-scrollbar-thumb {
         background: rgba(165, 165, 208, .30);
         border: 1px solid rgba(255, 255, 255, .05);
-        border-radius: 999px;
+        border-radius: var(--radius-pill);
     }
 
     .panel::-webkit-scrollbar-thumb:hover,
@@ -399,7 +366,8 @@
     .create-zone::-webkit-scrollbar-thumb:hover,
     .list-zone::-webkit-scrollbar-thumb:hover,
     .right-flow-container::-webkit-scrollbar-thumb:hover,
-    .right-flow::-webkit-scrollbar-thumb:hover {
+    .right-flow::-webkit-scrollbar-thumb:hover,
+    .detail-page::-webkit-scrollbar-thumb:hover {
         background: rgba(0, 212, 255, .48);
     }
 
@@ -426,7 +394,7 @@
     #tplKids::-webkit-scrollbar-thumb {
         background: rgba(165, 165, 208, .30);
         border: 1px solid rgba(255, 255, 255, .05);
-        border-radius: 999px;
+        border-radius: var(--radius-pill);
     }
 
     .picker.cal-wide::-webkit-scrollbar-thumb:hover,
@@ -443,17 +411,17 @@
         line-height: 1;
         opacity: .75;
         cursor: help;
-        transition: color .3s ease, opacity .3s ease, transform .3s ease;
+        transition: color var(--transition-base), opacity var(--transition-base), transform var(--transition-base);
         vertical-align: middle;
     }
 
     .time-source-icon.online {
-        color: #00ff88;
+        color: var(--accent-green);
         opacity: 1;
     }
 
     .time-source-icon.offline {
-        color: #ffd166;
+        color: var(--accent-yellow);
         opacity: 1;
     }
 
@@ -467,8 +435,6 @@
     .route-summary {
         position: absolute;
         top: 12px;
-        /* این پنل روی نقشه است (نه متن)، پس همیشه باید در گوشه راست-بالا
-           نقشه باشد. از right فیزیکی استفاده می‌کنیم. */
         right: 12px;
         left: auto;
         width: min(420px, calc(100% - 24px));
@@ -487,7 +453,7 @@
         border: 1px solid rgba(255, 255, 255, .14);
         border-radius: 12px 12px 8px 8px;
         background: rgba(10, 10, 26, .88);
-        color: #fff;
+        color: var(--text-white);
         font-size: 12px;
         font-weight: 700;
         backdrop-filter: blur(10px);
@@ -511,7 +477,7 @@
         align-items: center;
         justify-content: center;
         border: 0;
-        border-radius: 8px;
+        border-radius: var(--radius-xs);
         background: transparent;
         color: #d9deea;
         cursor: pointer;
@@ -524,7 +490,7 @@
 
     .route-summary-close:hover {
         background: rgba(255, 255, 255, .1);
-        color: #fff;
+        color: var(--text-white);
     }
 
     .route-options {
@@ -543,7 +509,7 @@
         padding: 7px 10px;
         border: 1px solid rgba(255, 255, 255, .12);
         border-inline-end: 3px solid transparent;
-        border-radius: 9px;
+        border-radius: var(--radius-sm);
         background: rgba(10, 10, 26, .84);
         color: #e9edf5;
         cursor: pointer;
@@ -600,7 +566,7 @@
     }
 
     .route-option.is-active .route-option-info {
-        color: #fff;
+        color: var(--text-white);
         font-weight: 700;
     }
 
@@ -680,7 +646,7 @@
         border: 1px solid rgba(255, 255, 255, .12);
         background: rgba(10, 10, 26, .72);
         color: #e9edf5;
-        border-radius: 999px;
+        border-radius: var(--radius-pill);
         padding: 7px 11px;
         cursor: pointer;
         font: inherit;
@@ -708,7 +674,7 @@
         padding: 8px 12px;
         margin: 0 0 8px;
         border: 1px solid rgba(0, 212, 255, 0.22);
-        border-radius: 12px;
+        border-radius: var(--radius-md);
         background: rgba(0, 212, 255, 0.05);
         color: #c9f7ff;
         font-family: inherit;
@@ -726,19 +692,19 @@
     }
 
     .saved-locations-manage:focus-visible {
-        outline: 2px solid #00d4ff;
+        outline: 2px solid var(--accent-cyan);
         outline-offset: 2px;
     }
 
     .saved-locations-count {
-        color: #7a7aaa;
+        color: var(--text-muted);
         font-weight: 400;
         font-size: 0.78rem;
     }
 
     .saved-locations-chevron {
         margin-inline-start: auto;
-        color: #7a7aaa;
+        color: var(--text-muted);
         font-size: 1.1rem;
         line-height: 1;
     }
@@ -758,10 +724,10 @@
         align-items: center;
         gap: 10px;
         padding: 10px 14px;
-        border-radius: 14px;
-        border: 1.5px solid #2a2a5e;
-        background: linear-gradient(145deg, #0d0d28, #151542);
-        color: #e0e0ff;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--border-medium);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+        color: var(--text-primary);
         font-size: 0.85rem;
     }
 
@@ -780,7 +746,7 @@
 
     .saved-locations-row .slr-coords {
         font-size: 0.72rem;
-        color: #7a7aaa;
+        color: var(--text-muted);
         direction: ltr;
         unicode-bidi: plaintext;
         text-align: end;
@@ -795,10 +761,10 @@
     .saved-locations-row .slr-actions button {
         width: 34px;
         height: 34px;
-        border-radius: 10px;
-        border: 1.5px solid #2a2a5e;
-        background: linear-gradient(145deg, #0d0d28, #151542);
-        color: #00d4ff;
+        border-radius: var(--radius-sm);
+        border: 1.5px solid var(--border-medium);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+        color: var(--accent-cyan);
         font-family: inherit;
         font-size: 0.95rem;
         cursor: pointer;
@@ -830,7 +796,7 @@
         margin: 0 0 12px;
         font-size: 0.82rem;
         line-height: 1.9;
-        color: #a5a5d0;
+        color: var(--text-muted);
         text-align: start;
     }
 
@@ -846,10 +812,10 @@
         flex: 1;
         min-width: 0;
         padding: 10px 14px;
-        border: 1.5px solid #1a1a3e;
-        border-radius: 12px;
-        background: linear-gradient(145deg, #0d0d28, #131338);
-        color: #e0e0ff;
+        border: 1.5px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        background: linear-gradient(145deg, var(--bg-13), var(--bg-11));
+        color: var(--text-primary);
         font-family: inherit;
         font-size: 0.9rem;
         outline: none;
@@ -862,7 +828,7 @@
     }
 
     #namePromptInput.input-error {
-        border-color: #ff4d8d;
+        border-color: var(--accent-pink);
         animation: shake 0.4s ease;
     }
 
@@ -906,7 +872,7 @@
         margin-top: 10px;
         padding: 10px 14px;
         border: 1px solid rgba(0, 212, 255, 0.32);
-        border-radius: 12px;
+        border-radius: var(--radius-md);
         background: linear-gradient(145deg, rgba(0, 212, 255, 0.08), rgba(81, 56, 201, 0.08));
         color: #c9f7ff;
         font-size: 0.82rem;
@@ -925,7 +891,7 @@
         flex: 0 0 auto;
         padding: 6px 12px;
         border: 1px solid rgba(255, 77, 141, 0.45);
-        border-radius: 10px;
+        border-radius: var(--radius-sm);
         background: rgba(255, 77, 141, 0.1);
         color: #ff8fb6;
         font-family: inherit;
@@ -957,7 +923,7 @@
     #confirmModal .picker-title,
     #infoModal .picker-title {
         font-size: 1.1rem;
-        color: #fff;
+        color: var(--text-white);
         padding-bottom: 8px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         margin-bottom: 14px;
@@ -977,13 +943,11 @@
 
     /* ═══════════════════════════════════════════════════════════════════════
        Detail Page — Position (دسکتاپ روی ستون راست)
-       این عنصر بصری است: از چپ (left) فاصله می‌گیرد تا روی ستون راست
-       قرار بگیرد. از left/right فیزیکی استفاده می‌کنیم.
        ═══════════════════════════════════════════════════════════════════════ */
     @media (min-width: 901px) {
         .detail-page {
-            left: calc(max(360px, 42vw));
-            right: 0;
+            left: calc(max(0px, (100vw - 1100px) / 2) + 400px);
+            right: max(0px, (100vw - 1100px) / 2);
             padding: 28px 34px 60px;
             z-index: 60;
         }
@@ -1049,9 +1013,6 @@
 
         .right-flow-container > .map-divider-toggle {
             position: absolute;
-            /* این عنصر بصری است (نه متنی). در RTL، inset-inline-start
-               به راست معکوس می‌شود، ولی ما می‌خواهیم دکمه در لبه چپ
-               کانتینر باشد. پس از left/right فیزیکی استفاده می‌کنیم. */
             left: 0;
             right: auto;
             top: 50%;
@@ -1151,7 +1112,6 @@
     @media (max-width: 520px) {
         .list-zone .search-row input {
             font-size: .84rem;
-            /* در موبایل کوچک، جای آیکن ذره‌بین را کمی کمتر می‌کنیم */
             padding-inline-start: 36px;
         }
         .task-item .mini-link {
@@ -1163,3 +1123,21 @@
             padding-inline: 10px;
         }
     }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       Root variables for visual-fixes (keep in overrides layer)
+       ═══════════════════════════════════════════════════════════════════════ */
+    :root {
+        --rf-primary: #5138C9;
+        --rf-primary-soft: rgba(81, 56, 201, .14);
+        --rf-accent: #00d4ff;
+        --rf-accent-soft: rgba(0, 212, 255, .10);
+        --rf-yellow: #F2E338;
+        --rf-text: #f1f1ff;
+        --rf-muted: #a5a5d0;
+        --rf-border: rgba(255, 255, 255, .09);
+        --rf-radius-sm: 10px;
+        --rf-radius-md: 14px;
+        --rf-glow: 0 0 24px rgba(81, 56, 201, .16);
+    }
+}

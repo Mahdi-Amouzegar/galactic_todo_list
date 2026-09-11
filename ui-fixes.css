@@ -25,7 +25,7 @@
             padding: 0;
             border: 0;
             background: transparent;
-            color: #a5a5d0;
+            color: var(--text-muted);
             font: inherit;
             font-size: 0.92rem;
             font-weight: 500;
@@ -35,7 +35,7 @@
         }
 
         .tagline-toggle:hover {
-            color: #00d4ff;
+            color: var(--accent-cyan);
         }
 
         .header-side {
@@ -82,7 +82,6 @@
 
     /* ═══════════════════════════════════════════════════════════════════════
        Task Column Information Architecture
-       primary action → task management → secondary settings → insights
        ═══════════════════════════════════════════════════════════════════════ */
     .task-zone {
         width: 100%;
@@ -91,7 +90,7 @@
 
     .task-zone-title {
         margin: 0;
-        color: #f1f1ff;
+        color: var(--text-title);
         font-size: 1rem;
         font-weight: 700;
         line-height: 1.6;
@@ -100,7 +99,7 @@
     .create-zone {
         padding: 18px;
         border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 16px;
+        border-radius: var(--radius-lg);
         background: rgba(255, 255, 255, 0.035);
     }
 
@@ -129,18 +128,18 @@
 
     .create-zone .kind3-btn:hover {
         border-color: rgba(0, 212, 255, 0.45);
-        color: #fff;
+        color: var(--text-white);
     }
 
     .create-zone .kind3-btn.active {
         border-color: rgba(0, 212, 255, 0.78);
         background: rgba(0, 212, 255, 0.13);
-        color: #fff;
+        color: var(--text-white);
         box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.12);
     }
 
     .create-zone .kind3-btn:focus-visible {
-        outline: 2px solid #00d4ff;
+        outline: 2px solid var(--accent-cyan);
         outline-offset: 2px;
     }
 
@@ -187,7 +186,7 @@
         flex: 0 0 auto;
         min-height: 34px;
         padding: 5px 10px;
-        border-radius: 999px;
+        border-radius: var(--radius-pill);
         white-space: nowrap;
         font-size: .82rem;
     }
@@ -243,7 +242,7 @@
     @media (max-width: 900px) {
         #panelTasks { padding-bottom: 20px; }
         .task-zone-title { font-size: .98rem; }
-        .create-zone { padding: 14px; border-radius: 14px; }
+        .create-zone { padding: 14px; border-radius: var(--radius-md); }
         .create-zone .kind3 { gap: 6px; }
         .create-zone .kind3-btn { min-height: 42px; padding-inline: 8px; font-size: .9rem; }
         .create-zone .due-row { display: grid; grid-template-columns: 1fr; gap: 8px; }
