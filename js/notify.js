@@ -41,11 +41,19 @@
             try {
                 if (!audioCtx) {
                     const AC = window.AudioContext || window.webkitAudioContext;
-                    if (!AC) return;
+                    if (!AC) return null;
                     audioCtx = new AC();
                 }
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-            } catch { /* نادیده */ }
+                if (audioCtx.state === 'suspended') {
+                    // resume فقط بعد از user gesture مجاز است. اگر رد شود،
+                    // فقط یک warning در Console می‌آید که با catch مدیریت می‌شود.
+                    const p = audioCtx.resume();
+                    if (p && typeof p.catch === 'function') p.catch(() => {});
+                }
+                return audioCtx;
+            } catch {
+                return null;
+            }
         }
 
         // زنگ ملایم کاملاً آفلاین (بدون فایل صوتی): دو نت سینوسی

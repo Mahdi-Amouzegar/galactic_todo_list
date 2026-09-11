@@ -330,10 +330,20 @@
             return map;
         }
 
-        function findTask(id) {
-            if (!_taskIndex) buildTaskIndex();
-            return _taskIndex.get(String(id)) || null;
+// جستجوی خطی مطمئن — همیشه از tasks مستقیم می‌خواند.
+// (پرفورمنس برای لیست‌های کوچک کافی است.)
+function findTask(id) {
+    const key = String(id);
+    for (const t of tasks) {
+        if (String(t.id) === key) return { task: t, parent: null };
+        if (t.kind === 'plan' && Array.isArray(t.children)) {
+            for (const c of t.children) {
+                if (String(c.id) === key) return { task: c, parent: t };
+            }
         }
+    }
+    return null;
+}
 
         function planStats(g) {
             const k = visibleChildren(g);

@@ -19,13 +19,25 @@
 //   - هر تغییر در ساختار داده → API + ۱ و بقیه صفر
 //   - تغییر بزرگ معماری → MAJOR + ۱ و بقیه صفر
 // ─────────────────────────────────────────────────────────────────────────────
-const CACHE = 'space-todo-v1.0.0.4-2026-09-11';
+// تاریخچه:
+//   v1.0.0.0-2026-09-11 — نقطه شروع (baseline) قبل از برنامه ارتقا
+//   v1.0.0.1-2026-09-11 — فاز ۱: رفع باگ‌های بحرانی (saveTasks deep clone، idbPutAll guard)
+//   v1.0.0.2-2026-09-11 — فاز ۲: امنیت (CSP، SRI، sanitizeUrl، escapeHtml سریع)
+//   v1.0.0.3-2026-09-11 — فاز ۳: عملکرد (debounce، Task Index، cache allSessions، ترتیب منابع زمان)
+//   v1.0.0.4-2026-09-11 — فاز ۴: UX و دسترس‌پذیری (focus trap، مودال‌های سفارشی، Snackbar دقیق، Escape متمرکز)
+//   v1.1.0.0-2026-09-11 — فاز ۵-الف: Cascade Layers + Logical Properties + رفع باگ findTask
+// ─────────────────────────────────────────────────────────────────────────────
+const CACHE = 'rahefarda-v1.1.0.0-2026-09-11';
+// فایل‌ها بدون query-string (?v=N) کش می‌شوند.
+// networkFirst + ignoreSearch تضمین می‌کند همیشه نسخه درست لود شود:
+//  - آنلاین: از شبکه (با query جدید)
+//  - آفلاین: از کش (ignoreSearch نادیده می‌گیرد)
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=1',
-  './ui-fixes.css?v=1',
-  './visual-fixes.css?v=1',
+  './styles.css',
+  './ui-fixes.css',
+  './visual-fixes.css',
   './manifest.webmanifest',
   './fonts/vazirmatn-arabic.woff2',
   './fonts/vazirmatn-latin.woff2',
@@ -36,19 +48,19 @@ const ASSETS = [
   './icons/favicon-32.ico',
   './icons/favicon-96x96.png',
   './icons/favicon.svg',
-  './js/core.js?v=1',
-  './js/jalali.js?v=1',
-  './js/time.js?v=1',
-  './js/notify.js?v=1',
-  './js/store.js?v=1',
-  './js/sessions.js?v=1',
-  './js/picker.js?v=1',
-  './js/map.js?v=1',
-  './js/route-ui.js?v=1',
-  './js/location-ui.js?v=1',
-  './js/detail.js?v=1',
-  './js/ui.js?v=1',
-  './js/app.js?v=1'
+  './js/core.js',
+  './js/jalali.js',
+  './js/time.js',
+  './js/notify.js',
+  './js/store.js',
+  './js/sessions.js',
+  './js/picker.js',
+  './js/map.js',
+  './js/route-ui.js',
+  './js/location-ui.js',
+  './js/detail.js',
+  './js/ui.js',
+  './js/app.js'
 ];
 
 self.addEventListener('notificationclick', e => {

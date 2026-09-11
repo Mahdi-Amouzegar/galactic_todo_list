@@ -367,8 +367,8 @@
                 }
                 updateNotifStatus();
             });
-            window.addEventListener('pointerdown', ensureAudio);
-            window.addEventListener('keydown', ensureAudio);
+            //window.addEventListener('pointerdown', ensureAudio);
+            //window.addEventListener('keydown', ensureAudio);
             updateNotifStatus();
         }
 
@@ -552,6 +552,7 @@
             if (!actionEl && editingId) return;
 
             const action = actionEl ? actionEl.dataset.action : null;
+    console.log('🟡 action =', action, '| id =', id, '| scopeEl =', scopeEl);
             if (action === 'toggle') toggleTask(id);
             else if (action === 'delete') deleteTask(id, scopeEl);
             else if (action === 'edit-btn') startEdit(id);
@@ -869,17 +870,28 @@
         }
         initSettings();
         applyMapVisibility();
-        loadTasks().then(async () => {
-            await loadTrash();
-            if (prefs.proMode) tasks.forEach(t => { if (t.kind === 'plan') expandedPlans.add(String(t.id)); });
-            updateDueChips();
-            syncDisclosure();
-            render();
-            renderTrash();
-            initMap();
-            syncServerTime();
-            startReminderLoop();
-        });
+loadTasks().then(async () => {
+    await loadTrash();
+    if (prefs.proMode) tasks.forEach(t => { if (t.kind === 'plan') expandedPlans.add(String(t.id)); });
+    updateDueChips();
+    syncDisclosure();
+    try {
+        console.log('🔴 Before render in loadTasks.then');
+        render();
+        console.log('🟢 After render in loadTasks.then');
+    } catch (err) {
+        console.error('❌ Error in render (loadTasks.then):', err);
+    }
+    try {
+        renderTrash();
+        console.log('🟢 After renderTrash');
+    } catch (err) {
+        console.error('❌ Error in renderTrash:', err);
+    }
+    initMap();
+    syncServerTime();
+    startReminderLoop();
+});
 
 // Future React entry point can import state/actions from here.
 window.TodoApp = { getTasks: () => tasks, findTask, saveTasks, render };

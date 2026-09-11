@@ -99,13 +99,22 @@ function destroyMap() {
 }
 
 function applyMapVisibility() {
-    document.body.classList.toggle('map-hidden', !prefs.mapVisible);
     const btn = document.getElementById('mapToggle');
     if (btn) btn.textContent = prefs.mapVisible ? '🗺 نقشه: روشن' : '🗺 نقشه: خاموش';
+
     if (!prefs.mapVisible) {
-        destroyMap();
+        // مرحله ۱: اضافه کردن map-hidden برای شروع انیمیشن fade-out.
+        // (visual-fixes.css با opacity: 0 و transition، نقشه را fade-out می‌کند.)
+        // مرحله ۲: بعد از 550ms که انیمیشن .5s تمام شد، Leaflet را حذف کن.
+        setTimeout(() => {
+        document.body.classList.add('map-hidden');
+            if (!prefs.mapVisible) destroyMap();
+        }, 550);
         return;
     }
+
+    // حالت نمایش — فوری
+    document.body.classList.remove('map-hidden');
     if (mapReady) setTimeout(() => map.invalidateSize(), 60);
 }
 
