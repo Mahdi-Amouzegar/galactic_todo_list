@@ -50,7 +50,7 @@
         display: flex;
         flex-direction: column;
         gap: 16px;
-        background: linear-gradient(145deg, var(--bg-5), var(--bg-4));
+        background: var(--bg-2);
         border: 1.5px solid var(--border-subtle);
         border-radius: var(--radius-xl);
         padding: 24px;
@@ -75,7 +75,7 @@
         padding: 12px 16px;
         border: 1.5px solid var(--border-subtle);
         border-radius: var(--radius-md);
-        background: linear-gradient(145deg, var(--bg-13), var(--bg-11));
+        background: var(--bg-2);
         color: var(--text-primary);
         font-family: inherit;
         font-size: 0.9rem;
@@ -86,7 +86,7 @@
 
     .field input:focus,
     .field textarea:focus {
-        border-color: #00d4ff66;
+        border-color: var(--accent-cyan);
     }
 
     .field input.ltr {
@@ -96,7 +96,7 @@
 
     .field-error {
         font-size: 0.75rem;
-        color: #ff6da8;
+        color: var(--accent-pink);
         min-height: 1.2em;
     }
 
@@ -155,7 +155,7 @@
         gap: 10px;
         padding: 10px 14px;
         border-radius: var(--radius-md);
-        background: linear-gradient(145deg, var(--bg-13), var(--bg-11));
+        background: var(--bg-4);
         border: 1.5px solid var(--border-subtle);
         font-size: 0.85rem;
     }
@@ -265,7 +265,7 @@
         border-radius: 50%;
         border: none;
         background: rgba(10, 10, 26, 0.8);
-        color: #ff6da8;
+        color: var(--accent-pink);
         font-size: 0.7rem;
         cursor: pointer;
         font-family: inherit;
@@ -296,7 +296,7 @@
         margin-bottom: 20px;
         padding: 14px 16px;
         border-radius: var(--radius-lg);
-        background: linear-gradient(145deg, var(--bg-13), var(--bg-11));
+        background: var(--bg-2);
         border: 1.5px solid var(--border-subtle);
     }
 
@@ -329,7 +329,7 @@
         max-width: 26px;
         border-radius: 6px 6px 3px 3px;
         background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
-        box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
+        box-shadow: 0 0 10px var(--accent-cyan-glow);
     }
 
     .bar.empty {
@@ -343,21 +343,16 @@
     }
 
     /* ═══ Misc ═══ */
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.25); }
-    }
-
-    .mic-btn.listening {
-        border-color: var(--accent-pink);
-        ...
-    }
-
     .mic-btn.listening {
         border-color: var(--accent-pink);
         color: var(--accent-pink);
-        box-shadow: 0 0 15px rgba(255, 77, 141, 0.35);
+        box-shadow: 0 0 15px var(--accent-pink-soft);
         animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.25); }
     }
 
     @media (min-width: 901px) {
@@ -369,7 +364,7 @@
     .welcome-text {
         font-size: 0.85rem;
         line-height: 2.1;
-        color: #b9b9e0;
+        color: var(--text-primary);
         margin-bottom: 14px;
         text-align: start;
     }
@@ -379,7 +374,7 @@
         padding: 6px 10px;
         border-radius: var(--radius-sm);
         border: 1.5px solid var(--border-medium);
-        background: linear-gradient(145deg, var(--bg-13), var(--bg-4));
+        background: var(--bg-2);
         color: var(--text-muted);
         font-family: inherit;
         font-size: 0.78rem;
@@ -389,10 +384,10 @@
     }
 
     .day-chip.on {
-        border-color: #00d4ff88;
+        border-color: var(--accent-cyan-border);
         color: var(--accent-cyan);
-        background: rgba(0, 212, 255, 0.12);
-        box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
+        background: var(--accent-cyan-soft);
+        box-shadow: 0 0 10px var(--accent-cyan-soft);
     }
 
     .chip-row {
@@ -428,12 +423,12 @@
         }
     }
 
-    /* ═══ Detail Accordion (از visual-fixes.css) ═══ */
+    /* ═══ Detail Accordion ═══ */
     .detail-page .detail-card > .detail-accordion {
         margin: 0 0 9px;
-        border: 1px solid rgba(255, 255, 255, .085);
+        border: 1px solid var(--border-subtle);
         border-radius: 13px;
-        background: rgba(255, 255, 255, .025);
+        background: var(--bg-4);
         overflow: hidden;
         transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
     }
@@ -461,20 +456,20 @@
         inset-inline-end: 15px;
         top: 50%;
         transform: translateY(-50%) rotate(-90deg);
-        color: #9d9dc5;
+        color: var(--text-muted);
         font-size: 18px;
         line-height: 1;
         transition: transform .18s ease, color .18s ease;
     }
 
     .detail-page .detail-accordion[open] {
-        border-color: rgba(81, 56, 201, .24);
-        box-shadow: 0 0 18px rgba(81, 56, 201, .06);
+        border-color: var(--accent-purple-border);
+        box-shadow: 0 0 18px var(--accent-purple-soft);
     }
 
     .detail-page .detail-accordion[open] > summary {
-        background: rgba(81, 56, 201, .075);
-        color: var(--text-white);
+        background: var(--accent-purple-soft);
+        color: var(--text-primary);
     }
 
     .detail-page .detail-accordion[open] > summary::before {
@@ -483,7 +478,7 @@
     }
 
     .detail-page .detail-accordion > summary:hover {
-        background: rgba(255, 255, 255, .045);
+        background: var(--bg-2);
     }
 
     .detail-page .detail-accordion-body {
@@ -503,15 +498,34 @@
     }
 
     /* ═══ Light theme overrides ═══ */
-    html[data-theme="light"] .task-item.completed .task-text,
-    html[data-theme="light"] .child-item.completed .child-text {
+    html.theme-light .task-item.completed .task-text,
+    html.theme-light .child-item.completed .child-text {
         color: #6a8a7a;
     }
 
-    @media (prefers-color-scheme: light) {
-        html:not([data-theme]) .task-item.completed .task-text,
-        html:not([data-theme]) .child-item.completed .child-text {
-            color: #6a8a7a;
-        }
+    html.theme-light .detail-card {
+        box-shadow:
+            0 1px 3px rgba(15, 23, 42, 0.08),
+            0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    html.theme-light .detail-page .detail-accordion {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+    }
+
+    html.theme-light .detail-page .detail-accordion[open] {
+        background: #ffffff;
+        border-color: var(--accent-purple-border);
+    }
+
+    html.theme-light .detail-page .detail-accordion > summary:hover {
+        background: #ffffff;
+    }
+
+    html.theme-light .stats-box {
+        box-shadow:
+            0 1px 3px rgba(15, 23, 42, 0.06),
+            0 1px 2px rgba(15, 23, 42, 0.04);
     }
 }

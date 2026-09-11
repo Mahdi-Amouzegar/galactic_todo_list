@@ -327,18 +327,32 @@
         // - 'auto' : حذف data-theme → پیروی از prefers-color-scheme
         // - 'dark' : data-theme="dark"
         // - 'light': data-theme="light"
+        // اعمال theme روی <html>
+        // - 'auto' : حذف data-theme + کلاس بر اساس prefers-color-scheme
+        // - 'dark' : data-theme="dark" + theme-dark
+        // - 'light': data-theme="light" + theme-light
         function applyTheme(theme) {
             const html = document.documentElement;
-            if (theme === 'dark' || theme === 'light') {
-                html.setAttribute('data-theme', theme);
+            html.classList.remove('theme-light', 'theme-dark');
+
+            let effective;  // 'light' یا 'dark' — چیزی که واقعاً اعمال می‌شود
+            if (theme === 'dark') {
+                effective = 'dark';
+                html.setAttribute('data-theme', 'dark');
+            } else if (theme === 'light') {
+                effective = 'light';
+                html.setAttribute('data-theme', 'light');
             } else {
+                // auto: از OS پیروی کن
                 html.removeAttribute('data-theme');
+                effective = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
             }
+
+            html.classList.add(effective === 'light' ? 'theme-light' : 'theme-dark');
+
             const meta = document.querySelector('meta[name="theme-color"]');
             if (meta) {
-                const isLight = theme === 'light' ||
-                    (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches);
-                meta.setAttribute('content', isLight ? '#f0f0f5' : '#0a0a1a');
+                meta.setAttribute('content', effective === 'light' ? '#f0f3f8' : '#0a0a1a');
             }
         }
 

@@ -5,40 +5,40 @@
    CSS Variables (Design Tokens)
    ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-    /* ── Background layers (از عمیق‌ترین به بالاترین) ── */
-    --bg-0: #080818;         /* عمیق‌ترین — app-shell */
-    --bg-1: #0a0a1a;         /* بدنه اصلی — body, detail-page */
-    --bg-2: #0d0d28;         /* کارت‌ها — input, filter-btn */
-    --bg-3: #101032;         /* مودال‌ها — picker, snackbar */
-    --bg-4: #151542;         /* لایه‌های بالاتر — task-item */
-    --bg-5: #0e0e2c;         /* کارت‌های گرادیان — task-item (start) */
-    --bg-6: #141432;         /* progress background */
-    --bg-7: #0f0f2e;         /* input section (start) */
-    --bg-8: #161640;         /* input section (end) */
-    --bg-9: #0a0a24;         /* inner elements — task-checkbox */
-    --bg-10: #121238;        /* task-checkbox (end) */
-    --bg-11: #131338;        /* card (end) */
-    --bg-12: #181848;        /* modal (end) */
-    --bg-13: #0d0d28;        /* search input (start) */
-    --bg-14: #1a0a4a;        /* active kind3 (start) */
-    --bg-15: #251060;        /* active kind3 (end) */
-    --bg-16: #1a0a28;        /* btn-delete (start) */
-    --bg-17: #251038;        /* btn-delete (end) */
-    --bg-18: #0a1a28;        /* btn-edit (start) */
-    --bg-19: #102838;        /* btn-edit (end) */
-    --bg-20: #1a1408;        /* btn-archive (start) */
-    --bg-21: #26200f;        /* btn-archive (end) */
-    --bg-22: #0a1a15;        /* completed item (start) */
-    --bg-23: #0f2a20;        /* completed item (end) */
-    --bg-24: #1a0a20;        /* btn-clear (start) */
-    --bg-25: #221030;        /* btn-clear (end) */
-    --bg-26: #23234d;        /* bar empty */
-    --bg-27: #0a2a1a;        /* btn-ok (start) */
-    --bg-28: #0f3a24;        /* btn-ok (end) */
-    --bg-29: #003322;        /* checkbox checked (start) */
-    --bg-30: #005533;        /* checkbox checked (end) */
+    /* ── Background layers (Dark — پیش‌فرض) ── */
+    --bg-0: #080818;
+    --bg-1: #0a0a1a;
+    --bg-2: #0d0d28;
+    --bg-3: #101032;
+    --bg-4: #151542;
+    --bg-5: #0e0e2c;
+    --bg-6: #141432;
+    --bg-7: #0f0f2e;
+    --bg-8: #161640;
+    --bg-9: #0a0a24;
+    --bg-10: #121238;
+    --bg-11: #131338;
+    --bg-12: #181848;
+    --bg-13: #0d0d28;
+    --bg-14: #1a0a4a;
+    --bg-15: #251060;
+    --bg-16: #1a0a28;
+    --bg-17: #251038;
+    --bg-18: #0a1a28;
+    --bg-19: #102838;
+    --bg-20: #1a1408;
+    --bg-21: #26200f;
+    --bg-22: #0a1a15;
+    --bg-23: #0f2a20;
+    --bg-24: #1a0a20;
+    --bg-25: #221030;
+    --bg-26: #23234d;
+    --bg-27: #0a2a1a;
+    --bg-28: #0f3a24;
+    --bg-29: #003322;
+    --bg-30: #005533;
 
-    /* ── Text ── */
+    /* ── Text (Dark) ── */
     --text-primary: #e0e0ff;
     --text-secondary: #b98aff;
     --text-muted: #7a7aaa;
@@ -48,14 +48,14 @@
     --text-title: #f1f1ff;
     --text-detail-title: #e8e8fb;
 
-    /* ── Borders ── */
+    /* ── Borders (Dark) ── */
     --border-subtle: #1a1a3e;
     --border-medium: #2a2a5e;
     --border-strong: #3a3a6e;
     --border-purple: #2a1a3e;
     --border-dark: #202050;
 
-    /* ── Accents ── */
+    /* ── Accents (Dark) ── */
     --accent-cyan: #00d4ff;
     --accent-cyan-soft: rgba(0, 212, 255, 0.08);
     --accent-cyan-border: #00d4ff44;
@@ -89,7 +89,7 @@
     --radius-xl: 20px;
     --radius-pill: 99px;
 
-    /* ── Shadows ── */
+    /* ── Shadows (Dark) ── */
     --shadow-sm: 0 3px 8px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
@@ -100,7 +100,7 @@
     --transition-base: 0.3s ease;
     --transition-slow: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-    /* ── Visual Fixes Variables (از visual-fixes.css) ── */
+    /* ── Visual Fixes Variables ── */
     --rf-primary: #5138C9;
     --rf-primary-soft: rgba(81, 56, 201, .14);
     --rf-accent: #00d4ff;
@@ -112,6 +112,100 @@
     --rf-radius-sm: 10px;
     --rf-radius-md: 14px;
     --rf-glow: 0 0 24px rgba(81, 56, 201, .16);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIGHT THEME — کلاس theme-light روی <html> (تنظیم‌شده توسط JS)
+   ═══════════════════════════════════════════════════════════════════════════
+   پالت رنگی الهام‌گرفته از Tailwind Slate + Indigo/Violet تیره‌تر
+   برای کنتراست بالای WCAG AA روی پس‌زمینه روشن.
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.theme-light {
+    /* ── Background layers ── */
+    --bg-0: #e8ecf2;
+    --bg-1: #f0f3f8;
+    --bg-2: #ffffff;
+    --bg-3: #ffffff;
+    --bg-4: #f8fafc;
+    --bg-5: #ffffff;
+    --bg-6: #e5e9ef;
+    --bg-7: #ffffff;
+    --bg-8: #f8fafc;
+    --bg-9: #f8fafc;
+    --bg-10: #eef1f5;
+    --bg-11: #f8fafc;
+    --bg-12: #f8fafc;
+    --bg-13: #ffffff;
+    --bg-14: #ede9fe;
+    --bg-15: #ddd6fe;
+    --bg-16: #fee2e2;
+    --bg-17: #fecaca;
+    --bg-18: #dbeafe;
+    --bg-19: #bfdbfe;
+    --bg-20: #fef3c7;
+    --bg-21: #fde68a;
+    --bg-22: #ecfdf5;
+    --bg-23: #d1fae5;
+    --bg-24: #fee2e2;
+    --bg-25: #fecaca;
+    --bg-26: #e2e8f0;
+    --bg-27: #dcfce7;
+    --bg-28: #bbf7d0;
+    --bg-29: #d1fae5;
+    --bg-30: #a7f3d0;
+
+    /* ── Text ── */
+    --text-primary: #1e293b;
+    --text-secondary: #6d28d9;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
+    --text-faintest: #a8b3c2;
+    --text-white: #ffffff;
+    --text-title: #0f172a;
+    --text-detail-title: #1e293b;
+
+    /* ── Borders ── */
+    --border-subtle: #d8dde5;
+    --border-medium: #c4cbd6;
+    --border-strong: #a8b3c2;
+    --border-purple: #c4b5fd;
+    --border-dark: #cbd5e1;
+
+    /* ── Accents (نسخه تیره‌تر برای کنتراست AA/AAA روی روشن) ── */
+    --accent-cyan: #0891b2;
+    --accent-cyan-soft: rgba(8, 145, 178, 0.08);
+    --accent-cyan-border: #0891b266;
+    --accent-cyan-border-strong: #0891b288;
+    --accent-cyan-glow: rgba(8, 145, 178, 0.3);
+    --accent-purple: #6d28d9;
+    --accent-purple-soft: rgba(109, 40, 217, 0.12);
+    --accent-purple-border: #6d28d966;
+    --accent-pink: #db2777;
+    --accent-pink-soft: rgba(219, 39, 119, 0.08);
+    --accent-pink-border: #db277766;
+    --accent-green: #059669;
+    --accent-green-soft: rgba(5, 150, 105, 0.08);
+    --accent-green-border: #05966944;
+    --accent-yellow: #d97706;
+    --accent-yellow-soft: rgba(217, 119, 6, 0.08);
+    --accent-yellow-border: #d9770655;
+
+    /* ── Shadows (ملایم‌تر برای Light) ── */
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
+    --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+
+    /* ── Visual Fixes (Light) ── */
+    --rf-primary: #6d28d9;
+    --rf-primary-soft: rgba(109, 40, 217, .10);
+    --rf-accent: #0891b2;
+    --rf-accent-soft: rgba(8, 145, 178, .08);
+    --rf-yellow: #d97706;
+    --rf-text: #1e293b;
+    --rf-muted: #64748b;
+    --rf-border: rgba(15, 23, 42, .08);
+    --rf-glow: 0 0 24px rgba(109, 40, 217, .10);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -164,6 +258,8 @@
         position: relative;
         -webkit-user-select: none;
         user-select: none;
+        /* transition نرم برای تغییر theme */
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -197,8 +293,8 @@
     }
 
     select option {
-        color: var(--bg-3);
-        background-color: var(--text-white);
+        color: var(--text-primary);
+        background-color: var(--bg-2);
     }
 
     input[type="checkbox"] {
@@ -250,195 +346,4 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer utilities {
     /* کلاس‌های کمکی در آینده اضافه می‌شوند */
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   THEME OVERRIDE — با data-theme روی <html>
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── حالت صریح Dark ── */
-html[data-theme="dark"] {
-    --bg-0: #080818;
-    --bg-1: #0a0a1a;
-    --bg-2: #0d0d28;
-    --bg-3: #101032;
-    --bg-4: #151542;
-    --bg-5: #0e0e2c;
-    --bg-6: #141432;
-    --bg-7: #0f0f2e;
-    --bg-8: #161640;
-    --bg-9: #0a0a24;
-    --bg-10: #121238;
-    --bg-11: #131338;
-    --bg-12: #181848;
-    --bg-13: #0d0d28;
-    --bg-14: #1a0a4a;
-    --bg-15: #251060;
-    --bg-16: #1a0a28;
-    --bg-17: #251038;
-    --bg-18: #0a1a28;
-    --bg-19: #102838;
-    --bg-20: #1a1408;
-    --bg-21: #26200f;
-    --bg-22: #0a1a15;
-    --bg-23: #0f2a20;
-    --bg-24: #1a0a20;
-    --bg-25: #221030;
-    --bg-26: #23234d;
-    --bg-27: #0a2a1a;
-    --bg-28: #0f3a24;
-    --bg-29: #003322;
-    --bg-30: #005533;
-
-    --text-primary: #e0e0ff;
-    --text-secondary: #b98aff;
-    --text-muted: #7a7aaa;
-    --text-faint: #5a5a8a;
-    --text-faintest: #4a4a7a;
-    --text-white: #ffffff;
-    --text-title: #f1f1ff;
-    --text-detail-title: #e8e8fb;
-
-    --border-subtle: #1a1a3e;
-    --border-medium: #2a2a5e;
-    --border-strong: #3a3a6e;
-    --border-purple: #2a1a3e;
-    --border-dark: #202050;
-}
-
-/* ── حالت صریح Light ── */
-html[data-theme="light"] {
-    --bg-0: #e8e8f0;
-    --bg-1: #f0f0f5;
-    --bg-2: #ffffff;
-    --bg-3: #ffffff;
-    --bg-4: #eaeaf0;
-    --bg-5: #f5f5fa;
-    --bg-6: #e0e0e8;
-    --bg-7: #ffffff;
-    --bg-8: #f0f0f5;
-    --bg-9: #f5f5fa;
-    --bg-10: #eaeaf0;
-    --bg-11: #ffffff;
-    --bg-12: #f5f5fa;
-    --bg-13: #ffffff;
-    --bg-14: #e0d8f5;
-    --bg-15: #d0c8f0;
-    --bg-16: #f5e0e8;
-    --bg-17: #ead0d8;
-    --bg-18: #e0e8f5;
-    --bg-19: #d0d8f0;
-    --bg-20: #f5eed0;
-    --bg-21: #eadfc0;
-    --bg-22: #e0f5e8;
-    --bg-23: #d0ead8;
-    --bg-24: #f5e0e8;
-    --bg-25: #ead0d8;
-    --bg-26: #d0d0d8;
-    --bg-27: #e0f5e8;
-    --bg-28: #d0ead8;
-    --bg-29: #e0f5e8;
-    --bg-30: #d0ead8;
-
-    --text-primary: #1a1a2e;
-    --text-secondary: #5a3a9a;
-    --text-muted: #6a6a8a;
-    --text-faint: #8a8aa0;
-    --text-faintest: #a0a0b0;
-    --text-white: #ffffff;
-    --text-title: #1a1a2e;
-    --text-detail-title: #1a1a2e;
-
-    --border-subtle: #d0d0e0;
-    --border-medium: #b8b8cc;
-    --border-strong: #a0a0b8;
-    --border-purple: #c8b8d8;
-    --border-dark: #c0c0d0;
-}
-
-/* ── رنگ‌های ویژه در Light ── */
-html[data-theme="light"] .task-item.completed .task-text,
-html[data-theme="light"] .child-item.completed .child-text {
-    color: #6a8a7a;
-}
-
-html[data-theme="light"] .empty-state {
-    color: var(--text-faint);
-}
-
-html[data-theme="light"] .empty-state .icon {
-    opacity: 0.6;
-}
-
-html[data-theme="light"] .snackbar {
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-}
-
-/* ── Light theme با prefers-color-scheme (وقتی data-theme نیست) ── */
-@media (prefers-color-scheme: light) {
-    html:not([data-theme]) {
-        --bg-0: #e8e8f0;
-        --bg-1: #f0f0f5;
-        --bg-2: #ffffff;
-        --bg-3: #ffffff;
-        --bg-4: #eaeaf0;
-        --bg-5: #f5f5fa;
-        --bg-6: #e0e0e8;
-        --bg-7: #ffffff;
-        --bg-8: #f0f0f5;
-        --bg-9: #f5f5fa;
-        --bg-10: #eaeaf0;
-        --bg-11: #ffffff;
-        --bg-12: #f5f5fa;
-        --bg-13: #ffffff;
-        --bg-14: #e0d8f5;
-        --bg-15: #d0c8f0;
-        --bg-16: #f5e0e8;
-        --bg-17: #ead0d8;
-        --bg-18: #e0e8f5;
-        --bg-19: #d0d8f0;
-        --bg-20: #f5eed0;
-        --bg-21: #eadfc0;
-        --bg-22: #e0f5e8;
-        --bg-23: #d0ead8;
-        --bg-24: #f5e0e8;
-        --bg-25: #ead0d8;
-        --bg-26: #d0d0d8;
-        --bg-27: #e0f5e8;
-        --bg-28: #d0ead8;
-        --bg-29: #e0f5e8;
-        --bg-30: #d0ead8;
-
-        --text-primary: #1a1a2e;
-        --text-secondary: #5a3a9a;
-        --text-muted: #6a6a8a;
-        --text-faint: #8a8aa0;
-        --text-faintest: #a0a0b0;
-        --text-white: #ffffff;
-        --text-title: #1a1a2e;
-        --text-detail-title: #1a1a2e;
-
-        --border-subtle: #d0d0e0;
-        --border-medium: #b8b8cc;
-        --border-strong: #a0a0b8;
-        --border-purple: #c8b8d8;
-        --border-dark: #c0c0d0;
-    }
-
-    html:not([data-theme]) .task-item.completed .task-text,
-    html:not([data-theme]) .child-item.completed .child-text {
-        color: #6a8a7a;
-    }
-
-    html:not([data-theme]) .empty-state {
-        color: var(--text-faint);
-    }
-
-    html:not([data-theme]) .empty-state .icon {
-        opacity: 0.6;
-    }
-
-    html:not([data-theme]) .snackbar {
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-    }
 }
