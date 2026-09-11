@@ -85,7 +85,23 @@
             return (list || []).some(s => sameMinute(s.at, iso));
         }
 
+        // Cache برای allSessions: با هر تغییر tasks (که _taskIndexVersion را bump می‌کند)،
+        // cache پاک و در اولین فراخوانی بعدی بازسازی می‌شود.
+        let _allSessionsCache = null;
+        let _allSessionsCacheVersion = -1;
+
         function allSessions(onlyOpen) {
+            // اگر tasks تغییر کرده، cache را پاک کن
+            if (_allSessionsCacheVersion !== _taskIndexVersion) {
+                _allSessionsCache = null;
+                _allSessionsCacheVersion = _taskIndexVersion;
+            }
+            if (!_allSessionsCache) {
+                _allSessionsCache = { open: null, all: null };
+            }
+            const key = onlyOpen ? 'open' : 'all';
+            if (_allSessionsCache[key]) return _allSessionsCache[key];
+
             const out = [];
             const push = (t, owner) => {
                 if (t.archived) return;
@@ -100,6 +116,7 @@
                     (t.children || []).forEach(c => { if (!c.archived) push(c, t.text + ' / ' + c.text); });
                 } else push(t, t.text);
             });
+            _allSessionsCache[key] = out;
             return out;
         }
 

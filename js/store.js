@@ -307,17 +307,35 @@
         }
 
         // یافتن وظیفه یا زیرکار در همه‌جا (برمی‌گرداند {task, parent})
-        function findTask(id) {
-            for (const t of tasks) {
-                if (String(t.id) === String(id)) return { task: t, parent: null };
-                if (t.kind === 'plan') {
-                    const c = (t.children || []).find(x => String(x.id) === String(id));
-                    if (c) return { task: c, parent: t };
-                }
-            }
-            return null;
+        // ایندکس جستجوی O(1) برای یافتن سریع task یا زیرکار.
+        // بعد از هر تغییر در tasks، invalidateTaskIndex صدا زده می‌شود تا بازسازی شود.
+        let _taskIndex = null;
+        let _taskIndexVersion = 0;
+
+        function invalidateTaskIndex() {
+            _taskIndex = null;
+            _taskIndexVersion++;
         }
 
+        function buildTaskIndex() {
+            const map = new Map();
+            for (const t of tasks) {
+                map.set(String(t.id), { task: t, parent: null });
+                if (t.kind === 'plan' && Array.isArray(t.children)) {
+                    for (const c of t.children) {
+                        map.set(String(c.id), { task: c, parent: t });
+                    }
+                }
+            }
+            _taskIndex = map;
+            return map;
+        }
+
+        function findTask(id) {
+            if (!_taskIndex) buildTaskIndex();
+            return _taskIndex.get(String(id)) || null;
+        }
+	
         function planStats(g) {
             const k = visibleChildren(g);
             return { total: k.length, done: k.filter(c => c.completed).length };

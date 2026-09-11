@@ -85,3 +85,25 @@
             return String(str).replace(ESCAPE_REGEX, c => ESCAPE_MAP[c]);
         }
 
+        // debounce: تأخیر در اجرای تابع تا وقتی کاربر متوقف شود
+        // flush: اجرای فوری (برای قبل از بستن صفحه جزئیات)
+        function debounce(fn, ms) {
+            let timer = null;
+            const wrapped = function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    timer = null;
+                    fn.apply(this, args);
+                }, ms);
+            };
+            wrapped.cancel = () => { clearTimeout(timer); timer = null; };
+            wrapped.flush = function (...args) {
+                if (timer) {
+                    clearTimeout(timer);
+                    timer = null;
+                    fn.apply(this, args);
+                }
+            };
+            return wrapped;
+        }
+

@@ -54,6 +54,13 @@
         }
 
         function closeDetail() {
+            // قبل از بستن، آخرین تغییرات input‌ها را ذخیره کن
+            if (typeof debouncedSaveTitle !== 'undefined') debouncedSaveTitle.flush();
+            if (typeof debouncedSaveDesc !== 'undefined') debouncedSaveDesc.flush();
+            if (typeof debouncedSavePhone !== 'undefined') debouncedSavePhone.flush();
+            if (typeof debouncedSaveAddr !== 'undefined') debouncedSaveAddr.flush();
+            if (typeof debouncedSaveUrl !== 'undefined') debouncedSaveUrl.flush();
+
             currentDetailId = null;
             clearInterval(timerTick);
             document.getElementById('detailPage').style.display = 'none';
@@ -284,57 +291,81 @@
             flashSaved();
         }
 
+        // debounce برای ذخیره‌های تکراری در input‌ها.
+        // flush در closeDetail برای اطمینان از ذخیره آخرین تغییرات.
+        const debouncedSaveTitle = debounce(() => {
+            const task = getDetailTask();
+            if (!task) return;
+            task.text = document.getElementById('fTitle').value.trim().replace(/\s+/g, ' ').slice(0, MAX_LENGTH);
+            document.getElementById('detailTitle').textContent = task.text || 'بدون عنوان';
+            saveTasks();
+            render();
+            flashSaved();
+        }, 300);
+
+        const debouncedSaveDesc = debounce(() => {
+            const task = getDetailTask();
+            if (!task) return;
+            task.description = document.getElementById('fDesc').value.slice(0, 1000);
+            saveTasks();
+            flashSaved();
+        }, 500);
+
+        const debouncedSavePhone = debounce(() => {
+            const task = getDetailTask();
+            if (!task) return;
+            task.phone = document.getElementById('fPhone').value.trim().slice(0, 20);
+            saveTasks();
+            flashSaved();
+        }, 300);
+
+        const debouncedSaveAddr = debounce(() => {
+            const task = getDetailTask();
+            if (!task) return;
+            task.address = document.getElementById('fAddr').value.slice(0, 500);
+            saveTasks();
+            flashSaved();
+        }, 500);
+
+        const debouncedSaveUrl = debounce(() => {
+            const task = getDetailTask();
+            if (!task) return;
+            task.url = document.getElementById('fUrl').value.trim().slice(0, 300);
+            updateUrlLink();
+            saveTasks();
+            flashSaved();
+        }, 300);
+
+
         function bindDetailInputs() {
             document.getElementById('fTitle').addEventListener('input', e => {
-                const task = getDetailTask();
-                if (!task) return;
                 const v = e.target.value.trim().replace(/\s+/g, ' ');
                 if (!v) {
                     flashSaved('عنوان نمی‌تواند خالی باشد');
                     return;
                 }
-                task.text = v.slice(0, MAX_LENGTH);
-                document.getElementById('detailTitle').textContent = task.text;
-                saveTasks();
-                render();
-                flashSaved();
+                debouncedSaveTitle();
             });
-            document.getElementById('fDesc').addEventListener('input', e => {
-                const task = getDetailTask();
-                if (!task) return;
-                task.description = e.target.value.slice(0, 1000);
-                saveTasks();
-                flashSaved();
+            document.getElementById('fDesc').addEventListener('input', () => {
+                debouncedSaveDesc();
             });
             document.getElementById('fPhone').addEventListener('input', e => {
-                const task = getDetailTask();
-                if (!task) return;
                 const v = e.target.value.trim();
                 const err = document.getElementById('fPhoneError');
+                // validation فوری (چون خطا باید سریع دیده شود)
                 if (v && !/^[0-9+\-\s()]{5,20}$/.test(v)) {
                     err.textContent = 'شماره تلفن معتبر نیست';
                     return;
                 }
                 err.textContent = '';
-                task.phone = v;
                 updateCallBtn();
-                saveTasks();
-                flashSaved();
+                debouncedSavePhone();
             });
-            document.getElementById('fAddr').addEventListener('input', e => {
-                const task = getDetailTask();
-                if (!task) return;
-                task.address = e.target.value.slice(0, 500);
-                saveTasks();
-                flashSaved();
+            document.getElementById('fAddr').addEventListener('input', () => {
+                debouncedSaveAddr();
             });
-            document.getElementById('fUrl').addEventListener('input', e => {
-                const task = getDetailTask();
-                if (!task) return;
-                task.url = e.target.value.trim().slice(0, 300);
-                updateUrlLink();
-                saveTasks();
-                flashSaved();
+            document.getElementById('fUrl').addEventListener('input', () => {
+                debouncedSaveUrl();
             });
             document.getElementById('addSessionBtn').addEventListener('click', () => {
                 openPicker('session', iso => {
