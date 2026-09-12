@@ -53,8 +53,8 @@ function idbOpen() {
     if (!idbPromise) {
         idbPromise = new Promise((resolve, reject) => {
             const req = indexedDB.open(IDB_NAME, IDB_VERSION);
-            req.onupgradeneeded = (event) => {
-                const db = event.target.result;
+            req.onupgradeneeded = () => {
+                const db = req.result;
                 if (!db.objectStoreNames.contains(IDB_STORE)) {
                     db.createObjectStore(IDB_STORE, { keyPath: 'id' });
                 }

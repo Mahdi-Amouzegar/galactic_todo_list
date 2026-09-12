@@ -55,8 +55,8 @@ function openDb() {
     if (!dbPromise) {
         dbPromise = new Promise((resolve, reject) => {
             const req = indexedDB.open(DB_NAME, 1);
-            req.onupgradeneeded = (event) => {
-                const db = event.target.result;
+            req.onupgradeneeded = () => {
+                const db = req.result;
                 if (!db.objectStoreNames.contains(STORE)) {
                     db.createObjectStore(STORE, { keyPath: 'id' });
                 }

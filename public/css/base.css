@@ -236,7 +236,7 @@ html.theme-light {
 @layer base {
     @font-face {
         font-family: 'Vazirmatn';
-        src: url('/fonts/vazirmatn-arabic.woff2') format('woff2');
+        src: url('../fonts/vazirmatn-arabic.woff2') format('woff2');
         font-weight: 100 900;
         font-style: normal;
         font-display: swap;
@@ -245,7 +245,7 @@ html.theme-light {
 
     @font-face {
         font-family: 'Vazirmatn';
-        src: url('/fonts/vazirmatn-latin.woff2') format('woff2');
+        src: url('../fonts/vazirmatn-latin.woff2') format('woff2');
         font-weight: 100 900;
         font-style: normal;
         font-display: swap;

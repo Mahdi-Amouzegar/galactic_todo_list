@@ -39,24 +39,24 @@ const CACHE = 'rahefarda-v1.2.0.0-2026-09-12';
 //  - آنلاین: از شبکه (با query جدید)
 //  - آفلاین: از کش (ignoreSearch نادیده می‌گیرد)
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/base.css',
-  '/css/components.css',
-  '/css/modals.css',
-  '/css/detail.css',
-  '/css/map.css',
-  '/css/responsive.css',
-  '/manifest.webmanifest',
-  '/fonts/vazirmatn-arabic.woff2',
-  '/fonts/vazirmatn-latin.woff2',
-  '/icons/logo.png',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png',
-  '/icons/favicon-32.ico',
-  '/icons/favicon-96x96.png',
-  '/icons/favicon.svg'
+  './',
+  './index.html',
+  './css/base.css',
+  './css/components.css',
+  './css/modals.css',
+  './css/detail.css',
+  './css/map.css',
+  './css/responsive.css',
+  './manifest.webmanifest',
+  './fonts/vazirmatn-arabic.woff2',
+  './fonts/vazirmatn-latin.woff2',
+  './icons/logo.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/apple-touch-icon.png',
+  './icons/favicon-32.ico',
+  './icons/favicon-96x96.png',
+  './icons/favicon.svg'
 ];
 
 self.addEventListener('notificationclick', e => {
