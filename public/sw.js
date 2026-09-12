@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // راهنمای نسخه‌بندی CACHE
 // ─────────────────────────────────────────────────────────────────────────────
-// ساختار: space-todo-v<MAJOR>.<API>.<FEATURE>.<PHASE>-<DATE>
+// ساختار: rahefarda-v<MAJOR>.<API>.<FEATURE>.<PHASE>-<DATE>
 //
 //   MAJOR    : تغییر بزرگ در معماری پروژه (مثلاً مهاجرت به framework جدید)
 //   API      : تغییر در ساختار ذخیره‌سازی یا قرارداد داده (data contract)
@@ -29,45 +29,34 @@
 //   v1.1.0.1-2026-09-11 — فاز ۵-ب: CSS Variables (Design Tokens) برای پشتیبانی از Light theme
 //   v1.1.1.0-2026-09-11 — فاز ۵-ج: دکمه‌های تغییر Theme (auto/dark/light) و Lang (fa/en)
 //   v1.1.2.0-2026-09-11 — فاز ۵-د: تقسیم CSS به ۶ فایل منطقی + دکمه‌های done-actions کنار هم
+//   v1.1.2.1-2026-09-12 — فاز ۶-ب: Refactor ESM + Vite + Vitest
+//   v1.2.0.0-2026-09-12 — فاز ۷: حذف کامل shim‌ها + refactor نهایی ESM + Vite build
 // ─────────────────────────────────────────────────────────────────────────────
-const CACHE = 'rahefarda-v1.1.2.0-2026-09-11';
+const CACHE = 'rahefarda-v1.2.0.0-2026-09-12';
 
 // فایل‌ها بدون query-string (?v=N) کش می‌شوند.
 // networkFirst + ignoreSearch تضمین می‌کند همیشه نسخه درست لود شود:
 //  - آنلاین: از شبکه (با query جدید)
 //  - آفلاین: از کش (ignoreSearch نادیده می‌گیرد)
 const ASSETS = [
-  './',
-  './index.html',
-  './css/base.css',
-  './css/components.css',
-  './css/modals.css',
-  './css/detail.css',
-  './css/map.css',
-  './css/responsive.css',
-  './manifest.webmanifest',
-  './fonts/vazirmatn-arabic.woff2',
-  './fonts/vazirmatn-latin.woff2',
-  './icons/logo.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/apple-touch-icon.png',
-  './icons/favicon-32.ico',
-  './icons/favicon-96x96.png',
-  './icons/favicon.svg',
-  './js/core.js',
-  './js/jalali.js',
-  './js/time.js',
-  './js/notify.js',
-  './js/store.js',
-  './js/sessions.js',
-  './js/picker.js',
-  './js/map.js',
-  './js/route-ui.js',
-  './js/location-ui.js',
-  './js/detail.js',
-  './js/ui.js',
-  './js/app.js'
+  '/',
+  '/index.html',
+  '/css/base.css',
+  '/css/components.css',
+  '/css/modals.css',
+  '/css/detail.css',
+  '/css/map.css',
+  '/css/responsive.css',
+  '/manifest.webmanifest',
+  '/fonts/vazirmatn-arabic.woff2',
+  '/fonts/vazirmatn-latin.woff2',
+  '/icons/logo.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png',
+  '/icons/favicon-32.ico',
+  '/icons/favicon-96x96.png',
+  '/icons/favicon.svg'
 ];
 
 self.addEventListener('notificationclick', e => {

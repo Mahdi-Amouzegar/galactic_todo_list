@@ -1,35 +1,32 @@
 # Dependencies
-node_modules
+node_modules/
 
-# Production build
-dist
-dist-ssr
+# Build output
+dist/
+
+# Vite cache
+.vite/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Logs
-logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-# Environment variables
+# Test coverage
+coverage/
+
+# Local env
 .env
 .env.local
 .env.*.local
-
-# Editor / OS files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-Thumbs.db
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*.local
-
-backup/

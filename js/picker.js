@@ -1,150 +1,186 @@
 // © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
-'use strict';
-// picker.js -- Jalali date+time picker dialog  |  React: <DuePicker/>
-        /* ---------- پیکر گرافیکی تاریخ جلالی + ساعت ---------- */
+// picker.js -- Jalali date+time picker dialog (ESM)
 
-        let conflictArmed = false;
+import { state, toFa, uid, escapeHtml } from './core.js';
+import { getNow } from './time.js';
+import {
+    JALALI_MONTHS,
+    gregorianToJalali,
+    jalaliToGregorian,
+    jalaliMonthLength
+} from './jalali.js';
+import { faShort, updateDueChips, hasSessionAt, allSessions } from './sessions.js';
 
-        function openPicker(mode, onConfirm) {
-            pickerMode = mode;
-            pickerCallback = typeof onConfirm === 'function' ? onConfirm : null;
-            const lastAdd = addDraftSessions.length ? addDraftSessions[addDraftSessions.length - 1].at : null;
-            const draft = mode === 'add' ? lastAdd : null;
+// ═══════════════════════════════════════════════════════════════════════════
+// Internal state
+// ═══════════════════════════════════════════════════════════════════════════
 
-            // برای سررسید جدید، زمان پیش‌فرض همیشه نزدیک‌ترین بازهٔ ۵ دقیقه‌ای در آینده است.
-            // مثال: ۱۱:۴۷ → ۱۱:۵۰، و ۱۱:۵۰ → ۱۱:۵۵.
-            let base;
-            if (draft) {
-                base = new Date(draft);
-            } else {
-                base = new Date(getNow());
-                base.setSeconds(0, 0);
-                base.setMinutes(Math.floor(base.getMinutes() / 5) * 5 + 5);
-            }
+let conflictArmed = false;
 
-            const j = gregorianToJalali(base.getFullYear(), base.getMonth() + 1, base.getDate());
-            pickerJy = j.jy;
-            pickerJm = j.jm;
-            pickerDay = j.jd;
-            document.getElementById('pickerHour').value = String(base.getHours()).padStart(2, '0');
-            document.getElementById('pickerMinute').value = String(Math.floor(base.getMinutes() / 5) * 5).padStart(2, '0');
-            document.getElementById('pickerError').textContent = '';
-            document.getElementById('pickerRemove').style.display = mode === 'add' ? '' : 'none';
-            renderPicker();
-            document.getElementById('pickerOverlay').style.display = 'flex';
+// ═══════════════════════════════════════════════════════════════════════════
+// Open / close
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function openPicker(mode, onConfirm) {
+    state.pickerMode = mode;
+    state.pickerCallback = typeof onConfirm === 'function' ? onConfirm : null;
+    const lastAdd = state.addDraftSessions.length ? state.addDraftSessions[state.addDraftSessions.length - 1].at : null;
+    const draft = mode === 'add' ? lastAdd : null;
+
+    let base;
+    if (draft) {
+        base = new Date(draft);
+    } else {
+        base = new Date(getNow());
+        base.setSeconds(0, 0);
+        base.setMinutes(Math.floor(base.getMinutes() / 5) * 5 + 5);
+    }
+
+    const j = gregorianToJalali(base.getFullYear(), base.getMonth() + 1, base.getDate());
+    state.pickerJy = j.jy;
+    state.pickerJm = j.jm;
+    state.pickerDay = j.jd;
+    document.getElementById('pickerHour').value = String(base.getHours()).padStart(2, '0');
+    document.getElementById('pickerMinute').value = String(Math.floor(base.getMinutes() / 5) * 5).padStart(2, '0');
+    document.getElementById('pickerError').textContent = '';
+    document.getElementById('pickerRemove').style.display = mode === 'add' ? '' : 'none';
+    renderPicker();
+    document.getElementById('pickerOverlay').style.display = 'flex';
+}
+
+export function closePicker() {
+    document.getElementById('pickerOverlay').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Navigation
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function shiftPickerMonth(delta) {
+    state.pickerJm += delta;
+    if (state.pickerJm < 1) { state.pickerJm = 12; state.pickerJy -= 1; }
+    if (state.pickerJm > 12) { state.pickerJm = 1; state.pickerJy += 1; }
+    const maxDay = jalaliMonthLength(state.pickerJy, state.pickerJm);
+    if (state.pickerDay && state.pickerDay > maxDay) state.pickerDay = null;
+    renderPicker();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Render
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function renderPicker() {
+    conflictArmed = false;
+    const now = getNow();
+    const tj = gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+
+    document.getElementById('pickerMonthLabel').textContent =
+        JALALI_MONTHS[state.pickerJm - 1] + ' ' + toFa(state.pickerJy);
+
+    const g = jalaliToGregorian(state.pickerJy, state.pickerJm, 1);
+    const firstWeekday = new Date(g.gy, g.gm - 1, g.gd).getDay();
+    const leading = (firstWeekday + 1) % 7;
+    const monthLen = jalaliMonthLength(state.pickerJy, state.pickerJm);
+
+    let html = '';
+    for (let i = 0; i < leading; i++) html += '<span class="picker-day empty"></span>';
+    for (let d = 1; d <= monthLen; d++) {
+        const isPast = state.pickerJy < tj.jy ||
+            (state.pickerJy === tj.jy && state.pickerJm < tj.jm) ||
+            (state.pickerJy === tj.jy && state.pickerJm === tj.jm && d < tj.jd);
+        const isToday = state.pickerJy === tj.jy && state.pickerJm === tj.jm && d === tj.jd;
+        const cls = 'picker-day' + (isToday ? ' today' : '') + (state.pickerDay === d ? ' selected' : '');
+        html += `<button class="${cls}" data-day="${d}" ${isPast ? 'disabled' : ''} aria-label="${toFa(d)} ${JALALI_MONTHS[state.pickerJm - 1]}">${toFa(d)}</button>`;
+    }
+    document.getElementById('pickerDays').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Confirm / remove
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function confirmPicker() {
+    const err = document.getElementById('pickerError');
+    if (!state.pickerDay) {
+        err.textContent = 'لطفاً یک روز انتخاب کنید.';
+        return;
+    }
+    const g = jalaliToGregorian(state.pickerJy, state.pickerJm, state.pickerDay);
+    const h = parseInt(document.getElementById('pickerHour').value, 10);
+    const mi = parseInt(document.getElementById('pickerMinute').value, 10);
+    const picked = new Date(g.gy, g.gm - 1, g.gd, h, mi, 0, 0);
+    if (picked.getTime() <= getNow().getTime()) {
+        err.textContent = 'زمان سررسید باید بعد از زمان جاری باشد.';
+        return;
+    }
+    const hit = findConflict(picked.getTime());
+    if (hit && !conflictArmed) {
+        conflictArmed = true;
+        err.textContent = `⚠️ تداخل زمانی: «${hit.owner}» در ${faShort(hit.at)} برنامه‌ریزی شده و کمتر از ۳۰ دقیقه با زمان انتخاب‌شده فاصله دارد. برای ثبت این سررسید، دوباره تأیید کنید.`;
+        return;
+    }
+    const iso = picked.toISOString();
+    if (state.pickerCallback) {
+        const cb = state.pickerCallback;
+        state.pickerCallback = null;
+        closePicker();
+        cb(iso);
+    } else {
+        if (hasSessionAt(state.addDraftSessions, iso)) {
+            err.textContent = 'این سررسید قبلاً ثبت شده است.';
+            return;
         }
+        state.addDraftSessions.push({ id: uid(), at: iso });
+        updateDueChips();
+        closePicker();
+    }
+}
 
-        function closePicker() {
-            document.getElementById('pickerOverlay').style.display = 'none';
-        }
+export function removePickerDue() {
+    state.addDraftSessions = [];
+    updateDueChips();
+    closePicker();
+}
 
-        function shiftPickerMonth(delta) {
-            pickerJm += delta;
-            if (pickerJm < 1) { pickerJm = 12; pickerJy -= 1; }
-            if (pickerJm > 12) { pickerJm = 1; pickerJy += 1; }
-            const maxDay = jalaliMonthLength(pickerJy, pickerJm);
-            if (pickerDay && pickerDay > maxDay) pickerDay = null;
-            renderPicker();
-        }
+// ═══════════════════════════════════════════════════════════════════════════
+// Conflict check
+// ═══════════════════════════════════════════════════════════════════════════
 
-        function renderPicker() {
-            conflictArmed = false;
-            const now = getNow();
-            const tj = gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+export function findConflict(ms) {
+    const now = getNow().getTime();
+    const list = allSessions(true);
+    for (const s of list) {
+        const v = new Date(s.at).getTime();
+        if (isNaN(v) || v < now) continue;
+        if (Math.abs(v - ms) < 30 * 60 * 1000) return s;
+    }
+    return null;
+}
 
-            document.getElementById('pickerMonthLabel').textContent = JALALI_MONTHS[pickerJm - 1] + ' ' + toFa(pickerJy);
+// ═══════════════════════════════════════════════════════════════════════════
+// Presets
+// ═══════════════════════════════════════════════════════════════════════════
 
-            const g = jalaliToGregorian(pickerJy, pickerJm, 1);
-            const firstWeekday = new Date(g.gy, g.gm - 1, g.gd).getDay(); // 0=یکشنبه ... 6=شنبه
-            const leading = (firstWeekday + 1) % 7; // شروع هفته از شنبه
-            const monthLen = jalaliMonthLength(pickerJy, pickerJm);
+export function applyPreset(name) {
+    const now = getNow();
+    let base;
+    if (name === 'evening') {
+        base = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0, 0);
+        if (base.getTime() <= now.getTime()) base.setDate(base.getDate() + 1);
+    } else if (name === 'tomorrow') {
+        base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9, 0, 0, 0);
+    } else {
+        base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 9, 0, 0, 0);
+    }
+    const j = gregorianToJalali(base.getFullYear(), base.getMonth() + 1, base.getDate());
+    state.pickerJy = j.jy;
+    state.pickerJm = j.jm;
+    state.pickerDay = j.jd;
+    document.getElementById('pickerHour').value = String(base.getHours()).padStart(2, '0');
+    document.getElementById('pickerMinute').value = '00';
+    renderPicker();
+}
 
-            let html = '';
-            for (let i = 0; i < leading; i++) html += '<span class="picker-day empty"></span>';
-            for (let d = 1; d <= monthLen; d++) {
-                const isPast = pickerJy < tj.jy ||
-                    (pickerJy === tj.jy && pickerJm < tj.jm) ||
-                    (pickerJy === tj.jy && pickerJm === tj.jm && d < tj.jd);
-                const isToday = pickerJy === tj.jy && pickerJm === tj.jm && d === tj.jd;
-                const cls = 'picker-day' + (isToday ? ' today' : '') + (pickerDay === d ? ' selected' : '');
-                html += `<button class="${cls}" data-day="${d}" ${isPast ? 'disabled' : ''} aria-label="${toFa(d)} ${JALALI_MONTHS[pickerJm - 1]}">${toFa(d)}</button>`;
-            }
-            document.getElementById('pickerDays').innerHTML = html;
-        }
-
-        function confirmPicker() {
-            const err = document.getElementById('pickerError');
-            if (!pickerDay) {
-                err.textContent = 'لطفاً یک روز انتخاب کنید.';
-                return;
-            }
-            const g = jalaliToGregorian(pickerJy, pickerJm, pickerDay);
-            const h = parseInt(document.getElementById('pickerHour').value, 10);
-            const mi = parseInt(document.getElementById('pickerMinute').value, 10);
-            const picked = new Date(g.gy, g.gm - 1, g.gd, h, mi, 0, 0);
-            // اعتبارسنجی: سررسید باید بعد از زمان جاری (مبنای سرور) باشد
-            if (picked.getTime() <= getNow().getTime()) {
-                err.textContent = 'زمان سررسید باید بعد از زمان جاری باشد.';
-                return;
-            }
-            const hit = findConflict(picked.getTime());
-            if (hit && !conflictArmed) {
-                conflictArmed = true;
-                err.textContent = `⚠️ تداخل زمانی: «${hit.owner}» در ${faShort(hit.at)} برنامه‌ریزی شده و کمتر از ۳۰ دقیقه با زمان انتخاب‌شده فاصله دارد. برای ثبت این سررسید، دوباره تأیید کنید.`;
-                return;
-            }
-            const iso = picked.toISOString();
-            if (pickerCallback) {
-                const cb = pickerCallback;
-                pickerCallback = null;
-                closePicker();
-                cb(iso);
-            } else {
-                if (hasSessionAt(addDraftSessions, iso)) {
-                    err.textContent = 'این سررسید قبلاً ثبت شده است.';
-                    return;
-                }
-                addDraftSessions.push({ id: uid(), at: iso });
-                updateDueChips();
-                closePicker();
-            }
-        }
-
-        function removePickerDue() {
-            addDraftSessions = [];
-            updateDueChips();
-            closePicker();
-        }
-
-        // بررسی تداخل با وظایف آینده در بازه ۳۰ دقیقه‌ای
-        function findConflict(ms) {
-            const now = getNow().getTime();
-            const list = allSessions(true);
-            for (const s of list) {
-                const v = new Date(s.at).getTime();
-                if (isNaN(v) || v < now) continue;
-                if (Math.abs(v - ms) < 30 * 60 * 1000) return s;
-            }
-            return null;
-        }
-
-        // میان‌برها: امروز عصر / فردا ۹ صبح / هفته بعد (همیشه آینده)
-        function applyPreset(name) {
-            const now = getNow();
-            let base;
-            if (name === 'evening') {
-                base = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0, 0);
-                if (base.getTime() <= now.getTime()) base.setDate(base.getDate() + 1);
-            } else if (name === 'tomorrow') {
-                base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9, 0, 0, 0);
-            } else {
-                base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 9, 0, 0, 0);
-            }
-            const j = gregorianToJalali(base.getFullYear(), base.getMonth() + 1, base.getDate());
-            pickerJy = j.jy;
-            pickerJm = j.jm;
-            pickerDay = j.jd;
-            document.getElementById('pickerHour').value = String(base.getHours()).padStart(2, '0');
-            document.getElementById('pickerMinute').value = '00';
-            renderPicker();
-        }
+// ═══════════════════════════════════════════════════════════════════════════
+// ⚠️ گام ۱۵: SHIM‌ها حذف شدند
+// ═══════════════════════════════════════════════════════════════════════════

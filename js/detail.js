@@ -1,622 +1,675 @@
 // © Mahdi Amouzegar — All rights reserved | مهدی آموزگار — همه حقوق محفوظ است
-'use strict';
-// detail.js -- detail page  |  React: <TaskDetail/> route
+// detail.js -- detail page (ESM)
 
-        /* ---------- صفحه جزئیات وظیفه ---------- */
+import { state, toFa, uid, escapeHtml, debounce, showConfirmModal, MAX_LENGTH } from './core.js';
+import { getNow } from './time.js';
+import { findTask, saveTasks, moveToTrashById, sanitizeUrl } from './store.js';
+import { faShort, hasSessionAt } from './sessions.js';
+import {
+    ensureMapVisible,
+    switchToTab,
+    mapHint,
+    flyToTask,
+    refreshMarkers,
+    removePickMarker
+} from './map.js';
+import { openPicker } from './picker.js';
 
-        function getDetailTask() {
-            const found = findTask(currentDetailId);
-            return found ? found.task : null;
-        }
+// ═══════════════════════════════════════════════════════════════════════════
+// Local state
+// ═══════════════════════════════════════════════════════════════════════════
 
-        function openDetail(id) {
+let timerTick = null;
+let saveHintTimer = null;
+
+// callback registry برای توابعی که نمی‌توانیم import کنیم (circular)
+const _callbacks = {
+    render: null,
+    refreshSavedLocationUI: null,
+    showUndoFor: null,
+    showMobilePickBanner: null,
+    hideMobilePickBanner: null,
+    showRouteTo: null,
+};
+
+export function registerDetailCallbacks(cbs) {
+    Object.assign(_callbacks, cbs);
+}
+
+function call(name, ...args) {
+    const fn = _callbacks[name];
+    if (typeof fn === 'function') return fn(...args);
+    return undefined;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function getDetailTask() {
+    const found = findTask(state.currentDetailId);
+    return found ? found.task : null;
+}
+
+function flashSaved(msg) {
+    const hint = document.getElementById('saveHint');
+    if (!hint) return;
+    hint.textContent = msg || '✓ ذخیره شد';
+    hint.classList.add('show');
+    clearTimeout(saveHintTimer);
+    saveHintTimer = setTimeout(() => hint.classList.remove('show'), 1500);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Open / Close
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function openDetail(id) {
+    const pageEl = document.getElementById('detailPage');
+    const wasAlreadyOpen = pageEl && pageEl.style.display === 'block';
+    const prevScroll = wasAlreadyOpen ? pageEl.scrollTop : 0;
+
+    state.currentDetailId = id;
+    const task = getDetailTask();
+    if (!task) return;
+
+    document.getElementById('detailTitle').textContent = (task.kind === 'plan' ? '📁 ' : '') + task.text;
+    document.getElementById('fTitle').value = task.text;
+    document.getElementById('fLocField').style.display = task.kind === 'plan' ? 'none' : '';
+    const locAccordion = document.querySelector('.detail-accordion.location');
+    if (locAccordion) locAccordion.style.display = task.kind === 'plan' ? 'none' : '';
+    document.getElementById('fDesc').value = task.description || '';
+    document.getElementById('fPhone').value = task.phone || '';
+    document.getElementById('fAddr').value = task.address || '';
+    document.getElementById('fUrl').value = task.url || '';
+    document.getElementById('fPriority').value = task.priority || 'medium';
+    document.getElementById('fPin').checked = Boolean(task.pinned);
+    document.getElementById('fRecur').value = task.recur || 'none';
+    document.getElementById('fRecurN').value = task.recurN || (task.recur === 'hourly' ? 8 : 2);
+    renderRecurRows();
+    document.getElementById('fPhoneError').textContent = '';
+    updateUrlLink();
+    updateCallBtn();
+    renderDetailSessions();
+    call('refreshSavedLocationUI');
+    renderDetailPhotos();
+    renderTimer();
+    clearInterval(timerTick);
+    timerTick = setInterval(() => { if (getDetailTask()) renderTimer(); }, 60000);
+    pageEl.style.display = 'block';
+    if (window.matchMedia('(max-width: 900px)').matches) {
+        document.body.style.overflow = 'hidden';
+    }
+    if (!wasAlreadyOpen) {
+        document.getElementById('detailBack').focus();
+    } else {
+        pageEl.scrollTop = prevScroll;
+        requestAnimationFrame(() => { pageEl.scrollTop = prevScroll; });
+    }
+}
+
+export function closeDetail() {
+    // قبل از بستن، آخرین تغییرات input‌ها را ذخیره کن
+    if (typeof debouncedSaveTitle !== 'undefined') debouncedSaveTitle.flush();
+    if (typeof debouncedSaveDesc !== 'undefined') debouncedSaveDesc.flush();
+    if (typeof debouncedSavePhone !== 'undefined') debouncedSavePhone.flush();
+    if (typeof debouncedSaveAddr !== 'undefined') debouncedSaveAddr.flush();
+    if (typeof debouncedSaveUrl !== 'undefined') debouncedSaveUrl.flush();
+
+    state.currentDetailId = null;
+    clearInterval(timerTick);
+    document.getElementById('detailPage').style.display = 'none';
+    document.body.style.overflow = '';
+    call('hideMobilePickBanner');
+    call('render');
+}
+
+// ورود به حالت انتخاب مکان بدون بستن صفحه جزئیات
+function enterLocationPickMode(taskId, mode) {
+    ensureMapVisible();
+    switchToTab('map');
+
+    if (mode === 'change') {
+        state.relocateTaskId = taskId;
+        state.relocateSess = null;
+        state.pendingReturnDetail = state.currentDetailId;
+
+        // روی موبایل: صفحه جزئیات مخفی می‌شود تا کاربر مستقیم نقشه را ببیند.
+        if (window.matchMedia('(max-width: 900px)').matches) {
             const pageEl = document.getElementById('detailPage');
-            const wasAlreadyOpen = pageEl && pageEl.style.display === 'block';
-            const prevScroll = wasAlreadyOpen ? pageEl.scrollTop : 0;
-
-            currentDetailId = id;
-            const task = getDetailTask();
-            if (!task) return;
-            document.getElementById('detailTitle').textContent = (task.kind === 'plan' ? '📁 ' : '') + task.text;
-            document.getElementById('fTitle').value = task.text;
-            document.getElementById('fLocField').style.display = task.kind === 'plan' ? 'none' : '';
-            const locAccordion = document.querySelector('.detail-accordion.location');
-            if (locAccordion) locAccordion.style.display = task.kind === 'plan' ? 'none' : '';
-            document.getElementById('fDesc').value = task.description || '';
-            document.getElementById('fPhone').value = task.phone || '';
-            document.getElementById('fAddr').value = task.address || '';
-            document.getElementById('fUrl').value = task.url || '';
-            document.getElementById('fPriority').value = task.priority || 'medium';
-            document.getElementById('fPin').checked = Boolean(task.pinned);
-            document.getElementById('fRecur').value = task.recur || 'none';
-            document.getElementById('fRecurN').value = task.recurN || (task.recur === 'hourly' ? 8 : 2);
-            renderRecurRows();
-            document.getElementById('fPhoneError').textContent = '';
-            updateUrlLink();
-            updateCallBtn();
-            renderDetailSessions();
-            if (typeof window.refreshSavedLocationUI === 'function') {
-                window.refreshSavedLocationUI();
-            }
-            renderDetailPhotos();
-            renderTimer();
-            clearInterval(timerTick);
-            timerTick = setInterval(() => { if (getDetailTask()) renderTimer(); }, 60000);
-            pageEl.style.display = 'block';
-            if (window.matchMedia('(max-width: 900px)').matches) {
-                document.body.style.overflow = 'hidden';
-            }
-            if (!wasAlreadyOpen) {
-                document.getElementById('detailBack').focus();
-            } else {
-                pageEl.scrollTop = prevScroll;
-                requestAnimationFrame(() => { pageEl.scrollTop = prevScroll; });
-            }
-        }
-
-        function closeDetail() {
-            // قبل از بستن، آخرین تغییرات input‌ها را ذخیره کن
-            if (typeof debouncedSaveTitle !== 'undefined') debouncedSaveTitle.flush();
-            if (typeof debouncedSaveDesc !== 'undefined') debouncedSaveDesc.flush();
-            if (typeof debouncedSavePhone !== 'undefined') debouncedSavePhone.flush();
-            if (typeof debouncedSaveAddr !== 'undefined') debouncedSaveAddr.flush();
-            if (typeof debouncedSaveUrl !== 'undefined') debouncedSaveUrl.flush();
-
-            currentDetailId = null;
-            clearInterval(timerTick);
-            document.getElementById('detailPage').style.display = 'none';
+            if (pageEl) pageEl.style.display = 'none';
             document.body.style.overflow = '';
-            if (typeof window.__hideMobilePickBanner === 'function') {
-                window.__hideMobilePickBanner();
-            }
-            render();
         }
 
-        // ورود به حالت انتخاب مکان بدون بستن صفحه جزئیات
-        function enterLocationPickMode(taskId, mode) {
-            if (typeof ensureMapVisible === 'function') ensureMapVisible();
-            if (typeof switchToTab === 'function') switchToTab('map');
+        mapHint('روی نقشه کلیک کنید تا محل جدید ثبت شود');
+        call('showMobilePickBanner', 'روی نقشه ضربه بزنید تا محل جدید ثبت شود. برای انصراف، دکمه لغو را بزنید.');
+    } else if (mode === 'show') {
+        flyToTask(taskId);
+    } else if (mode === 'route') {
+        call('showRouteTo', taskId);
+    }
+}
 
-            if (mode === 'change') {
-                try { relocateTaskId = taskId; } catch (_) {}
-                try { relocateSess = null; } catch (_) {}
-                try { pendingReturnDetail = currentDetailId; } catch (_) {}
+// ═══════════════════════════════════════════════════════════════════════════
+// URL / Phone
+// ═══════════════════════════════════════════════════════════════════════════
 
-                // روی موبایل: صفحه جزئیات مخفی می‌شود تا کاربر مستقیم نقشه را ببیند.
-                // بعد از انتخاب مکان، map.js#onMapClick با openDetail صفحه را برمی‌گرداند.
-                if (window.matchMedia('(max-width: 900px)').matches) {
-                    const pageEl = document.getElementById('detailPage');
-                    if (pageEl) pageEl.style.display = 'none';
-                    document.body.style.overflow = '';
-                }
+function updateUrlLink() {
+    const link = document.getElementById('fUrlOpen');
+    const copy = document.getElementById('fUrlCopy');
+    const task = getDetailTask();
+    // از همان sanitizeUrl استفاده می‌کنیم تا دقیقاً همان مقداری که ذخیره می‌شود،
+    // در لینک و کپی نمایش داده شود. اگر نامعتبر باشد، null برمی‌گرداند.
+    const safe = task ? sanitizeUrl(task.url || '') : '';
+    if (!safe) {
+        link.style.display = 'none';
+        link.removeAttribute('href');
+        copy.style.display = 'none';
+        return;
+    }
+    link.href = safe;
+    link.style.display = '';
+    copy.style.display = '';
+}
 
-                if (typeof mapHint === 'function') mapHint('روی نقشه کلیک کنید تا محل جدید ثبت شود');
-                if (typeof window.__showMobilePickBanner === 'function') {
-                    window.__showMobilePickBanner('روی نقشه ضربه بزنید تا محل جدید ثبت شود. برای انصراف، دکمه لغو را بزنید.');
-                }
-            } else if (mode === 'show') {
-                if (typeof flyToTask === 'function') flyToTask(taskId);
-            } else if (mode === 'route') {
-                if (typeof showRouteTo === 'function') showRouteTo(taskId);
-            }
+function updateCallBtn() {
+    const btn = document.getElementById('fPhoneCall');
+    const task = getDetailTask();
+    const raw = task ? (task.phone || '').trim() : '';
+    if (!raw) {
+        btn.style.display = 'none';
+        btn.removeAttribute('href');
+        return;
+    }
+    btn.href = 'tel:' + raw.replace(/[\s()-]/g, '');
+    btn.style.display = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Sessions
+// ═══════════════════════════════════════════════════════════════════════════
+
+function renderDetailSessions() {
+    const task = getDetailTask();
+    if (!task) return;
+    const list = [...(task.sessions || [])].sort((a, b) => new Date(a.at) - new Date(b.at));
+    document.getElementById('sessCount').textContent = list.length > 0 ? `(${toFa(list.length)})` : '';
+    const el = document.getElementById('sessList');
+    if (list.length === 0) {
+        el.innerHTML = '<div class="session-empty">هنوز جلسه‌ای ثبت نشده است.</div>';
+        return;
+    }
+    const now = getNow().getTime();
+    el.innerHTML = list.map((s, i) => {
+        const past = new Date(s.at).getTime() < now;
+        return `<div class="session-item ${past ? 'past' : ''}">
+            <span class="session-num">${toFa(i + 1)}</span>
+            <span class="session-date">📅 ${faShort(s.at)}${past ? ' (گذشته)' : ''}</span>
+            <select class="sess-remind" data-sess-rem="${escapeHtml(String(s.id))}" aria-label="یادآور این جلسه">
+                <option value=""${s.remindMin == null ? ' selected' : ''}>⏰ پیش‌فرض</option>
+                <option value="5"${s.remindMin === 5 ? ' selected' : ''}>۵ دقیقه</option>
+                <option value="15"${s.remindMin === 15 ? ' selected' : ''}>۱۵ دقیقه</option>
+                <option value="30"${s.remindMin === 30 ? ' selected' : ''}>۳۰ دقیقه</option>
+                <option value="60"${s.remindMin === 60 ? ' selected' : ''}>۱ ساعت</option>
+                <option value="180"${s.remindMin === 180 ? ' selected' : ''}>۳ ساعت</option>
+                <option value="1440"${s.remindMin === 1440 ? ' selected' : ''}>۱ روز</option>
+                <option value="0"${s.remindMin === 0 ? ' selected' : ''}>خاموش</option>
+            </select>
+            <button class="btn-icon btn-detail ${s.location ? 'has-loc' : ''}" data-sess-loc="${escapeHtml(String(s.id))}" aria-label="ثبت محل جلسه">📍</button>
+            <button class="btn-icon btn-delete" data-sess="${escapeHtml(String(s.id))}" aria-label="حذف جلسه ${toFa(i + 1)}">✕</button>
+        </div>`;
+    }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Photos
+// ═══════════════════════════════════════════════════════════════════════════
+
+function downscale(dataUrl, maxDim, quality, cb) {
+    const img = new Image();
+    img.onload = () => {
+        try {
+            const r = Math.min(1, maxDim / Math.max(img.width, img.height));
+            const c = document.createElement('canvas');
+            c.width = Math.max(1, Math.round(img.width * r));
+            c.height = Math.max(1, Math.round(img.height * r));
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            cb(c.toDataURL('image/jpeg', quality));
+        } catch {
+            cb(null);
         }
+    };
+    img.onerror = () => cb(null);
+    img.src = dataUrl;
+}
 
-        let saveHintTimer = null;
-        function flashSaved(msg) {
-            const hint = document.getElementById('saveHint');
-            hint.textContent = msg || '✓ ذخیره شد';
-            hint.classList.add('show');
-            clearTimeout(saveHintTimer);
-            saveHintTimer = setTimeout(() => hint.classList.remove('show'), 1500);
+function renderDetailPhotos() {
+    const task = getDetailTask();
+    if (!task) return;
+    const list = task.photos || [];
+    document.getElementById('photoCount').textContent = list.length ? `(${toFa(list.length)})` : '';
+    document.getElementById('photoGrid').innerHTML = list.length ? list.map(p => `
+        <div class="photo-thumb">
+            <img src="${p.dataUrl}" data-photo-view="${escapeHtml(String(p.id))}" alt="تصویر وظیفه" loading="lazy">
+            <button data-photo-del="${escapeHtml(String(p.id))}" aria-label="حذف عکس">✕</button>
+        </div>`).join('') : '<div class="session-empty">عکسی ثبت نشده است.</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Timer
+// ═══════════════════════════════════════════════════════════════════════════
+
+function currentSpent(task) {
+    let s = Number(task.timeSpent) || 0;
+    if (task.timerStartedAt) {
+        s += (Date.now() - new Date(task.timerStartedAt).getTime()) / 1000;
+    }
+    return Math.max(0, Math.floor(s));
+}
+
+function faDuration(sec) {
+    sec = Math.floor(sec);
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) return `${toFa(h)} ساعت و ${toFa(m)} دقیقه`;
+    if (m > 0) return `${toFa(m)} دقیقه`;
+    return `${toFa(s)} ثانیه`;
+}
+
+function renderTimer() {
+    const task = getDetailTask();
+    if (!task) return;
+    document.getElementById('timerLabel').textContent = faDuration(currentSpent(task));
+    document.getElementById('timerToggle').textContent = task.timerStartedAt ? '⏸ توقف' : '▶ شروع';
+}
+
+function toggleTimer() {
+    const task = getDetailTask();
+    if (!task) return;
+    if (task.timerStartedAt) {
+        task.timeSpent = currentSpent(task);
+        task.timerStartedAt = null;
+    } else {
+        task.timerStartedAt = new Date().toISOString();
+    }
+    saveTasks();
+    renderTimer();
+    flashSaved();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Recur
+// ═══════════════════════════════════════════════════════════════════════════
+
+const WEEK_ORDER = [['شنبه', 6], ['یکشنبه', 0], ['دوشنبه', 1], ['سه‌شنبه', 2], ['چهارشنبه', 3], ['پنجشنبه', 4], ['جمعه', 5]];
+
+function renderRecurRows() {
+    const task = getDetailTask();
+    if (!task) return;
+    const r = task.recur;
+    document.getElementById('fRecurNRow').style.display = (r === 'custom' || r === 'hourly') ? '' : 'none';
+    document.getElementById('fRecurWeekRow').style.display = r === 'weeklyDays' ? '' : 'none';
+    document.getElementById('fRecurMonthRow').style.display = r === 'monthlyDays' ? '' : 'none';
+    document.querySelector('#fRecurNRow .field-label').textContent = r === 'hourly' ? 'هر چند ساعت؟' : 'هر چند روز؟';
+    const nInp = document.getElementById('fRecurN');
+    nInp.max = r === 'hourly' ? 168 : 365;
+    const wc = document.getElementById('fRecurWeekChips');
+    if (wc) wc.innerHTML = WEEK_ORDER.map(([name, v]) => `<button type="button" class="day-chip${(task.recurDays || []).includes(v) ? ' on' : ''}" data-wday="${v}">${name}</button>`).join('');
+    const mc = document.getElementById('fRecurMonthChips');
+    if (mc) {
+        let mhtml = '';
+        for (let d = 1; d <= 31; d++) mhtml += `<button type="button" class="day-chip${(task.recurDays || []).includes(d) ? ' on' : ''}" data-mday="${d}">${toFa(d)}</button>`;
+        mc.innerHTML = mhtml;
+    }
+}
+
+function toggleRecurDay(v) {
+    const task = getDetailTask();
+    if (!task) return;
+    task.recurDays = task.recurDays || [];
+    const i = task.recurDays.indexOf(v);
+    if (i >= 0) task.recurDays.splice(i, 1);
+    else task.recurDays.push(v);
+    saveTasks();
+    call('render');
+    renderRecurRows();
+    flashSaved();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Debounced saves
+// ═══════════════════════════════════════════════════════════════════════════
+
+const debouncedSaveTitle = debounce(() => {
+    const task = getDetailTask();
+    if (!task) return;
+    task.text = document.getElementById('fTitle').value.trim().replace(/\s+/g, ' ').slice(0, MAX_LENGTH);
+    document.getElementById('detailTitle').textContent = task.text || 'بدون عنوان';
+    saveTasks();
+    call('render');
+    flashSaved();
+}, 300);
+
+const debouncedSaveDesc = debounce(() => {
+    const task = getDetailTask();
+    if (!task) return;
+    task.description = document.getElementById('fDesc').value.slice(0, 1000);
+    saveTasks();
+    flashSaved();
+}, 500);
+
+const debouncedSavePhone = debounce(() => {
+    const task = getDetailTask();
+    if (!task) return;
+    task.phone = document.getElementById('fPhone').value.trim().slice(0, 20);
+    saveTasks();
+    flashSaved();
+}, 300);
+
+const debouncedSaveAddr = debounce(() => {
+    const task = getDetailTask();
+    if (!task) return;
+    task.address = document.getElementById('fAddr').value.slice(0, 500);
+    saveTasks();
+    flashSaved();
+}, 500);
+
+const debouncedSaveUrl = debounce(() => {
+    const task = getDetailTask();
+    if (!task) return;
+    // sanitizeUrl هم اعتبارسنجی می‌کند و هم استاندارد می‌کند (https:// اضافه می‌کند)
+    // اگر نامعتبر باشد، رشته خالی برمی‌گرداند.
+    task.url = sanitizeUrl(document.getElementById('fUrl').value);
+    updateUrlLink();
+    saveTasks();
+    flashSaved();
+}, 300);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Bind inputs
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function bindDetailInputs() {
+    document.getElementById('fTitle').addEventListener('input', e => {
+        const v = e.target.value.trim().replace(/\s+/g, ' ');
+        if (!v) {
+            flashSaved('عنوان نمی‌تواند خالی باشد');
+            return;
         }
-
-        function updateUrlLink() {
-            const link = document.getElementById('fUrlOpen');
-            const copy = document.getElementById('fUrlCopy');
+        debouncedSaveTitle();
+    });
+    document.getElementById('fDesc').addEventListener('input', () => {
+        debouncedSaveDesc();
+    });
+    document.getElementById('fPhone').addEventListener('input', e => {
+        const v = e.target.value.trim();
+        const err = document.getElementById('fPhoneError');
+        // validation فوری (چون خطا باید سریع دیده شود)
+        if (v && !/^[0-9+\-\s()]{5,20}$/.test(v)) {
+            err.textContent = 'شماره تلفن معتبر نیست';
+            return;
+        }
+        err.textContent = '';
+        updateCallBtn();
+        debouncedSavePhone();
+    });
+    document.getElementById('fAddr').addEventListener('input', () => {
+        debouncedSaveAddr();
+    });
+    document.getElementById('fUrl').addEventListener('input', () => {
+        debouncedSaveUrl();
+    });
+    document.getElementById('addSessionBtn').addEventListener('click', () => {
+        openPicker('session', iso => {
             const task = getDetailTask();
-            const raw = task ? (task.url || '').trim() : '';
-            if (!raw) {
-                link.style.display = 'none';
-                link.removeAttribute('href');
-                copy.style.display = 'none';
+            if (!task) return;
+            if (hasSessionAt(task.sessions, iso)) {
+                flashSaved('این سررسید قبلاً ثبت شده است.');
                 return;
             }
-            // لایه دوم امنیت: حتی اگر sanitizeUrl در store.js دور زده شود، اینجا دوباره چک می‌کنیم.
-            // فقط http و https مجاز است.
-            let safe = null;
+            task.sessions.push({ id: uid(), at: iso });
+            saveTasks();
+            renderDetailSessions();
+            call('render');
+            flashSaved();
+        });
+    });
+    document.getElementById('sessList').addEventListener('click', e => {
+        const locBtn = e.target.closest('[data-sess-loc]');
+        if (locBtn) {
+            state.relocateSess = { taskId: state.currentDetailId, sessId: locBtn.dataset.sessLoc };
+            state.relocateTaskId = null;
+            state.pendingReturnDetail = state.currentDetailId;
+            ensureMapVisible();
+            switchToTab('map');
+            // روی موبایل، صفحه جزئیات مخفی شود تا کاربر نقشه را ببیند
+            if (window.matchMedia('(max-width: 900px)').matches) {
+                const pageEl = document.getElementById('detailPage');
+                if (pageEl) pageEl.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+            mapHint('روی نقشه کلیک کنید تا محل جلسه ثبت شود');
+            call('showMobilePickBanner', 'روی نقشه ضربه بزنید تا محل جلسه ثبت شود. برای انصراف، دکمه لغو را بزنید.');
+            return;
+        }
+        const btn = e.target.closest('[data-sess]');
+        if (!btn) return;
+        const task = getDetailTask();
+        if (!task) return;
+        task.sessions = task.sessions.filter(s => String(s.id) !== btn.dataset.sess);
+        saveTasks();
+        renderDetailSessions();
+        call('render');
+        flashSaved('جلسه حذف شد');
+    });
+    document.getElementById('sessList').addEventListener('change', e => {
+        const sel = e.target.closest('[data-sess-rem]');
+        if (!sel) return;
+        const task = getDetailTask();
+        if (!task) return;
+        const s = (task.sessions || []).find(x => String(x.id) === String(sel.dataset.sessRem));
+        if (!s) return;
+        s.reminded = false;
+        s.remindedDue = false;
+        if (sel.value === '') s.remindMin = null;
+        else s.remindMin = Math.max(0, parseInt(sel.value, 10) || 0);
+        saveTasks();
+        flashSaved();
+    });
+    document.getElementById('detailLocShow').addEventListener('click', () => {
+        const t = getDetailTask();
+        if (!t || !t.location) return;
+        enterLocationPickMode(t.id, 'show');
+    });
+    document.getElementById('detailLocChange').addEventListener('click', () => {
+        const t = getDetailTask();
+        if (!t) return;
+        enterLocationPickMode(t.id, 'change');
+    });
+    document.getElementById('detailLocRemove').addEventListener('click', () => {
+        const t = getDetailTask();
+        if (!t) return;
+        t.location = null;
+        saveTasks();
+        call('refreshSavedLocationUI');
+        call('render');
+        refreshMarkers();
+        flashSaved('محل حذف شد');
+    });
+    document.getElementById('fPriority').addEventListener('change', e => {
+        const task = getDetailTask();
+        if (!task) return;
+        task.priority = ['high', 'medium', 'low'].includes(e.target.value) ? e.target.value : 'medium';
+        saveTasks();
+        call('render');
+        refreshMarkers();
+        flashSaved();
+    });
+    document.getElementById('fUrlCopy').addEventListener('click', async () => {
+        const task = getDetailTask();
+        if (!task) return;
+        const full = sanitizeUrl(task.url || '');
+        if (!full) return;
+        let ok = false;
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(full);
+                ok = true;
+            }
+        } catch { /* fallback */ }
+        if (!ok) {
             try {
-                const candidate = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
-                const u = new URL(candidate);
-                if (['http:', 'https:'].includes(u.protocol)) safe = u.href;
+                const ta = document.createElement('textarea');
+                ta.value = full;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                ok = document.execCommand('copy');
+                ta.remove();
             } catch { /* نادیده */ }
-
-            if (!safe) {
-                link.style.display = 'none';
-                link.removeAttribute('href');
-                copy.style.display = 'none';
-                return;
-            }
-            link.href = safe;
-            link.style.display = '';
-            copy.style.display = '';
         }
-
-        function updateCallBtn() {
-            const btn = document.getElementById('fPhoneCall');
-            const task = getDetailTask();
-            const raw = task ? (task.phone || '').trim() : '';
-            if (!raw) {
-                btn.style.display = 'none';
-                btn.removeAttribute('href');
-                return;
-            }
-            btn.href = 'tel:' + raw.replace(/[\s()-]/g, '');
-            btn.style.display = '';
+        flashSaved(ok ? 'پیوند کپی شد ✓' : 'کپی نشد');
+    });
+    document.getElementById('fPin').addEventListener('change', e => {
+        const task = getDetailTask();
+        if (!task) return;
+        task.pinned = e.target.checked;
+        saveTasks();
+        call('render');
+        flashSaved();
+    });
+    document.getElementById('fRecurWeekChips').addEventListener('click', e => {
+        const b = e.target.closest('[data-wday]');
+        if (b) toggleRecurDay(parseInt(b.dataset.wday, 10));
+    });
+    document.getElementById('fRecurMonthChips').addEventListener('click', e => {
+        const b = e.target.closest('[data-mday]');
+        if (b) toggleRecurDay(parseInt(b.dataset.mday, 10));
+    });
+    document.getElementById('fRecur').addEventListener('change', e => {
+        const task = getDetailTask();
+        if (!task) return;
+        const v = e.target.value;
+        task.recur = ['daily', 'weekly', 'monthly', 'custom', 'hourly', 'weeklyDays', 'monthlyDays'].includes(v) ? v : 'none';
+        let warn = '';
+        if (task.recur !== 'none' && (task.sessions || []).length > 1) {
+            task.sessions.sort((a, b) => new Date(a.at) - new Date(b.at));
+            task.sessions = [task.sessions[0]];
+            renderDetailSessions();
+            warn = 'فقط نزدیک‌ترین سررسید نگه داشته شد؛ بقیه حذف شدند';
         }
-
-        function renderDetailSessions() {
-            const task = getDetailTask();
-            if (!task) return;
-            const list = [...(task.sessions || [])].sort((a, b) => new Date(a.at) - new Date(b.at));
-            document.getElementById('sessCount').textContent = list.length > 0 ? `(${toFa(list.length)})` : '';
-            const el = document.getElementById('sessList');
-            if (list.length === 0) {
-                el.innerHTML = '<div class="session-empty">هنوز جلسه‌ای ثبت نشده است.</div>';
-                return;
-            }
-            const now = getNow().getTime();
-            el.innerHTML = list.map((s, i) => {
-                const past = new Date(s.at).getTime() < now;
-                return `<div class="session-item ${past ? 'past' : ''}">
-                    <span class="session-num">${toFa(i + 1)}</span>
-                    <span class="session-date">📅 ${faShort(s.at)}${past ? ' (گذشته)' : ''}</span>
-                    <select class="sess-remind" data-sess-rem="${escapeHtml(String(s.id))}" aria-label="یادآور این جلسه">
-                        <option value=""${s.remindMin == null ? ' selected' : ''}>⏰ پیش‌فرض</option>
-                        <option value="5"${s.remindMin === 5 ? ' selected' : ''}>۵ دقیقه</option>
-                        <option value="15"${s.remindMin === 15 ? ' selected' : ''}>۱۵ دقیقه</option>
-                        <option value="30"${s.remindMin === 30 ? ' selected' : ''}>۳۰ دقیقه</option>
-                        <option value="60"${s.remindMin === 60 ? ' selected' : ''}>۱ ساعت</option>
-                        <option value="180"${s.remindMin === 180 ? ' selected' : ''}>۳ ساعت</option>
-                        <option value="1440"${s.remindMin === 1440 ? ' selected' : ''}>۱ روز</option>
-                        <option value="0"${s.remindMin === 0 ? ' selected' : ''}>خاموش</option>
-                    </select>
-                    <button class="btn-icon btn-detail ${s.location ? 'has-loc' : ''}" data-sess-loc="${escapeHtml(String(s.id))}" aria-label="ثبت محل جلسه">📍</button>
-                    <button class="btn-icon btn-delete" data-sess="${escapeHtml(String(s.id))}" aria-label="حذف جلسه ${toFa(i + 1)}">✕</button>
-                </div>`;
-            }).join('');
-        }
-
-        function downscale(dataUrl, maxDim, quality, cb) {
-            const img = new Image();
-            img.onload = () => {
-                try {
-                    const r = Math.min(1, maxDim / Math.max(img.width, img.height));
-                    const c = document.createElement('canvas');
-                    c.width = Math.max(1, Math.round(img.width * r));
-                    c.height = Math.max(1, Math.round(img.height * r));
-                    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-                    cb(c.toDataURL('image/jpeg', quality));
-                } catch {
-                    cb(null);
-                }
-            };
-            img.onerror = () => cb(null);
-            img.src = dataUrl;
-        }
-
-        function renderDetailPhotos() {
-            const task = getDetailTask();
-            if (!task) return;
-            const list = task.photos || [];
-            document.getElementById('photoCount').textContent = list.length ? `(${toFa(list.length)})` : '';
-            document.getElementById('photoGrid').innerHTML = list.length ? list.map(p => `
-                <div class="photo-thumb">
-                    <img src="${p.dataUrl}" data-photo-view="${escapeHtml(String(p.id))}" alt="تصویر وظیفه" loading="lazy">
-                    <button data-photo-del="${escapeHtml(String(p.id))}" aria-label="حذف عکس">✕</button>
-                </div>`).join('') : '<div class="session-empty">عکسی ثبت نشده است.</div>';
-        }
-
-        let timerTick = null;
-
-        function currentSpent(task) {
-            let s = Number(task.timeSpent) || 0;
-            if (task.timerStartedAt) {
-                s += (Date.now() - new Date(task.timerStartedAt).getTime()) / 1000;
-            }
-            return Math.max(0, Math.floor(s));
-        }
-
-        function faDuration(sec) {
-            sec = Math.floor(sec);
-            const h = Math.floor(sec / 3600);
-            const m = Math.floor((sec % 3600) / 60);
-            const s = sec % 60;
-            if (h > 0) return `${toFa(h)} ساعت و ${toFa(m)} دقیقه`;
-            if (m > 0) return `${toFa(m)} دقیقه`;
-            return `${toFa(s)} ثانیه`;
-        }
-
-        function renderTimer() {
-            const task = getDetailTask();
-            if (!task) return;
-            document.getElementById('timerLabel').textContent = faDuration(currentSpent(task));
-            document.getElementById('timerToggle').textContent = task.timerStartedAt ? '⏸ توقف' : '▶ شروع';
-        }
-
-        function toggleTimer() {
-            const task = getDetailTask();
-            if (!task) return;
-            if (task.timerStartedAt) {
-                task.timeSpent = currentSpent(task);
-                task.timerStartedAt = null;
-            } else {
-                task.timerStartedAt = new Date().toISOString();
-            }
-            saveTasks();
-            renderTimer();
-            flashSaved();
-        }
-
-        const WEEK_ORDER = [['شنبه', 6], ['یکشنبه', 0], ['دوشنبه', 1], ['سه‌شنبه', 2], ['چهارشنبه', 3], ['پنجشنبه', 4], ['جمعه', 5]];
-
-        function renderRecurRows() {
-            const task = getDetailTask();
-            if (!task) return;
-            const r = task.recur;
-            document.getElementById('fRecurNRow').style.display = (r === 'custom' || r === 'hourly') ? '' : 'none';
-            document.getElementById('fRecurWeekRow').style.display = r === 'weeklyDays' ? '' : 'none';
-            document.getElementById('fRecurMonthRow').style.display = r === 'monthlyDays' ? '' : 'none';
-            document.querySelector('#fRecurNRow .field-label').textContent = r === 'hourly' ? 'هر چند ساعت؟' : 'هر چند روز؟';
-            const nInp = document.getElementById('fRecurN');
-            nInp.max = r === 'hourly' ? 168 : 365;
-            const wc = document.getElementById('fRecurWeekChips');
-            if (wc) wc.innerHTML = WEEK_ORDER.map(([name, v]) => `<button type="button" class="day-chip${(task.recurDays || []).includes(v) ? ' on' : ''}" data-wday="${v}">${name}</button>`).join('');
-            const mc = document.getElementById('fRecurMonthChips');
-            if (mc) {
-                let mhtml = '';
-                for (let d = 1; d <= 31; d++) mhtml += `<button type="button" class="day-chip${(task.recurDays || []).includes(d) ? ' on' : ''}" data-mday="${d}">${toFa(d)}</button>`;
-                mc.innerHTML = mhtml;
+        if (task.recur === 'hourly' && !(task.recurN >= 1 && task.recurN <= 168)) task.recurN = 8;
+        if (task.recur === 'custom') {
+            const n = parseInt(document.getElementById('fRecurN').value, 10);
+            if (n >= 1 && n <= 365) task.recurN = n;
+            else {
+                task.recur = 'none';
+                e.target.value = 'none';
+                warn = 'عدد روزهای تکرار (۱ تا ۳۶۵) را وارد کنید';
             }
         }
-
-        function toggleRecurDay(v) {
-            const task = getDetailTask();
-            if (!task) return;
-            task.recurDays = task.recurDays || [];
-            const i = task.recurDays.indexOf(v);
-            if (i >= 0) task.recurDays.splice(i, 1);
-            else task.recurDays.push(v);
-            saveTasks();
-            render();
-            renderRecurRows();
-            flashSaved();
+        if ((task.recur === 'weeklyDays' || task.recur === 'monthlyDays') && !(task.recurDays || []).length) {
+            warn += (warn ? ' — ' : '') + 'حداقل یک روز انتخاب کنید';
         }
-
-        // debounce برای ذخیره‌های تکراری در input‌ها.
-        // flush در closeDetail برای اطمینان از ذخیره آخرین تغییرات.
-        const debouncedSaveTitle = debounce(() => {
-            const task = getDetailTask();
-            if (!task) return;
-            task.text = document.getElementById('fTitle').value.trim().replace(/\s+/g, ' ').slice(0, MAX_LENGTH);
-            document.getElementById('detailTitle').textContent = task.text || 'بدون عنوان';
+        saveTasks();
+        call('render');
+        renderRecurRows();
+        flashSaved(warn || undefined);
+    });
+    document.getElementById('fRecurN').addEventListener('change', e => {
+        const task = getDetailTask();
+        if (!task) return;
+        const maxN = task.recur === 'hourly' ? 168 : 365;
+        const n = parseInt(e.target.value, 10);
+        if ((task.recur === 'custom' || task.recur === 'hourly') && n >= 1 && n <= maxN) {
+            task.recurN = n;
             saveTasks();
-            render();
+            call('render');
             flashSaved();
-        }, 300);
-
-        const debouncedSaveDesc = debounce(() => {
-            const task = getDetailTask();
-            if (!task) return;
-            task.description = document.getElementById('fDesc').value.slice(0, 1000);
-            saveTasks();
-            flashSaved();
-        }, 500);
-
-        const debouncedSavePhone = debounce(() => {
-            const task = getDetailTask();
-            if (!task) return;
-            task.phone = document.getElementById('fPhone').value.trim().slice(0, 20);
-            saveTasks();
-            flashSaved();
-        }, 300);
-
-        const debouncedSaveAddr = debounce(() => {
-            const task = getDetailTask();
-            if (!task) return;
-            task.address = document.getElementById('fAddr').value.slice(0, 500);
-            saveTasks();
-            flashSaved();
-        }, 500);
-
-        const debouncedSaveUrl = debounce(() => {
-            const task = getDetailTask();
-            if (!task) return;
-            task.url = document.getElementById('fUrl').value.trim().slice(0, 300);
-            updateUrlLink();
-            saveTasks();
-            flashSaved();
-        }, 300);
-
-        function bindDetailInputs() {
-            document.getElementById('fTitle').addEventListener('input', e => {
-                const v = e.target.value.trim().replace(/\s+/g, ' ');
-                if (!v) {
-                    flashSaved('عنوان نمی‌تواند خالی باشد');
-                    return;
-                }
-                debouncedSaveTitle();
-            });
-            document.getElementById('fDesc').addEventListener('input', () => {
-                debouncedSaveDesc();
-            });
-            document.getElementById('fPhone').addEventListener('input', e => {
-                const v = e.target.value.trim();
-                const err = document.getElementById('fPhoneError');
-                // validation فوری (چون خطا باید سریع دیده شود)
-                if (v && !/^[0-9+\-\s()]{5,20}$/.test(v)) {
-                    err.textContent = 'شماره تلفن معتبر نیست';
-                    return;
-                }
-                err.textContent = '';
-                updateCallBtn();
-                debouncedSavePhone();
-            });
-            document.getElementById('fAddr').addEventListener('input', () => {
-                debouncedSaveAddr();
-            });
-            document.getElementById('fUrl').addEventListener('input', () => {
-                debouncedSaveUrl();
-            });
-            document.getElementById('addSessionBtn').addEventListener('click', () => {
-                openPicker('session', iso => {
-                    const task = getDetailTask();
-                    if (!task) return;
-                    if (hasSessionAt(task.sessions, iso)) {
-                        flashSaved('این سررسید قبلاً ثبت شده است.');
-                        return;
-                    }
-                    task.sessions.push({ id: uid(), at: iso });
-                    saveTasks();
-                    renderDetailSessions();
-                    render();
-                    flashSaved();
-                });
-            });
-            document.getElementById('sessList').addEventListener('click', e => {
-                const locBtn = e.target.closest('[data-sess-loc]');
-                if (locBtn) {
-                    relocateSess = { taskId: currentDetailId, sessId: locBtn.dataset.sessLoc };
-                    relocateTaskId = null;
-                    pendingReturnDetail = currentDetailId;
-                    ensureMapVisible();
-                    switchToTab('map');
-                    // روی موبایل، صفحه جزئیات مخفی شود تا کاربر نقشه را ببیند
-                    if (window.matchMedia('(max-width: 900px)').matches) {
-                        const pageEl = document.getElementById('detailPage');
-                        if (pageEl) pageEl.style.display = 'none';
-                        document.body.style.overflow = '';
-                    }
-                    mapHint('روی نقشه کلیک کنید تا محل جلسه ثبت شود');
-                    if (typeof window.__showMobilePickBanner === 'function') {
-                        window.__showMobilePickBanner('روی نقشه ضربه بزنید تا محل جلسه ثبت شود. برای انصراف، دکمه لغو را بزنید.');
-                    }
-                    return;
-                }
-                const btn = e.target.closest('[data-sess]');
-                if (!btn) return;
-                const task = getDetailTask();
-                if (!task) return;
-                task.sessions = task.sessions.filter(s => String(s.id) !== btn.dataset.sess);
-                saveTasks();
-                renderDetailSessions();
-                render();
-                flashSaved('جلسه حذف شد');
-            });
-            document.getElementById('sessList').addEventListener('change', e => {
-                const sel = e.target.closest('[data-sess-rem]');
-                if (!sel) return;
-                const task = getDetailTask();
-                if (!task) return;
-                const s = (task.sessions || []).find(x => String(x.id) === String(sel.dataset.sessRem));
-                if (!s) return;
-                s.reminded = false;
-                s.remindedDue = false;
-                if (sel.value === '') s.remindMin = null;
-                else s.remindMin = Math.max(0, parseInt(sel.value, 10) || 0);
-                saveTasks();
-                flashSaved();
-            });
-            document.getElementById('detailLocShow').addEventListener('click', () => {
-                const t = getDetailTask();
-                if (!t || !t.location) return;
-                enterLocationPickMode(t.id, 'show');
-            });
-            document.getElementById('detailLocChange').addEventListener('click', () => {
-                const t = getDetailTask();
-                if (!t) return;
-                enterLocationPickMode(t.id, 'change');
-            });
-            document.getElementById('detailLocRemove').addEventListener('click', () => {
-                const t = getDetailTask();
-                if (!t) return;
-                t.location = null;
-                saveTasks();
-                if (typeof window.refreshSavedLocationUI === 'function') {
-                    window.refreshSavedLocationUI();
-                }
-                render();
-                refreshMarkers();
-                flashSaved('محل حذف شد');
-            });
-            document.getElementById('fPriority').addEventListener('change', e => {
-                const task = getDetailTask();
-                if (!task) return;
-                task.priority = ['high', 'medium', 'low'].includes(e.target.value) ? e.target.value : 'medium';
-                saveTasks();
-                render();
-                refreshMarkers();
-                flashSaved();
-            });
-            document.getElementById('fUrlCopy').addEventListener('click', async () => {
-                const task = getDetailTask();
-                if (!task || !(task.url || '').trim()) return;
-                const raw = task.url.trim();
-                const full = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
-                let ok = false;
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(full);
-                        ok = true;
-                    }
-                } catch { /* fallback */ }
-                if (!ok) {
-                    try {
-                        const ta = document.createElement('textarea');
-                        ta.value = full;
-                        ta.style.position = 'fixed';
-                        ta.style.opacity = '0';
-                        document.body.appendChild(ta);
-                        ta.select();
-                        ok = document.execCommand('copy');
-                        ta.remove();
-                    } catch { /* نادیده */ }
-                }
-                flashSaved(ok ? 'پیوند کپی شد ✓' : 'کپی نشد');
-            });
-            document.getElementById('fPin').addEventListener('change', e => {
-                const task = getDetailTask();
-                if (!task) return;
-                task.pinned = e.target.checked;
-                saveTasks();
-                render();
-                flashSaved();
-            });
-            document.getElementById('fRecurWeekChips').addEventListener('click', e => {
-                const b = e.target.closest('[data-wday]');
-                if (b) toggleRecurDay(parseInt(b.dataset.wday, 10));
-            });
-            document.getElementById('fRecurMonthChips').addEventListener('click', e => {
-                const b = e.target.closest('[data-mday]');
-                if (b) toggleRecurDay(parseInt(b.dataset.mday, 10));
-            });
-            document.getElementById('fRecur').addEventListener('change', e => {
-                const task = getDetailTask();
-                if (!task) return;
-                const v = e.target.value;
-                task.recur = ['daily', 'weekly', 'monthly', 'custom', 'hourly', 'weeklyDays', 'monthlyDays'].includes(v) ? v : 'none';
-                let warn = '';
-                if (task.recur !== 'none' && (task.sessions || []).length > 1) {
-                    task.sessions.sort((a, b) => new Date(a.at) - new Date(b.at));
-                    task.sessions = [task.sessions[0]];
-                    renderDetailSessions();
-                    warn = 'فقط نزدیک‌ترین سررسید نگه داشته شد؛ بقیه حذف شدند';
-                }
-                if (task.recur === 'hourly' && !(task.recurN >= 1 && task.recurN <= 168)) task.recurN = 8;
-                if (task.recur === 'custom') {
-                    const n = parseInt(document.getElementById('fRecurN').value, 10);
-                    if (n >= 1 && n <= 365) task.recurN = n;
-                    else {
-                        task.recur = 'none';
-                        e.target.value = 'none';
-                        warn = 'عدد روزهای تکرار (۱ تا ۳۶۵) را وارد کنید';
-                    }
-                }
-                if ((task.recur === 'weeklyDays' || task.recur === 'monthlyDays') && !(task.recurDays || []).length) {
-                    warn += (warn ? ' — ' : '') + 'حداقل یک روز انتخاب کنید';
-                }
-                saveTasks();
-                render();
-                renderRecurRows();
-                flashSaved(warn || undefined);
-            });
-            document.getElementById('fRecurN').addEventListener('change', e => {
-                const task = getDetailTask();
-                if (!task) return;
-                const maxN = task.recur === 'hourly' ? 168 : 365;
-                const n = parseInt(e.target.value, 10);
-                if ((task.recur === 'custom' || task.recur === 'hourly') && n >= 1 && n <= maxN) {
-                    task.recurN = n;
-                    saveTasks();
-                    render();
-                    flashSaved();
-                } else {
-                    flashSaved(`عدد بین ۱ تا ${toFa(maxN)}`);
-                }
-            });
-            document.getElementById('detailLocRoute').addEventListener('click', () => {
-                const t = getDetailTask();
-                if (!t || !t.location) return;
-                enterLocationPickMode(t.id, 'route');
-            });
-            const photoInput = document.getElementById('photoInput');
-            photoInput.addEventListener('change', () => {
-                const task = getDetailTask();
-                if (!task) { photoInput.value = ''; return; }
-                task.photos = task.photos || [];
-                const files = [...photoInput.files].slice(0, Math.max(0, 8 - task.photos.length));
-                photoInput.value = '';
-                if (!files.length) {
-                    flashSaved(task.photos.length >= 8 ? 'سقف ۸ عکس' : 'فایلی انتخاب نشد');
-                    return;
-                }
-                let pending = files.length;
-                const doneOne = () => {
-                    if (--pending !== 0) return;
-                    saveTasks();
-                    renderDetailPhotos();
-                    render();
-                    flashSaved();
-                };
-                files.forEach(f => {
-                    if (!f.type.startsWith('image/')) return doneOne();
-                    const rd = new FileReader();
-                    rd.onload = () => downscale(rd.result, 1024, 0.72, url => {
-                        if (url) task.photos.push({ id: uid(), dataUrl: url, addedAt: new Date().toISOString() });
-                        doneOne();
-                    });
-                    rd.onerror = doneOne;
-                    rd.readAsDataURL(f);
-                });
-            });
-            document.getElementById('photoGrid').addEventListener('click', e => {
-                const del = e.target.closest('[data-photo-del]');
-                if (del) {
-                    const task = getDetailTask();
-                    if (!task) return;
-                    task.photos = (task.photos || []).filter(p => String(p.id) !== del.dataset.photoDel);
-                    saveTasks();
-                    renderDetailPhotos();
-                    render();
-                    flashSaved('عکس حذف شد');
-                    return;
-                }
-                const img = e.target.closest('[data-photo-view]');
-                if (img) {
-                    document.getElementById('lightboxImg').src = img.src;
-                    document.getElementById('lightbox').style.display = 'flex';
-                }
-            });
-            document.getElementById('lightbox').addEventListener('click', () => {
-                document.getElementById('lightbox').style.display = 'none';
-                document.getElementById('lightboxImg').removeAttribute('src');
-            });
-            document.getElementById('timerToggle').addEventListener('click', toggleTimer);
-            document.getElementById('detailBack').addEventListener('click', closeDetail);
-            document.getElementById('detailDelete').addEventListener('click', async () => {
-                const task = getDetailTask();
-                if (!task) return;
-                const ok = await showConfirmModal({
-                    title: 'حذف وظیفه',
-                    message: `«${task.text}» به سطل زباله منتقل شود؟`,
-                    confirmText: 'بله، منتقل کن',
-                    cancelText: 'انصراف',
-                    danger: true
-                });
-                if (!ok) return;
-                const id = task.id;
-                closeDetail();
-                moveToTrashById(id);
-                render();
-                showUndoFor([id]);
-            });
+        } else {
+            flashSaved(`عدد بین ۱ تا ${toFa(maxN)}`);
         }
+    });
+    document.getElementById('detailLocRoute').addEventListener('click', () => {
+        const t = getDetailTask();
+        if (!t || !t.location) return;
+        enterLocationPickMode(t.id, 'route');
+    });
+    const photoInput = document.getElementById('photoInput');
+    photoInput.addEventListener('change', () => {
+        const task = getDetailTask();
+        if (!task) { photoInput.value = ''; return; }
+        task.photos = task.photos || [];
+        const files = [...photoInput.files].slice(0, Math.max(0, 8 - task.photos.length));
+        photoInput.value = '';
+        if (!files.length) {
+            flashSaved(task.photos.length >= 8 ? 'سقف ۸ عکس' : 'فایلی انتخاب نشد');
+            return;
+        }
+        let pending = files.length;
+        const doneOne = () => {
+            if (--pending !== 0) return;
+            saveTasks();
+            renderDetailPhotos();
+            call('render');
+            flashSaved();
+        };
+        files.forEach(f => {
+            if (!f.type.startsWith('image/')) return doneOne();
+            const rd = new FileReader();
+            rd.onload = () => downscale(rd.result, 1024, 0.72, url => {
+                if (url) task.photos.push({ id: uid(), dataUrl: url, addedAt: new Date().toISOString() });
+                doneOne();
+            });
+            rd.onerror = doneOne;
+            rd.readAsDataURL(f);
+        });
+    });
+    document.getElementById('photoGrid').addEventListener('click', e => {
+        const del = e.target.closest('[data-photo-del]');
+        if (del) {
+            const task = getDetailTask();
+            if (!task) return;
+            task.photos = (task.photos || []).filter(p => String(p.id) !== del.dataset.photoDel);
+            saveTasks();
+            renderDetailPhotos();
+            call('render');
+            flashSaved('عکس حذف شد');
+            return;
+        }
+        const img = e.target.closest('[data-photo-view]');
+        if (img) {
+            document.getElementById('lightboxImg').src = img.src;
+            document.getElementById('lightbox').style.display = 'flex';
+        }
+    });
+    document.getElementById('lightbox').addEventListener('click', () => {
+        document.getElementById('lightbox').style.display = 'none';
+        document.getElementById('lightboxImg').removeAttribute('src');
+    });
+    document.getElementById('timerToggle').addEventListener('click', toggleTimer);
+    document.getElementById('detailBack').addEventListener('click', closeDetail);
+    document.getElementById('detailDelete').addEventListener('click', async () => {
+        const task = getDetailTask();
+        if (!task) return;
+        const ok = await showConfirmModal({
+            title: 'حذف وظیفه',
+            message: `«${task.text}» به سطل زباله منتقل شود؟`,
+            confirmText: 'بله، منتقل کن',
+            cancelText: 'انصراف',
+            danger: true
+        });
+        if (!ok) return;
+        const id = task.id;
+        closeDetail();
+        moveToTrashById(id);
+        call('render');
+        call('showUndoFor', [id]);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ⚠️ گام ۱۵: SHIM‌ها حذف شدند
+// ═══════════════════════════════════════════════════════════════════════════
